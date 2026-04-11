@@ -1,5 +1,5 @@
-import Stripe from "stripe";
-import { createClient } from "@supabase/supabase-js";
+const Stripe = require("stripe");
+const { createClient } = require("@supabase/supabase-js");
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(
@@ -31,7 +31,7 @@ async function sendEmail(to, code, plan) {
       html: `
         <div style="background:#0b1825;padding:40px 20px;font-family:Georgia,serif;max-width:520px;margin:0 auto;border-radius:16px;">
           <div style="text-align:center;margin-bottom:24px;">
-            <div style="font-size:36px;">⚓</div>
+            <div style="font-size:36px;">&#9875;</div>
             <h1 style="color:#ede3cd;font-size:22px;margin:8px 0 4px;font-family:Georgia,serif;">Anchored Steps</h1>
             <p style="color:#7e92a2;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;margin:0;">52 Weeks of Faith in Action</p>
           </div>
@@ -64,7 +64,7 @@ async function sendEmail(to, code, plan) {
   return response.json();
 }
 
-async function buffer(req) {
+async function getRawBody(req) {
   const chunks = [];
   for await (const chunk of req) {
     chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
@@ -72,7 +72,7 @@ async function buffer(req) {
   return Buffer.concat(chunks);
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -81,7 +81,7 @@ export default async function handler(req, res) {
   let event;
 
   try {
-    const rawBody = await buffer(req);
+    const rawBody = await getRawBody(req);
     event = stripe.webhooks.constructEvent(
       rawBody,
       sig,
@@ -142,8 +142,7 @@ export default async function handler(req, res) {
     console.log(`Code ${code} sent to ${customerEmail}`);
   } catch (emailErr) {
     console.error("Email failed:", emailErr);
-    // Don't fail the webhook if email fails - code is still in Supabase
   }
 
   return res.status(200).json({ received: true });
-}
+};
