@@ -163,10 +163,10 @@ function AuthScreen({onAuth}) {
         <div style={{marginTop:24,borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:20}}>
           <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:G.muted,letterSpacing:"0.14em",textTransform:"uppercase",textAlign:"center",marginBottom:14}}>New Subscriber? Choose Your Plan</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            <a href="https://buy.stripe.com/28E8wO63i51s8GH1Vp57W02" target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",background:"rgba(180,140,60,0.07)",border:"1px solid "+G.goldB,borderRadius:12,padding:"14px 12px",textAlign:"center"}}>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:G.gold,letterSpacing:"0.08em",marginBottom:4}}>Weekly</div>
+            <a href="https://buy.stripe.com/9B6fZg8bqalMe117fJ57W03" target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",background:"rgba(180,140,60,0.07)",border:"1px solid "+G.goldB,borderRadius:12,padding:"14px 12px",textAlign:"center"}}>
+              <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:G.gold,letterSpacing:"0.08em",marginBottom:4}}>Monthly</div>
               <div style={{fontSize:22,fontWeight:600,color:G.cream,fontFamily:"Cinzel,serif",marginBottom:2}}>$1.50</div>
-              <div style={{fontSize:10,color:G.muted}}>per week</div>
+              <div style={{fontSize:10,color:G.muted}}>per month</div>
               <div style={{marginTop:10,background:"rgba(180,140,60,0.15)",borderRadius:6,padding:"6px",fontSize:11,color:G.gold,fontFamily:"Cinzel,serif"}}>Subscribe &#8594;</div>
             </a>
             <a href="https://buy.stripe.com/dRmbJ09fu51s9KLgQj57W01" target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",background:"rgba(180,140,60,0.12)",border:"1px solid "+G.goldB,borderRadius:12,padding:"14px 12px",textAlign:"center",position:"relative"}}>
