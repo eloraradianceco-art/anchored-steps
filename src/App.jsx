@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
+import Onboarding from "./Onboarding.jsx";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://cvtukqamaqrhjtdvmslb.supabase.co";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2dHVrcWFtYXFyaGp0ZHZtc2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NDU1MjQsImV4cCI6MjA5MTQyMTUyNH0.gSksF5jV-UpuaUL7x7vhHHOB6Z7Qq0iehtbc2PoSAxw";
@@ -31,6 +32,48 @@ const INP_STYLE = {width:"100%",background:"rgba(255,255,255,0.06)",border:"1px 
 const LBL_STYLE = {fontSize:10,color:G.gold,letterSpacing:"0.15em",textTransform:"uppercase",marginBottom:8,display:"block",fontFamily:"Cinzel,serif"};
 
 function todayStr() { return new Date().toISOString().split("T")[0]; }
+
+function highlightKeywords(text, keywords) {
+  if (!text || !keywords || keywords.length === 0) return text;
+  const parts = [];
+  let remaining = text;
+  let i = 0;
+  // Sort keywords by length descending to match longer ones first
+  const sorted = [...keywords].sort((a,b) => b.length - a.length);
+  while (remaining.length > 0) {
+    let found = false;
+    for (const kw of sorted) {
+      const idx = remaining.toLowerCase().indexOf(kw.toLowerCase());
+      if (idx === 0) {
+        parts.push(
+          <mark key={i++} style={{background:"rgba(176,138,78,0.25)",color:"#F5F1E8",borderRadius:3,padding:"0 2px",fontStyle:"inherit",cursor:"pointer"}}
+            title={kw}>
+            {remaining.slice(0, kw.length)}
+          </mark>
+        );
+        remaining = remaining.slice(kw.length);
+        found = true;
+        break;
+      } else if (idx > 0) {
+        parts.push(<span key={i++}>{remaining.slice(0, idx)}</span>);
+        parts.push(
+          <mark key={i++} style={{background:"rgba(176,138,78,0.25)",color:"#F5F1E8",borderRadius:3,padding:"0 2px",fontStyle:"inherit",cursor:"pointer"}}
+            title={kw}>
+            {remaining.slice(idx, idx + kw.length)}
+          </mark>
+        );
+        remaining = remaining.slice(idx + kw.length);
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      parts.push(<span key={i++}>{remaining}</span>);
+      remaining = "";
+    }
+  }
+  return parts;
+}
 
 function calcStreak(entries) {
   const days = [...new Set(entries.filter(e => e.field_key.startsWith("day_")).map(e => e.field_key.replace("day_","")))].sort().reverse();
@@ -170,7 +213,7 @@ function AuthScreen({onAuth}) {
 
   if (screen === "plans") return (
     <div style={wrap()}>
-      <div style={{fontSize:32,color:G.gold,marginBottom:12}}>&#9875;</div>
+      <img src="/icon.png" alt="Anchored Steps" style={{width:56,height:56,marginBottom:12,borderRadius:12,boxShadow:"0 4px 16px rgba(0,0,0,0.2)"}}/>
       <div style={{fontFamily:"Cinzel,serif",fontSize:20,fontWeight:600,color:G.cream,marginBottom:4}}>Choose Your Plan</div>
       <div style={{fontSize:13,color:G.muted,fontStyle:"italic",marginBottom:28,textAlign:"center"}}>Subscribe to receive your access code instantly by email.</div>
       <div style={{width:"100%",maxWidth:400}}>
@@ -234,6 +277,8 @@ export default function AnchoredSteps() {
   const [profile, setProfile] = useState(null);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [subExpired, setSubExpired] = useState(false);
   const [view, setView] = useState("journal");
   const [wk, setWk] = useState(1);
   const [sec, setSec] = useState("scripture");
@@ -254,7 +299,7 @@ export default function AnchoredSteps() {
   if (!window.__APPDATA__) {
     return (
       <div style={{minHeight:"100vh",background:"#0b1825",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
-        <div style={{fontSize:32,color:"#c9a84c"}}>&#9875;</div>
+        <img src="/icon.png" alt="Anchored Steps" style={{width:56,height:56,marginBottom:12,borderRadius:12,boxShadow:"0 4px 16px rgba(0,0,0,0.2)"}}/>
         <div style={{fontFamily:"Cinzel,serif",color:"#7e92a2",fontSize:12,letterSpacing:"0.1em"}}>Loading journal data...</div>
       </div>
     );
@@ -343,8 +388,18 @@ export default function AnchoredSteps() {
       supabase.from("profiles").select("*").eq("id", userId).single(),
       supabase.from("journal_entries").select("*").eq("user_id", userId),
     ]);
-    if (prof) { setProfile(prof); setWk(prof.current_week || 1); }
+    if (prof) {
+      setProfile(prof);
+      setWk(prof.current_week || 1);
+      // Check subscription status
+      if (prof.subscription_status === "canceled") {
+        setSubExpired(true);
+      }
+    }
     if (ents) setEntries(ents);
+    // Show onboarding for new users
+    const done = localStorage.getItem("onboarding_complete");
+    if (!done) setShowOnboarding(true);
     setLoading(false);
   };
 
@@ -474,6 +529,22 @@ export default function AnchoredSteps() {
   };
   const communityNotes = () => { try { return JSON.parse(localStorage.getItem("community_w"+wk)||"[]"); } catch { return []; } };
 
+  // ── Onboarding
+  if (showOnboarding) return (
+    <Onboarding onComplete={() => setShowOnboarding(false)} />
+  );
+
+  // ── Subscription expired
+  if (subExpired) return (
+    <div style={{minHeight:"100vh",background:"linear-gradient(155deg,#0F1A24 0%,#1A2A38 55%,#0F1A24 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px",fontFamily:"EB Garamond,Georgia,serif",textAlign:"center"}}>
+      <img src="/icon.png" alt="" style={{width:64,height:64,borderRadius:14,marginBottom:16,opacity:.6}}/>
+      <div style={{fontFamily:"Cinzel,serif",fontSize:20,color:"#F5F1E8",marginBottom:8}}>Subscription Ended</div>
+      <p style={{fontSize:16,color:"#A8B3BC",lineHeight:1.7,marginBottom:28,maxWidth:340}}>Your subscription is no longer active. Resubscribe to continue your faith journey.</p>
+      <a href="https://eloraradiance.com/anchored-steps-app" style={{display:"block",background:"linear-gradient(135deg,rgba(176,138,78,0.35),rgba(176,138,78,0.15))",border:"1px solid rgba(176,138,78,0.45)",color:"#B08A4E",padding:"14px 32px",borderRadius:12,textDecoration:"none",fontFamily:"Cinzel,serif",fontSize:14,letterSpacing:"0.1em",marginBottom:12}}>View Plans &#8594;</a>
+      <button onClick={signOut} style={{background:"transparent",border:"none",color:"#6C7A86",cursor:"pointer",fontSize:13,fontFamily:"EB Garamond,Georgia,serif"}}>Sign out</button>
+    </div>
+  );
+
   // ── Loading
   if (loading) return (
     <div style={{minHeight:"100vh",background:G.bg,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
@@ -549,7 +620,7 @@ export default function AnchoredSteps() {
                     const ae = (AUTHOR_DATA[wk]||[])[i];
                     const isOpen = openAuthor === ak;
                     return (
-                      <div key={i} style={{background:i===0?"linear-gradient(145deg,rgba(176,138,78,0.13),rgba(176,138,78,0.04))":G.bgCard,border:"1px solid "+(i===0?"rgba(176,138,78,0.4)":G.border),borderRadius:16,padding:"22px 24px",marginBottom:14,boxShadow:i===0?"0 8px 32px rgba(0,0,0,0.15)":"none"}}>
+                      <div key={i} style={{background:i===0?"linear-gradient(145deg,rgba(176,138,78,0.14),rgba(176,138,78,0.05))":"linear-gradient(145deg,rgba(176,138,78,0.07),rgba(176,138,78,0.02))",border:"1px solid rgba(176,138,78,0.3)",borderRadius:16,padding:"22px 24px",marginBottom:14,boxShadow:"0 8px 24px rgba(0,0,0,0.12)"}}>
                         <div style={{display:"flex",gap:10}}>
                           <span style={{color:G.gold,fontSize:32,lineHeight:1,opacity:.3,flexShrink:0,marginTop:0,fontFamily:"Georgia,serif"}}>&#8220;</span>
                           <div style={{flex:1}}>
@@ -642,17 +713,30 @@ export default function AnchoredSteps() {
                   {crossRefs.length > 0 && (
                     <div style={{background:G.bgCard,border:"1px solid "+G.border,borderRadius:10,padding:"14px 18px",marginBottom:16}}>
                       <div style={{fontSize:10,color:G.muted,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:12,fontFamily:"Cinzel,serif"}}>Cross References &#8212; Dig Deeper</div>
-                      {crossRefs.map((s,i) => (
-                        <div key={i} style={{borderLeft:"2px solid "+G.goldB,paddingLeft:14,marginBottom:i<crossRefs.length-1?14:0,paddingBottom:i<crossRefs.length-1?14:0,borderBottom:i<crossRefs.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
-                          <p style={{fontSize:15,color:G.text,lineHeight:1.7,fontStyle:"italic",marginBottom:4}}>{s.text}</p>
-                          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
-                            <span style={{fontSize:12,color:G.gold,fontFamily:"Cinzel,serif"}}>{s.ref}</span>
-                            <button onClick={() => startQuiz(s)} style={{background:entries.find(e=>e.field_key==="mem_"+s.ref)?"rgba(120,184,120,0.1)":G.purpleF,border:"1px solid "+(entries.find(e=>e.field_key==="mem_"+s.ref)?G.greenB:G.purpleB),color:entries.find(e=>e.field_key==="mem_"+s.ref)?G.green:G.purple,padding:"2px 10px",borderRadius:12,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif"}}>
-                              {entries.find(e=>e.field_key==="mem_"+s.ref) ? "✓ Memorized" : "✦ Memorize"}
-                            </button>
+                      {crossRefs.map((s,i) => {
+                        const [crOpen, setCrOpen] = React.useState(false);
+                        return (
+                          <div key={i} style={{borderLeft:"2px solid rgba(176,138,78,0.35)",paddingLeft:14,marginBottom:i<crossRefs.length-1?18:0,paddingBottom:i<crossRefs.length-1?18:0,borderBottom:i<crossRefs.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
+                            <p style={{fontSize:16,color:G.text,lineHeight:1.8,fontStyle:"italic",marginBottom:8}}>
+                              {highlightKeywords(s.text, kwList)}
+                            </p>
+                            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
+                              <span style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",textTransform:"uppercase"}}>{s.ref}</span>
+                              <div style={{display:"flex",gap:6}}>
+                                {s.context && <button onClick={()=>setCrOpen(o=>!o)} style={{background:"rgba(176,138,78,0.1)",border:"1px solid rgba(176,138,78,0.25)",color:G.gold,padding:"2px 10px",borderRadius:12,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif"}}>{crOpen?"▲ Hide":"▼ Context"}</button>}
+                                <button onClick={() => startQuiz(s)} style={{background:entries.find(e=>e.field_key==="mem_"+s.ref)?"rgba(124,146,132,0.15)":G.purpleF,border:"1px solid "+(entries.find(e=>e.field_key==="mem_"+s.ref)?G.greenB:G.purpleB),color:entries.find(e=>e.field_key==="mem_"+s.ref)?G.green:G.purple,padding:"2px 10px",borderRadius:12,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif"}}>
+                                  {entries.find(e=>e.field_key==="mem_"+s.ref) ? "✓ Memorized" : "✦ Memorize"}
+                                </button>
+                              </div>
+                            </div>
+                            {crOpen && s.context && (
+                              <div className="sd" style={{background:"linear-gradient(145deg,rgba(176,138,78,0.06),rgba(176,138,78,0.02))",border:"1px solid rgba(176,138,78,0.15)",borderRadius:10,padding:"12px 14px",marginTop:8}}>
+                                <p style={{fontSize:13,color:G.text,lineHeight:1.7,margin:0}}>{s.context}</p>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                   <div style={{marginBottom:18}}>
@@ -877,6 +961,30 @@ export default function AnchoredSteps() {
         )}
 
       </main>
+
+      {/* Next Step floating button */}
+      {view === "journal" && week && sec !== "weekEnd" && (
+        <button
+          onClick={() => {
+            const idx = SECTIONS.findIndex(s => s.id === sec);
+            const next = SECTIONS[idx + 1];
+            if (next) { setSec(next.id); setAnimK(a => a+1); setLexWord(null); setQuizMode(false); }
+          }}
+          style={{
+            position:"fixed",bottom:28,right:20,
+            background:"linear-gradient(135deg,rgba(176,138,78,0.4),rgba(176,138,78,0.2))",
+            border:"1px solid rgba(176,138,78,0.5)",
+            color:G.gold,padding:"10px 20px",borderRadius:50,
+            cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif",
+            letterSpacing:"0.07em",boxShadow:"0 4px 20px rgba(0,0,0,0.35)",
+            backdropFilter:"blur(10px)",zIndex:200,
+            display:"flex",alignItems:"center",gap:8,
+            transition:"all .2s"
+          }}
+        >
+          {SECTIONS[SECTIONS.findIndex(s => s.id === sec)+1]?.label} &#8250;
+        </button>
+      )}
     </div>
   );
 }
