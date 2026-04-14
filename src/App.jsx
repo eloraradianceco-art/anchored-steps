@@ -34,45 +34,27 @@ const LBL_STYLE = {fontSize:10,color:G.gold,letterSpacing:"0.15em",textTransform
 function todayStr() { return new Date().toISOString().split("T")[0]; }
 
 function highlightKeywords(text, keywords) {
-  if (!text || !keywords || keywords.length === 0) return text;
-  const parts = [];
-  let remaining = text;
-  let i = 0;
-  // Sort keywords by length descending to match longer ones first
-  const sorted = [...keywords].sort((a,b) => b.length - a.length);
-  while (remaining.length > 0) {
-    let found = false;
-    for (const kw of sorted) {
-      const idx = remaining.toLowerCase().indexOf(kw.toLowerCase());
-      if (idx === 0) {
-        parts.push(
-          <mark key={i++} style={{background:"rgba(176,138,78,0.25)",color:"#F5F1E8",borderRadius:3,padding:"0 2px",fontStyle:"inherit",cursor:"pointer"}}
-            title={kw}>
-            {remaining.slice(0, kw.length)}
+  try {
+    if (!text || !keywords || keywords.length === 0) return text;
+    const validKws = keywords.filter(k => k && k.trim().length > 2);
+    if (validKws.length === 0) return text;
+    const sorted = [...validKws].sort((a,b) => b.length - a.length);
+    const escaped = sorted.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const regex = new RegExp(`(${escaped.join('|')})`, 'gi');
+    const parts = text.split(regex);
+    return parts.map((part, i) => {
+      if (validKws.some(kw => kw.toLowerCase() === part.toLowerCase())) {
+        return (
+          <mark key={i} style={{background:"rgba(176,138,78,0.28)",color:"#F5F1E8",borderRadius:3,padding:"0 3px",fontStyle:"inherit",fontWeight:500}}>
+            {part}
           </mark>
         );
-        remaining = remaining.slice(kw.length);
-        found = true;
-        break;
-      } else if (idx > 0) {
-        parts.push(<span key={i++}>{remaining.slice(0, idx)}</span>);
-        parts.push(
-          <mark key={i++} style={{background:"rgba(176,138,78,0.25)",color:"#F5F1E8",borderRadius:3,padding:"0 2px",fontStyle:"inherit",cursor:"pointer"}}
-            title={kw}>
-            {remaining.slice(idx, idx + kw.length)}
-          </mark>
-        );
-        remaining = remaining.slice(idx + kw.length);
-        found = true;
-        break;
       }
-    }
-    if (!found) {
-      parts.push(<span key={i++}>{remaining}</span>);
-      remaining = "";
-    }
+      return <span key={i}>{part}</span>;
+    });
+  } catch(e) {
+    return text;
   }
-  return parts;
 }
 
 function calcStreak(entries) {
@@ -277,7 +259,7 @@ export default function AnchoredSteps() {
   const [profile, setProfile] = useState(null);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem("onboarding_complete"));
   const [subExpired, setSubExpired] = useState(false);
   const [view, setView] = useState("journal");
   const [wk, setWk] = useState(1);
@@ -398,9 +380,6 @@ export default function AnchoredSteps() {
       }
     }
     if (ents) setEntries(ents);
-    // Show onboarding for new users
-    const done = localStorage.getItem("onboarding_complete");
-    if (!done) setShowOnboarding(true);
     setLoading(false);
   };
 
@@ -694,22 +673,26 @@ export default function AnchoredSteps() {
                         );
                       })}
                     </div>
-                    {lexWord && LEXICON[lexWord] && (
+                    {lexWord && LEXICON[lexWord] && (() => {
+                      const entry = LEXICON[lexWord];
+                      if (!entry) return null;
+                      return (
                       <div className="sd" style={{marginTop:12,background:"linear-gradient(145deg,rgba(168,154,207,0.1),rgba(168,154,207,0.03))",border:"1px solid rgba(168,154,207,0.25)",borderRadius:14,padding:"18px 20px",boxShadow:"0 8px 24px rgba(0,0,0,0.12)"}}>
                         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                          <span style={{fontFamily:"Cinzel,serif",fontSize:10,color:G.purple,letterSpacing:"0.12em",textTransform:"uppercase"}}>{LEXICON[lexWord].lang} &#183; {LEXICON[lexWord].strongs}</span>
+                          <span style={{fontFamily:"Cinzel,serif",fontSize:10,color:G.purple,letterSpacing:"0.12em",textTransform:"uppercase"}}>{entry.lang || ""} &#183; {entry.strongs || ""}</span>
                           <button onClick={() => setLexWord(null)} style={{background:"transparent",border:"none",color:G.dim,cursor:"pointer",fontSize:15}}>&#215;</button>
                         </div>
                         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8,flexWrap:"wrap"}}>
-                          <span style={{fontSize:21,color:G.cream,fontFamily:"EB Garamond,Georgia,serif"}}>{LEXICON[lexWord].word}</span>
-                          <span style={{fontSize:14,color:G.muted,fontStyle:"italic"}}>{LEXICON[lexWord].transliteration}</span>
-                          <button onClick={() => speak(LEXICON[lexWord])} style={{background:speaking?"rgba(158,136,196,0.25)":G.purpleF,border:"1px solid "+G.purpleB,borderRadius:20,padding:"3px 12px",cursor:"pointer",color:G.purple,fontSize:12,transition:"all .2s"}}>
+                          <span style={{fontSize:21,color:G.cream,fontFamily:"EB Garamond,Georgia,serif"}}>{entry.word || lexWord}</span>
+                          <span style={{fontSize:14,color:G.muted,fontStyle:"italic"}}>{entry.transliteration || ""}</span>
+                          <button onClick={() => speak(entry)} style={{background:speaking?"rgba(158,136,196,0.25)":G.purpleF,border:"1px solid "+G.purpleB,borderRadius:20,padding:"3px 12px",cursor:"pointer",color:G.purple,fontSize:12,transition:"all .2s"}}>
                             {speaking ? "▶ playing..." : "▶ hear"}
                           </button>
                         </div>
-                        <p style={{fontSize:15,color:G.text,lineHeight:1.75}}>{LEXICON[lexWord].definition}</p>
+                        <p style={{fontSize:15,color:G.text,lineHeight:1.75}}>{entry.definition || ""}</p>
                       </div>
-                    )}
+                      );
+                    })()}
                   </div>
                   {crossRefs.length > 0 && (
                     <div style={{background:G.bgCard,border:"1px solid "+G.border,borderRadius:10,padding:"14px 18px",marginBottom:16}}>
