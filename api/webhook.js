@@ -92,6 +92,37 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: "Webhook signature failed" });
   }
 
+  // Handle cancellations
+  if (event.type === "customer.subscription.deleted" ||
+      event.type === "customer.subscription.updated") {
+    const sub = event.data.object;
+    if (sub.status === "canceled" || sub.cancel_at_period_end) {
+      const customerId = sub.customer;
+      // Get customer email
+      const customer = await stripe.customers.retrieve(customerId);
+      const email = customer.email;
+      if (email) {
+        // Mark subscription as canceled in Supabase
+        await supabase
+          .from("profiles")
+          .update({ subscription_status: "canceled" })
+          .eq("email", email);
+        console.log(`Canceled subscription for ${email}`);
+      }
+    }
+    // Re-activate if subscription resumes
+    if (event.type === "customer.subscription.updated" && sub.status === "active") {
+      const customer = await stripe.customers.retrieve(sub.customer);
+      if (customer.email) {
+        await supabase
+          .from("profiles")
+          .update({ subscription_status: "active" })
+          .eq("email", customer.email);
+      }
+    }
+    return res.status(200).json({ received: true });
+  }
+
   if (
     event.type !== "checkout.session.completed" &&
     event.type !== "invoice.payment_succeeded"
