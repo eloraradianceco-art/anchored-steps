@@ -70,7 +70,7 @@ export default function Onboarding({ onComplete }) {
   return (
     <div style={{
       minHeight:"100vh",
-      background:`linear-gradient(155deg,${G.bg} 0%,${G.bgMid} 55%,${G.bg} 100%)`,
+      background:"linear-gradient(155deg,"+G.bg+" 0%,"+G.bgMid+" 55%,"+G.bg+" 100%)",
       display:"flex",flexDirection:"column",alignItems:"center",
       justifyContent:"center",padding:"32px 24px",
       fontFamily:"EB Garamond,Georgia,serif",
