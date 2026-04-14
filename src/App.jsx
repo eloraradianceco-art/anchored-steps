@@ -162,7 +162,7 @@ function AuthScreen({onAuth}) {
 
   if (screen === "login") return (
     <div style={wrap()}>
-      <div style={{fontSize:36,color:G.gold,marginBottom:12}}>⚓</div>
+      <div style={{fontSize:36,color:G.gold,marginBottom:12}}><img src="/icon.png" alt="⚓" style={{width:56,height:56,borderRadius:12,boxShadow:"0 4px 16px rgba(0,0,0,0.25)"}}/></div>
       <div style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:600,color:G.cream,marginBottom:4}}>Anchored Steps</div>
       <div style={{fontSize:12,color:G.muted,letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:28}}>52 Weeks of Faith in Action</div>
       <div style={card}>
@@ -226,7 +226,7 @@ function AuthScreen({onAuth}) {
 
   return (
     <div style={wrap()}>
-      <div style={{fontSize:36,color:G.gold,marginBottom:12}}>⚓</div>
+      <div style={{fontSize:36,color:G.gold,marginBottom:12}}><img src="/icon.png" alt="⚓" style={{width:56,height:56,borderRadius:12,boxShadow:"0 4px 16px rgba(0,0,0,0.25)"}}/></div>
       <div style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:600,color:G.cream,marginBottom:4}}>Create Your Account</div>
       <div style={{fontSize:12,color:G.muted,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:28}}>Enter your access code to get started</div>
       <div style={card}>
@@ -528,7 +528,7 @@ export default function AnchoredSteps() {
   // ── Loading
   if (loading) return (
     <div style={{minHeight:"100vh",background:G.bg,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
-      <div style={{fontSize:32,color:G.gold}}>⚓</div>
+      <div style={{fontSize:32,color:G.gold}}><img src="/icon.png" alt="⚓" style={{width:52,height:52,borderRadius:11,boxShadow:"0 4px 14px rgba(0,0,0,0.2)"}}/></div>
       <div style={{fontFamily:"Cinzel,serif",color:G.muted,fontSize:12,letterSpacing:"0.1em"}}>Loading your journal...</div>
     </div>
   );
@@ -549,7 +549,7 @@ export default function AnchoredSteps() {
         <div style={{borderBottom:"1px solid rgba(180,140,60,0.12)",padding:"10px 18px"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <span style={{fontSize:16,color:G.gold}}>⚓</span>
+              <span style={{fontSize:16,color:G.gold}}><img src="/icon.png" alt="⚓" style={{width:26,height:26,borderRadius:6,verticalAlign:"middle"}}/></span>
               <span style={{fontFamily:"Cinzel,serif",fontSize:14,fontWeight:600,color:G.cream}}>Anchored Steps</span>
               {streak > 0 && <span style={{background:"rgba(180,140,60,0.15)",border:"1px solid "+G.goldB,borderRadius:12,padding:"1px 8px",fontSize:10,color:G.gold,fontFamily:"Cinzel,serif"}}>🔥 {streak}</span>}
             </div>
@@ -834,7 +834,7 @@ export default function AnchoredSteps() {
                   )}
                   {wk === 52 && (
                     <div style={{textAlign:"center",padding:"32px 24px",background:"linear-gradient(145deg,rgba(176,138,78,0.14),rgba(176,138,78,0.05))",border:"1px solid rgba(176,138,78,0.3)",borderRadius:16,marginTop:16,boxShadow:"0 8px 32px rgba(0,0,0,0.15)"}}>
-                      <div style={{fontSize:22,marginBottom:7}}>⚓</div>
+                      <div style={{fontSize:22,marginBottom:7}}><img src="/icon.png" alt="⚓" style={{width:48,height:48,borderRadius:12,boxShadow:"0 4px 16px rgba(0,0,0,0.2)"}}/></div>
                       <div style={{fontFamily:"Cinzel,serif",fontSize:16,color:G.cream,marginBottom:5}}>You Have Finished Well</div>
                       <div style={{fontSize:13,color:G.muted,fontStyle:"italic"}}>Walk steadily. Stay anchored. Trust God with every step.</div>
                     </div>
