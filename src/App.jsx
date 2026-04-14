@@ -40,7 +40,7 @@ function highlightKeywords(text, keywords) {
     if (validKws.length === 0) return text;
     const sorted = [...validKws].sort((a,b) => b.length - a.length);
     const escaped = sorted.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-    const regex = new RegExp(`(${escaped.join('|')})`, 'gi');
+    const regex = new RegExp("(" + escaped.join("|") + ")", "gi");
     const parts = text.split(regex);
     return parts.map((part, i) => {
       if (validKws.some(kw => kw.toLowerCase() === part.toLowerCase())) {
@@ -1302,9 +1302,7 @@ export default function AnchoredSteps() {
                 Facebook
               </a>
               <button onClick={()=>{
-                const text = '"'+shareVerse.text+'" — '+shareVerse.ref+'
-
-Anchored Steps · anchored-steps.vercel.app';
+                const text = '"'+shareVerse.text+'" — '+shareVerse.ref+' | Anchored Steps · anchored-steps.vercel.app';
                 if(navigator.share){navigator.share({text});}
                 else{navigator.clipboard.writeText(text).then(()=>alert("Copied to clipboard!"));}
               }} style={{background:"linear-gradient(135deg,rgba(176,138,78,0.2),rgba(176,138,78,0.08))",border:"1px solid rgba(176,138,78,0.3)",borderRadius:10,padding:"12px",cursor:"pointer",color:G.gold,fontFamily:"Cinzel,serif",fontSize:12,letterSpacing:"0.06em"}}>
