@@ -80,6 +80,14 @@ function SaveBtn({onSave, flash}) {
 
 // ── AUTH SCREENS ──────────────────────────────────────────────────────────────
 
+function YearReviewModal({ entries, ALL_WEEKS, onClose, G }) {
+  const weeksComplete = ALL_WEEKS.filter(w => entries.some(e => e.week === w.week && (e.field_value||"").trim())).length;
+  const versesMemorized = entries.filter(e => e.field_key.startsWith("mem_") && e.field_value === "1").length;
+  const prayersWritten = entries.filter(e => e.field_key === "prayer" && (e.field_value||"").trim()).length;
+  const totalDays = entries.filter(e => e.field_key.startsWith("day_")).length;
+  return <YearReview weeksComplete={weeksComplete} versesMemorized={versesMemorized} prayersWritten={prayersWritten} totalDays={totalDays} onClose={onClose} G={G} />;
+}
+
 function YearReview({ weeksComplete, versesMemorized, prayersWritten, totalDays, onClose, G }) {
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:24,overflowY:"auto"}} onClick={onClose}>
@@ -111,6 +119,26 @@ function YearReview({ weeksComplete, versesMemorized, prayersWritten, totalDays,
         </button>
         <button onClick={onClose} style={{width:"100%",background:"transparent",border:"none",color:G.muted,cursor:"pointer",fontSize:13,fontFamily:"EB Garamond,Georgia,serif"}}>Close</button>
       </div>
+    </div>
+  );
+}
+
+function LexiconPanel({ entry, lexWord, speaking, onClose, onSpeak, G, T }) {
+  if (!entry) return null;
+  return (
+    <div className="sd" style={{marginTop:12,background:"linear-gradient(145deg,rgba(168,154,207,0.1),rgba(168,154,207,0.03))",border:"1px solid rgba(168,154,207,0.25)",borderRadius:14,padding:"18px 20px",boxShadow:"0 8px 24px rgba(0,0,0,0.12)"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+        <span style={{fontFamily:"Cinzel,serif",fontSize:10,color:G.purple,letterSpacing:"0.12em",textTransform:"uppercase"}}>{entry.lang || ""} &#183; {entry.strongs || ""}</span>
+        <button onClick={onClose} style={{background:"transparent",border:"none",color:G.dim,cursor:"pointer",fontSize:15}}>&#215;</button>
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8,flexWrap:"wrap"}}>
+        <span style={{fontSize:21,color:G.cream,fontFamily:"EB Garamond,Georgia,serif"}}>{entry.word || lexWord}</span>
+        <span style={{fontSize:14,color:G.muted,fontStyle:"italic"}}>{entry.transliteration || ""}</span>
+        <button onClick={() => onSpeak(entry)} style={{background:speaking?"rgba(158,136,196,0.25)":"rgba(168,154,207,0.08)",border:"1px solid rgba(168,154,207,0.3)",borderRadius:20,padding:"3px 12px",cursor:"pointer",color:G.purple,fontSize:12,transition:"all .2s"}}>
+          {speaking ? "▶ playing..." : "▶ hear"}
+        </button>
+      </div>
+      <p style={{fontSize:15,color:G.text,lineHeight:1.75}}>{entry.definition || ""}</p>
     </div>
   );
 }
@@ -822,26 +850,17 @@ export default function AnchoredSteps() {
                         );
                       })}
                     </div>
-                    {lexWord && LEXICON[lexWord] && (() => {
-                      const entry = LEXICON[lexWord];
-                      if (!entry) return null;
-                      return (
-                      <div className="sd" style={{marginTop:12,background:"linear-gradient(145deg,rgba(168,154,207,0.1),rgba(168,154,207,0.03))",border:"1px solid rgba(168,154,207,0.25)",borderRadius:14,padding:"18px 20px",boxShadow:"0 8px 24px rgba(0,0,0,0.12)"}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                          <span style={{fontFamily:"Cinzel,serif",fontSize:10,color:G.purple,letterSpacing:"0.12em",textTransform:"uppercase"}}>{entry.lang || ""} &#183; {entry.strongs || ""}</span>
-                          <button onClick={() => setLexWord(null)} style={{background:"transparent",border:"none",color:G.dim,cursor:"pointer",fontSize:15}}>&#215;</button>
-                        </div>
-                        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8,flexWrap:"wrap"}}>
-                          <span style={{fontSize:21,color:T.cream,fontFamily:"EB Garamond,Georgia,serif"}}>{entry.word || lexWord}</span>
-                          <span style={{fontSize:14,color:T.muted,fontStyle:"italic"}}>{entry.transliteration || ""}</span>
-                          <button onClick={() => speak(entry)} style={{background:speaking?"rgba(158,136,196,0.25)":G.purpleF,border:"1px solid "+G.purpleB,borderRadius:20,padding:"3px 12px",cursor:"pointer",color:G.purple,fontSize:12,transition:"all .2s"}}>
-                            {speaking ? "▶ playing..." : "▶ hear"}
-                          </button>
-                        </div>
-                        <p style={{fontSize:15,color:T.text,lineHeight:1.75}}>{entry.definition || ""}</p>
-                      </div>
-                      );
-                    })()}
+                    {lexWord && LEXICON[lexWord] && (
+                      <LexiconPanel
+                        entry={LEXICON[lexWord]}
+                        lexWord={lexWord}
+                        speaking={speaking}
+                        onClose={()=>setLexWord(null)}
+                        onSpeak={speak}
+                        G={G}
+                        T={T}
+                      />
+                    )}
                   </div>
                   {crossRefs.length > 0 && (
                     <div style={{background:G.bgCard,border:"1px solid "+G.border,borderRadius:10,padding:"14px 18px",marginBottom:16}}>
@@ -1020,11 +1039,11 @@ export default function AnchoredSteps() {
                   }
                 </div>
               )}
-                </div>
-              </div>
             </div>
           </div>
         </div>
+      </div>
+    </div>
         )}
 
         {view === "contents" && (
@@ -1246,14 +1265,7 @@ export default function AnchoredSteps() {
       </main>
 
       {/* Year in Review Modal */}
-      {showYearReview && (() => {
-        const totalEntries = entries.length;
-        const weeksComplete = ALL_WEEKS.filter(w => entries.some(e => e.week === w.week && (e.field_value||"").trim())).length;
-        const versesMemorized = entries.filter(e => e.field_key.startsWith("mem_") && e.field_value === "1").length;
-        const prayersWritten = entries.filter(e => e.field_key === "prayer" && (e.field_value||"").trim()).length;
-        const totalDays = entries.filter(e => e.field_key.startsWith("day_")).length;
-        return <YearReview weeksComplete={weeksComplete} versesMemorized={versesMemorized} prayersWritten={prayersWritten} totalDays={totalDays} onClose={()=>setShowYearReview(false)} G={G} />;
-      })()}
+      {showYearReview && <YearReviewModal entries={entries} ALL_WEEKS={ALL_WEEKS} onClose={()=>setShowYearReview(false)} G={G} />}
 
 
       {/* Scripture Context Modal - Author, Location, Audience, Commentary */}
