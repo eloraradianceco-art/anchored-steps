@@ -1047,7 +1047,6 @@ export default function AnchoredSteps() {
               )}
             </div>
           </div>
-        </div>
         )}
 
         {view === "contents" && (
