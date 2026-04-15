@@ -1373,6 +1373,20 @@ export default function AnchoredSteps() {
                 Copy Text
               </button>
             </div>
+            <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"12px 14px",marginBottom:12}}>
+              <div style={{fontSize:10,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:8}}>Suggested Caption</div>
+              <p style={{fontSize:13,color:G.muted,lineHeight:1.7,margin:"0 0 10px",fontStyle:"italic"}}>
+                {"“" + shareVerse.text + "” — " + shareVerse.ref}
+                {week ? "\n\nThis week: " + week.title + "." : ""}
+                {"\n\nReading through Anchored Steps — 52 weeks of faith in action.\n\nanchored-steps.vercel.app"}
+              </p>
+              <button onClick={()=>{
+                const cap = "“" + shareVerse.text + "” — " + shareVerse.ref + (week ? "\n\nThis week: " + week.title + "." : "") + "\n\nReading through Anchored Steps — 52 weeks of faith in action.\n\nanchored-steps.vercel.app";
+                navigator.clipboard.writeText(cap).then(()=>alert("Caption copied! Paste it after sharing the image."));
+              }} style={{width:"100%",background:"transparent",border:"1px solid rgba(176,138,78,0.25)",color:G.gold,padding:"8px",borderRadius:8,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif",letterSpacing:"0.08em"}}>
+                Copy Caption
+              </button>
+            </div>
             <button onClick={()=>setShareVerse(null)} style={{width:"100%",background:"transparent",border:"none",color:G.muted,cursor:"pointer",fontSize:13,fontFamily:"EB Garamond,Georgia,serif"}}>Close</button>
           </div>
         </div>
