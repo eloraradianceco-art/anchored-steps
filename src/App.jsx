@@ -793,7 +793,10 @@ export default function AnchoredSteps() {
                                 <button onClick={() => setShareVerse(s)} style={{background:"transparent",border:"1px solid "+G.border,color:G.muted,padding:"2px 8px",borderRadius:12,cursor:"pointer",fontSize:11}}>&#8599;</button>
                               </div>
                             </div>
-                            ;
+                      </div>
+                      );
+
+                </div>
                   })}
                   {EXCERPTS[wk] && (
                     <div style={{background:"linear-gradient(145deg,rgba(176,138,78,0.09),rgba(176,138,78,0.02))",border:"1px solid rgba(176,138,78,0.2)",borderRadius:14,padding:"20px 22px",marginBottom:14}}>
@@ -801,7 +804,6 @@ export default function AnchoredSteps() {
                       <p style={{fontSize:16,color:T.text,lineHeight:1.8,fontStyle:"italic"}}>{EXCERPTS[wk]}</p>
                     </div>
                   )}
-                                  </div>
               )}
 
               {sec === "verseMap" && (
