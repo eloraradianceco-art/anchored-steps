@@ -794,26 +794,7 @@ export default function AnchoredSteps() {
                       <p style={{fontSize:16,color:T.text,lineHeight:1.8,fontStyle:"italic"}}>{EXCERPTS[wk]}</p>
                     </div>
                   )}
-                  {quizMode && quizVerse && (
-                    <div className="sd" style={{background:G.purpleF,border:"1px solid "+G.purpleB,borderRadius:12,padding:"18px 20px",marginBottom:10}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                        <span style={{fontSize:11,color:G.purple,fontFamily:"Cinzel,serif",letterSpacing:"0.1em",textTransform:"uppercase"}}>✦ Memorization Quiz</span>
-                        <button onClick={() => { setQuizMode(false); setQuizResult(null); }} style={{background:"transparent",border:"none",color:G.dim,cursor:"pointer",fontSize:16}}>&#215;</button>
-                      </div>
-                      <p style={{fontSize:13,color:T.muted,marginBottom:8,fontStyle:"italic"}}>{quizVerse.ref} &#8212; type the verse from memory:</p>
-                      <textarea rows={3} value={quizInput} onChange={e => { setQuizInput(e.target.value); setQuizResult(null); }} placeholder="Type what you remember..." style={{...INP,marginBottom:10,fontSize:15}} />
-                      {quizResult === null && <button onClick={checkQuiz} style={{background:G.purpleF,border:"1px solid "+G.purpleB,color:G.purple,padding:"8px 18px",borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:"Cinzel,serif"}}>Check Answer</button>}
-                      {quizResult === "pass" && <div style={{background:"rgba(120,184,120,0.1)",border:"1px solid "+G.greenB,borderRadius:8,padding:"12px 16px",color:G.green,fontSize:15}}>✓ Well done! Verse marked as memorized.</div>}
-                      {quizResult === "fail" && (
-                        <div>
-                          <div style={{background:G.redF,border:"1px solid "+G.redB,borderRadius:8,padding:"12px 16px",color:G.red,fontSize:14,marginBottom:8}}>Keep practicing. The verse reads:</div>
-                          <div style={{background:G.bgCard,border:"1px solid "+G.border,borderRadius:8,padding:"12px 16px",fontSize:15,color:T.cream,fontStyle:"italic",lineHeight:1.7}}>{quizVerse.text}</div>
-                          <button onClick={() => { setQuizInput(""); setQuizResult(null); }} style={{marginTop:10,background:"transparent",border:"1px solid "+G.purpleB,color:G.purple,padding:"7px 16px",borderRadius:8,cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif"}}>Try Again</button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                                  </div>
               )}
 
               {sec === "verseMap" && (
@@ -1262,6 +1243,37 @@ export default function AnchoredSteps() {
         const totalDays = entries.filter(e => e.field_key.startsWith("day_")).length;
         return <YearReview weeksComplete={weeksComplete} versesMemorized={versesMemorized} prayersWritten={prayersWritten} totalDays={totalDays} onClose={()=>setShowYearReview(false)} G={G} />;
       })()}
+
+
+      {/* Memorize Quiz Modal - renders over any section */}
+      {quizMode && quizVerse && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={()=>{setQuizMode(false);setQuizResult(null);}}>
+          <div style={{background:"linear-gradient(145deg,#0F1A24,#1A2A38)",border:"1px solid rgba(168,154,207,0.4)",borderRadius:20,padding:28,maxWidth:400,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.5)"}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:10,color:G.purple,fontFamily:"Cinzel,serif",letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:12}}>✦ Memorization Practice</div>
+            <p style={{fontSize:15,color:G.cream,fontStyle:"italic",lineHeight:1.8,marginBottom:6}}>{quizVerse.text}</p>
+            <p style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:18}}>{quizVerse.ref}</p>
+            {!quizResult ? (
+              <div>
+                <p style={{fontSize:13,color:G.muted,marginBottom:10}}>Type the verse from memory:</p>
+                <textarea rows={4} value={quizInput} onChange={e=>setQuizInput(e.target.value)}
+                  placeholder="Type the verse here..."
+                  style={{width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(168,154,207,0.25)",borderRadius:10,color:G.cream,fontSize:15,padding:"12px 14px",fontFamily:"EB Garamond,Georgia,serif",outline:"none",lineHeight:1.7,marginBottom:12}}
+                />
+                <button onClick={checkQuiz} style={{width:"100%",background:"rgba(168,154,207,0.15)",border:"1px solid rgba(168,154,207,0.35)",color:G.purple,padding:"12px",borderRadius:10,cursor:"pointer",fontSize:13,fontFamily:"Cinzel,serif",letterSpacing:"0.08em"}}>Check My Answer</button>
+              </div>
+            ) : (
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:28,marginBottom:10}}>{quizResult === "pass" ? "✓" : "✗"}</div>
+                <div style={{fontSize:16,color:quizResult==="pass"?G.green:G.red,fontFamily:"Cinzel,serif",marginBottom:8}}>
+                  {quizResult === "pass" ? "Well done!" : "Keep practicing"}
+                </div>
+                {quizResult === "pass" && <p style={{fontSize:13,color:G.muted,marginBottom:16}}>Verse marked as memorized.</p>}
+                <button onClick={()=>{setQuizMode(false);setQuizResult(null);}} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.1)",color:G.muted,padding:"10px 24px",borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:"Cinzel,serif"}}>Close</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Share Verse Modal */}
       {shareVerse && (
