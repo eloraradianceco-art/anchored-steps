@@ -366,10 +366,11 @@ export default function AnchoredSteps() {
   const [animK, setAnimK] = useState(0);
   const [lexWord, setLexWord] = useState(null);
   const [speaking, setSpeaking] = useState(false);
-  const [quizMode, setQuizMode] = useState(false);
-  const [quizInput, setQuizInput] = useState("");
-  const [quizResult, setQuizResult] = useState(null);
-  const [quizVerse, setQuizVerse] = useState(null);
+  const [quizVerse, setQuizVerse] = useState(null); // triggers memorize modal
+  const [memMode, setMemMode] = useState(null);      // null | 'recall' | 'blanks' | 'type'
+  const [memRevealed, setMemRevealed] = useState(false);
+  const [memTyped, setMemTyped] = useState('');
+  const [memScore, setMemScore] = useState(null);
   const [openAuthor, setOpenAuthor] = useState(null);
   const [communityInput, setCommunityInput] = useState("");
   const [communityDone, setCommunityDone] = useState(false);
@@ -578,19 +579,9 @@ export default function AnchoredSteps() {
     window.speechSynthesis.speak(utt);
   };
 
-  const startQuiz = s => { setQuizVerse(s); setQuizMode(true); setQuizInput(""); setQuizResult(null); };
+  const startQuiz = s => { setQuizVerse(s); setMemMode(null); setMemRevealed(false); setMemTyped(''); setMemScore(null); };
 
-  const checkQuiz = async () => {
-    if (!quizVerse) return;
-    const norm = s => s.toLowerCase().replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim();
-    const aw = norm(quizInput).split(" ");
-    const cw = norm(quizVerse.text).split(" ");
-    const result = aw.filter(w => cw.includes(w)).length / cw.length >= 0.75 ? "pass" : "fail";
-    setQuizResult(result);
-    if (result === "pass") {
-      await set("mem_" + quizVerse.ref, "1");
-    }
-  };
+  // checkQuiz replaced by inline memo scoring
 
   const daysComplete = n => entries.filter(e => e.week === n && e.field_key.startsWith("tr_") && (e.field_value||"").trim()).length;
   const weeksActive = ALL_WEEKS.filter(w => daysComplete(w.week) > 0).length;
@@ -1316,35 +1307,114 @@ export default function AnchoredSteps() {
         <ContextModal ae={openAuthor} onClose={()=>setOpenAuthor(null)} G={G} />
       )}
 
-      {/* Memorize Quiz Modal - renders over any section */}
-      {quizMode && quizVerse && (
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={()=>{setQuizMode(false);setQuizResult(null);}}>
-          <div style={{background:"linear-gradient(145deg,#0F1A24,#1A2A38)",border:"1px solid rgba(168,154,207,0.4)",borderRadius:20,padding:28,maxWidth:400,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.5)"}} onClick={e=>e.stopPropagation()}>
-            <div style={{fontSize:10,color:G.purple,fontFamily:"Cinzel,serif",letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:12}}>✦ Memorization Practice</div>
-            <p style={{fontSize:15,color:G.cream,fontStyle:"italic",lineHeight:1.8,marginBottom:6}}>{quizVerse.text}</p>
-            <p style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:18}}>{quizVerse.ref}</p>
-            {!quizResult ? (
-              <div>
-                <p style={{fontSize:13,color:G.muted,marginBottom:10}}>Type the verse from memory:</p>
-                <textarea rows={4} value={quizInput} onChange={e=>setQuizInput(e.target.value)}
-                  placeholder="Type the verse here..."
-                  style={{width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(168,154,207,0.25)",borderRadius:10,color:G.cream,fontSize:15,padding:"12px 14px",fontFamily:"EB Garamond,Georgia,serif",outline:"none",lineHeight:1.7,marginBottom:12}}
-                />
-                <button onClick={checkQuiz} style={{width:"100%",background:"rgba(168,154,207,0.15)",border:"1px solid rgba(168,154,207,0.35)",color:G.purple,padding:"12px",borderRadius:10,cursor:"pointer",fontSize:13,fontFamily:"Cinzel,serif",letterSpacing:"0.08em"}}>Check My Answer</button>
+      {/* Memorize Modal — 3 modes */}
+      {quizVerse && (()=>{
+        const isMemorized = entries.some(e=>e.field_key==='mem_'+quizVerse.ref&&e.field_value==='1')
+        const words = quizVerse.text.split(' ')
+        const blankedWords = words.map((w,i)=>(i+1)%3===0?'___':w)
+        const markMemorized = async()=>{await set('mem_'+quizVerse.ref,'1');setQuizVerse(null);}
+        const checkScore=()=>{
+          const norm=s=>s.toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim()
+          const tw=norm(memTyped).split(' ');const ow=norm(quizVerse.text).split(' ')
+          const pct=Math.round(tw.filter(w=>ow.includes(w)).length/ow.length*100)
+          setMemScore(pct)
+          if(pct>=70){set('mem_'+quizVerse.ref,'1')}
+        }
+        const closeModal=()=>{setQuizVerse(null);setMemMode(null);setMemRevealed(false);setMemTyped('');setMemScore(null);}
+        return (
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",zIndex:600,display:"flex",alignItems:"center",justifyContent:"center",padding:16,overflowY:"auto"}} onClick={()=>{if(!memMode)closeModal()}}>
+            <div onClick={e=>e.stopPropagation()} style={{background:`linear-gradient(145deg,${G.bg},rgba(13,26,42,1))`,border:`1px solid ${G.goldB}`,borderRadius:20,padding:24,maxWidth:420,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+                <div style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.16em",textTransform:"uppercase"}}>{memMode?"← ":""}✦ Memorize</div>
+                <button onClick={closeModal} style={{background:"transparent",border:"none",color:G.muted,cursor:"pointer",fontSize:20,lineHeight:1}}>×</button>
               </div>
-            ) : (
-              <div style={{textAlign:"center"}}>
-                <div style={{fontSize:28,marginBottom:10}}>{quizResult === "pass" ? "✓" : "✗"}</div>
-                <div style={{fontSize:16,color:quizResult==="pass"?G.green:G.red,fontFamily:"Cinzel,serif",marginBottom:8}}>
-                  {quizResult === "pass" ? "Well done!" : "Keep practicing"}
+              <div style={{fontSize:14,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.1em",marginBottom:16,paddingBottom:14,borderBottom:"1px solid rgba(176,138,78,0.2)",textAlign:"center"}}>
+                {quizVerse.ref}
+                {isMemorized&&<span style={{display:"block",fontSize:11,color:G.green,marginTop:4}}>✓ Memorized</span>}
+              </div>
+              {!memMode ? (
+                <div>
+                  <p style={{fontSize:14,color:G.muted,textAlign:"center",marginBottom:16,fontStyle:"italic",lineHeight:1.6}}>Choose your memorization method:</p>
+                  <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                    {[
+                      {id:"recall",icon:"🧠",title:"Read & Recall",desc:"See the reference, recite aloud, then reveal to check"},
+                      {id:"blanks",icon:"✏️",title:"Fill the Gaps",desc:"Read the verse with every 3rd word blanked out"},
+                      {id:"type",icon:"⌨️",title:"Write it Out",desc:"Type the verse from memory and get a score"},
+                    ].map(m=>(
+                      <button key={m.id} onClick={()=>{setMemMode(m.id);setMemRevealed(false);setMemTyped('');setMemScore(null);}} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",borderRadius:12,cursor:"pointer",textAlign:"left",background:G.goldF,border:`1px solid ${G.goldB}`,transition:"all .2s"}}>
+                        <span style={{fontSize:22,flexShrink:0}}>{m.icon}</span>
+                        <span>
+                          <span style={{display:"block",fontSize:13,color:G.cream,fontFamily:"Cinzel,serif",letterSpacing:"0.06em",marginBottom:2}}>{m.title}</span>
+                          <span style={{display:"block",fontSize:12,color:G.muted,fontStyle:"italic"}}>{m.desc}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                {quizResult === "pass" && <p style={{fontSize:13,color:G.muted,marginBottom:16}}>Verse marked as memorized.</p>}
-                <button onClick={()=>{setQuizMode(false);setQuizResult(null);}} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.1)",color:G.muted,padding:"10px 24px",borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:"Cinzel,serif"}}>Close</button>
-              </div>
-            )}
+              ) : memMode==='recall' ? (
+                <div>
+                  {!memRevealed ? (
+                    <div style={{textAlign:"center"}}>
+                      <p style={{fontSize:14,color:G.muted,fontStyle:"italic",marginBottom:20,lineHeight:1.7}}>Say the verse aloud from memory, then reveal to check yourself.</p>
+                      <button onClick={()=>setMemRevealed(true)} style={{background:G.goldF,border:`1px solid ${G.goldB}`,color:G.gold,padding:"12px 28px",borderRadius:50,cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif",letterSpacing:"0.08em"}}>Reveal Verse</button>
+                    </div>
+                  ) : (
+                    <div>
+                      <p style={{fontSize:17,color:G.cream,fontStyle:"italic",lineHeight:1.85,marginBottom:20,textAlign:"center"}}>"{quizVerse.text}"</p>
+                      <button onClick={markMemorized} style={{width:"100%",background:"rgba(124,146,132,0.15)",border:"1px solid rgba(124,146,132,0.4)",color:G.green,padding:"13px",borderRadius:12,cursor:"pointer",fontSize:13,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",marginBottom:10}}>✓ I've Got It — Mark Memorized</button>
+                      <button onClick={()=>setMemRevealed(false)} style={{width:"100%",background:"transparent",border:"none",color:G.muted,cursor:"pointer",fontSize:13,fontFamily:"EB Garamond,Georgia,serif"}}>Try Again</button>
+                    </div>
+                  )}
+                </div>
+              ) : memMode==='blanks' ? (
+                <div>
+                  <p style={{fontSize:14,color:G.muted,fontStyle:"italic",marginBottom:14,lineHeight:1.6,textAlign:"center"}}>Read aloud, filling in the blanked words from memory.</p>
+                  <div style={{background:"rgba(255,255,255,0.04)",border:`1px solid ${G.border}`,borderRadius:12,padding:"16px",marginBottom:16}}>
+                    <p style={{fontSize:17,color:G.cream,fontStyle:"italic",lineHeight:2.1,margin:0}}>
+                      {blankedWords.map((w,i)=>(
+                        <span key={i} style={{color:w==='___'?G.gold:G.cream,borderBottom:w==='___'?`1px solid ${G.gold}`:undefined,padding:w==='___'?"0 4px":undefined,letterSpacing:w==='___'?"0.1em":undefined}}>{w}{i<blankedWords.length-1?" ":""}</span>
+                      ))}
+                    </p>
+                  </div>
+                  {!memRevealed ? (
+                    <button onClick={()=>setMemRevealed(true)} style={{width:"100%",background:G.goldF,border:`1px solid ${G.goldB}`,color:G.gold,padding:"12px",borderRadius:12,cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",marginBottom:10}}>Reveal Missing Words</button>
+                  ) : (
+                    <div style={{background:"rgba(124,146,132,0.08)",border:"1px solid rgba(124,146,132,0.25)",borderRadius:10,padding:"12px 14px",marginBottom:12}}>
+                      <p style={{fontSize:14,color:G.text,fontStyle:"italic",lineHeight:1.8,margin:0}}>
+                        {words.map((w,i)=>(
+                          <span key={i} style={{color:(i+1)%3===0?G.green:G.text,fontWeight:(i+1)%3===0?600:400}}>{w}{i<words.length-1?" ":""}</span>
+                        ))}
+                      </p>
+                    </div>
+                  )}
+                  <button onClick={markMemorized} style={{width:"100%",background:"rgba(124,146,132,0.15)",border:"1px solid rgba(124,146,132,0.4)",color:G.green,padding:"12px",borderRadius:12,cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif",letterSpacing:"0.08em"}}>✓ Mark as Memorized</button>
+                </div>
+              ) : (
+                <div>
+                  <p style={{fontSize:14,color:G.muted,fontStyle:"italic",marginBottom:12,lineHeight:1.6,textAlign:"center"}}>Type the verse from memory, then check your score.</p>
+                  {memScore===null ? (
+                    <div>
+                      <textarea rows={5} value={memTyped} onChange={e=>setMemTyped(e.target.value)} placeholder="Type the verse here from memory..." style={{width:"100%",background:"rgba(255,255,255,0.04)",border:`1px solid ${G.border}`,borderRadius:10,color:G.cream,fontSize:15,padding:"12px",fontFamily:"EB Garamond,Georgia,serif",outline:"none",resize:"none",boxSizing:"border-box",marginBottom:10,lineHeight:1.7}}/>
+                      <button onClick={checkScore} disabled={!memTyped.trim()} style={{width:"100%",background:G.goldF,border:`1px solid ${G.goldB}`,color:G.gold,padding:"12px",borderRadius:12,cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",opacity:memTyped.trim()?1:0.4}}>Check My Score</button>
+                    </div>
+                  ) : (
+                    <div style={{textAlign:"center"}}>
+                      <div style={{fontSize:48,fontWeight:700,color:memScore>=80?G.green:memScore>=50?G.gold:G.red,fontFamily:"Cinzel,serif",marginBottom:4}}>{memScore}%</div>
+                      <div style={{fontSize:13,color:G.muted,marginBottom:16}}>{memScore>=90?"Nearly perfect — keep going!":memScore>=70?"Great progress — almost there!":memScore>=50?"Good start — practice more!":"Keep at it — repetition builds memory!"}</div>
+                      <div style={{background:"rgba(255,255,255,0.04)",border:`1px solid ${G.border}`,borderRadius:10,padding:"12px",marginBottom:14,textAlign:"left"}}>
+                        <div style={{fontSize:10,color:G.muted,letterSpacing:"0.1em",textTransform:"uppercase",fontFamily:"Cinzel,serif",marginBottom:6}}>Full verse</div>
+                        <p style={{fontSize:14,color:G.text,fontStyle:"italic",lineHeight:1.8,margin:0}}>"{quizVerse.text}"</p>
+                      </div>
+                      {memScore>=70&&<button onClick={markMemorized} style={{width:"100%",background:"rgba(124,146,132,0.15)",border:"1px solid rgba(124,146,132,0.4)",color:G.green,padding:"12px",borderRadius:12,cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",marginBottom:10}}>✓ Mark as Memorized</button>}
+                      <button onClick={()=>{setMemTyped('');setMemScore(null);}} style={{width:"100%",background:"transparent",border:"none",color:G.muted,cursor:"pointer",fontSize:13,fontFamily:"EB Garamond,Georgia,serif"}}>Try Again</button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Share Card Modal */}
       {shareVerse && (()=>{
