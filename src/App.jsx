@@ -385,6 +385,9 @@ export default function AnchoredSteps() {
   });
   // Share
   const [shareVerse, setShareVerse] = useState(null);
+  const [shareCardType, setShareCardType] = useState('scripture')
+  const [shareCardLight, setShareCardLight] = useState(false)
+  const [sharingCard, setSharingCard] = useState(false)
   // Year review
   const [showYearReview, setShowYearReview] = useState(false);
 
@@ -633,43 +636,39 @@ export default function AnchoredSteps() {
   };
 
   const handleShareImage = async () => {
-    if (!shareCardRef.current || !shareVerse) return;
+    if (!shareCardRef.current || !shareVerse) return
+    setSharingCard(true)
     try {
-      const dataUrl = await toPng(shareCardRef.current, {
-        cacheBust: true,
-        pixelRatio: 2,
-        backgroundColor: "#0F1A24",
-      });
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
-      const file = new File([blob], "anchored-steps-verse.png", { type: "image/png" });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        const weekTitle = week ? week.title : "";
-          const caption = [
-            "“" + shareVerse.text + "”",
-            "— " + shareVerse.ref,
-            "",
-            weekTitle ? "This week: " + weekTitle + "." : "",
-            "Reading through Anchored Steps — 52 weeks of faith, Scripture, and intentional time with God.",
-            "",
-            "anchored-steps.vercel.app",
-          ].filter(Boolean).join("\n");
-          await navigator.share({
-            files: [file],
-            title: "Anchored Steps",
-            text: caption,
-          });
+      const bg = shareCardLight ? '#F5F1E8' : '#0F1A24'
+      const dataUrl = await toPng(shareCardRef.current, { cacheBust: true, pixelRatio: 2, backgroundColor: bg })
+      const res = await fetch(dataUrl)
+      const blob = await res.blob()
+      const file = new File([blob], 'anchored-steps-card.png', { type: 'image/png' })
+      const body = shareCardType === 'prayer' ? (week?.prayerPrompt || '')
+                 : shareCardType === 'confession' ? (week?.dailyConfession || '')
+                 : shareCardType === 'reflection' ? (week?.reflectionPrompts?.[0] || '')
+                 : shareVerse.text
+      const ref = shareCardType === 'scripture' ? shareVerse.ref : null
+      const caption = [
+        '“' + body + '”',
+        ref ? '— ' + ref : '',
+        '',
+        week ? 'Week ' + wk + ': ' + week.title : '',
+        '',
+        'Anchored Steps — 52 weeks of faith in action.',
+        '',
+        'anchored-steps.vercel.app',
+      ].filter(l => l !== undefined).join('\n').replace(/\n{3,}/g, '\n\n').trim()
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Anchored Steps', text: caption })
       } else {
-        const a = document.createElement("a");
-        a.href = dataUrl;
-        a.download = "anchored-steps-verse.png";
-        a.click();
+        const a = document.createElement('a')
+        a.href = dataUrl; a.download = 'anchored-steps-card.png'; a.click()
       }
     } catch(err) {
-      console.error("Image share failed:", err);
-      const text = shareVerse.text + " — " + shareVerse.ref + " | Anchored Steps - anchored-steps.vercel.app";
-      navigator.clipboard.writeText(text).then(() => alert("Copied to clipboard!"));
+      console.error('Share failed:', err)
     }
+    setSharingCard(false)
   };
 
   const exportPDF = () => {
@@ -1347,50 +1346,98 @@ export default function AnchoredSteps() {
         </div>
       )}
 
-      {/* Share Verse Modal */}
-      {shareVerse && (
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={()=>setShareVerse(null)}>
-          <div style={{background:"linear-gradient(145deg,#0F1A24,#1A2A38)",border:"1px solid rgba(176,138,78,0.4)",borderRadius:20,padding:28,maxWidth:380,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.5)"}} onClick={e=>e.stopPropagation()}>
-            <div style={{textAlign:"center",marginBottom:16}}>
-              <img src="/icon.png" alt="" style={{width:36,height:36,borderRadius:8,marginBottom:8}}/>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:G.gold,letterSpacing:"0.14em",textTransform:"uppercase"}}>Share This Verse</div>
+      {/* Share Card Modal */}
+      {shareVerse && (()=>{
+        const AS1_TYPES = [
+          {id:'scripture', icon:'📖', label:'Scripture',  show: !!(week?.scriptures?.[0])},
+          {id:'prayer',    icon:'🙏', label:'Prayer',     show: !!(week?.prayerPrompt)},
+          {id:'confession',icon:'✦',  label:'Confession', show: !!(week?.dailyConfession)},
+          {id:'reflection',icon:'💭', label:'Reflection', show: !!(week?.reflectionPrompts?.[0])},
+        ].filter(t=>t.show)
+        const content = shareCardType==='prayer'
+          ? {label:'Prayer Prompt',   body: week?.prayerPrompt||'',          ref:null}
+          : shareCardType==='confession'
+          ? {label:'Daily Confession',body: week?.dailyConfession||'',        ref:null}
+          : shareCardType==='reflection'
+          ? {label:'Reflection',      body: week?.reflectionPrompts?.[0]||'', ref:null}
+          : {label:'Key Passage',     body: shareVerse.text,                  ref: shareVerse.ref}
+        const caption = [
+          '“'+content.body+'”',
+          content.ref ? '— '+content.ref : '',
+          '',
+          week ? 'Week '+wk+': '+week.title : '',
+          '',
+          'Anchored Steps — 52 weeks of faith in action.',
+          '',
+          'anchored-steps.vercel.app',
+        ].filter(l=>l!==undefined).join('\n').replace(/\n{3,}/g,'\n\n').trim()
+        const cBg     = shareCardLight ? 'linear-gradient(155deg,#F5F1E8 0%,#EDE8DC 100%)' : 'linear-gradient(155deg,#0F1A24 0%,#1A2A38 100%)'
+        const cBorder = shareCardLight ? 'rgba(0,0,0,0.1)'        : 'rgba(176,138,78,0.25)'
+        const cText   = shareCardLight ? '#1C150A'                 : '#F5F1E8'
+        const cGold   = shareCardLight ? '#7A5C28'                 : '#B08A4E'
+        const cMuted  = shareCardLight ? '#7A6248'                 : '#A8B3BC'
+        const cLabel  = shareCardLight ? 'rgba(0,0,0,0.4)'        : 'rgba(176,138,78,0.6)'
+        return (
+          <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.82)',zIndex:500,display:'flex',alignItems:'flex-start',justifyContent:'center',overflowY:'auto',padding:'16px 16px 48px'}} onClick={()=>setShareVerse(null)}>
+            <div style={{background:'linear-gradient(145deg,#0F1A24,#1A2A38)',border:'1px solid rgba(176,138,78,0.22)',borderRadius:20,padding:22,width:'100%',maxWidth:420,marginTop:24,boxShadow:'0 20px 60px rgba(0,0,0,0.65)'}} onClick={e=>e.stopPropagation()}>
+
+              {/* Header */}
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+                <div style={{fontSize:10,color:G.gold,fontFamily:'Cinzel,serif',letterSpacing:'0.18em',textTransform:'uppercase'}}>✦ Share Card</div>
+                <button onClick={()=>setShareVerse(null)} style={{background:'transparent',border:'none',color:G.muted,cursor:'pointer',fontSize:20,lineHeight:1,padding:0}}>×</button>
+              </div>
+
+              {/* Card type tabs */}
+              <div style={{display:'flex',gap:5,marginBottom:14,flexWrap:'wrap'}}>
+                {AS1_TYPES.map(t=>(
+                  <button key={t.id} onClick={()=>setShareCardType(t.id)} style={{flex:'1 1 auto',padding:'7px 5px',borderRadius:9,cursor:'pointer',fontSize:11,fontFamily:'Cinzel,serif',letterSpacing:'0.04em',background:shareCardType===t.id?'rgba(176,138,78,0.18)':'rgba(255,255,255,0.04)',border:'1px solid '+(shareCardType===t.id?'rgba(176,138,78,0.45)':'rgba(255,255,255,0.07)'),color:shareCardType===t.id?G.gold:G.muted,transition:'all .2s'}}>
+                    {t.icon} {t.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Light/dark toggle */}
+              <div style={{display:'flex',justifyContent:'flex-end',marginBottom:12}}>
+                <button onClick={()=>setShareCardLight(!shareCardLight)} style={{background:shareCardLight?'rgba(255,255,255,0.1)':'rgba(176,138,78,0.08)',border:'1px solid '+(shareCardLight?'rgba(255,255,255,0.2)':'rgba(176,138,78,0.22)'),color:shareCardLight?'#F5F1E8':G.gold,padding:'5px 13px',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:'Cinzel,serif',letterSpacing:'0.06em'}}>
+                  {shareCardLight?'☀ Light':'🌙 Dark'}
+                </button>
+              </div>
+
+              {/* Card rendered to image */}
+              <div ref={shareCardRef} style={{background:cBg,border:'1px solid '+cBorder,borderRadius:18,padding:'26px 24px',marginBottom:18,textAlign:'center',fontFamily:'EB Garamond,Georgia,serif'}}>
+                <img src="/icon.png" alt="" style={{width:36,height:36,borderRadius:8,marginBottom:9}}/>
+                <div style={{fontSize:9,color:cGold,fontFamily:'Cinzel,serif',letterSpacing:'0.2em',textTransform:'uppercase',marginBottom:4}}>Anchored Steps</div>
+                <div style={{fontSize:9,color:cLabel,fontFamily:'Cinzel,serif',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:14,paddingBottom:14,borderBottom:'1px solid '+cBorder}}>Week {wk} &nbsp;·&nbsp; {week?.title}</div>
+                <div style={{fontSize:9,color:cGold,fontFamily:'Cinzel,serif',letterSpacing:'0.16em',textTransform:'uppercase',marginBottom:11}}>{AS1_TYPES.find(t=>t.id===shareCardType)?.label}</div>
+                <p style={{fontSize:17,color:cText,fontStyle:'italic',lineHeight:1.9,margin:'0 0 12px',letterSpacing:'0.01em'}}>
+                  {shareCardType==='scripture'?'“'+content.body+'”':content.body}
+                </p>
+                {content.ref && <p style={{fontSize:10,color:cGold,fontFamily:'Cinzel,serif',letterSpacing:'0.12em',textTransform:'uppercase',margin:'0 0 12px'}}>{content.ref}</p>}
+                <p style={{fontSize:9,color:cMuted,margin:0,letterSpacing:'0.05em'}}>Walk steadily. Stay anchored. &mdash; eloraradiance.com</p>
+              </div>
+
+              {/* Buttons */}
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
+                <button onClick={handleShareImage} disabled={sharingCard} style={{background:'linear-gradient(135deg,rgba(176,138,78,0.3),rgba(176,138,78,0.12))',border:'1px solid rgba(176,138,78,0.45)',color:G.gold,padding:'12px',borderRadius:10,cursor:'pointer',fontSize:12,fontFamily:'Cinzel,serif',letterSpacing:'0.08em',opacity:sharingCard?.6:1}}>
+                  {sharingCard?'Saving...':'Share Image ↗'}
+                </button>
+                <button onClick={()=>navigator.clipboard?.writeText(content.body).then(()=>alert('Copied!'))} style={{background:'transparent',border:'1px solid rgba(255,255,255,0.08)',color:G.muted,padding:'12px',borderRadius:10,cursor:'pointer',fontSize:12,fontFamily:'Cinzel,serif',letterSpacing:'0.08em'}}>
+                  Copy Text
+                </button>
+              </div>
+
+              {/* Caption */}
+              <div style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:10,padding:'12px 14px',marginBottom:10}}>
+                <div style={{fontSize:9,color:G.gold,fontFamily:'Cinzel,serif',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:8}}>Suggested Caption</div>
+                <p style={{fontSize:12,color:G.muted,lineHeight:1.7,margin:'0 0 8px',whiteSpace:'pre-line'}}>{caption}</p>
+                <button onClick={()=>navigator.clipboard?.writeText(caption).then(()=>alert('Caption copied!'))} style={{width:'100%',background:'transparent',border:'1px solid rgba(176,138,78,0.22)',color:G.gold,padding:'7px',borderRadius:7,cursor:'pointer',fontSize:10,fontFamily:'Cinzel,serif',letterSpacing:'0.1em'}}>Copy Caption</button>
+              </div>
+
+              <button onClick={()=>setShareVerse(null)} style={{width:'100%',background:'transparent',border:'none',color:G.dim,cursor:'pointer',fontSize:13,fontFamily:'EB Garamond,Georgia,serif',paddingTop:4}}>Close</button>
             </div>
-            <div ref={shareCardRef} style={{background:"linear-gradient(155deg,#0F1A24 0%,#1A2A38 100%)",border:"1px solid rgba(176,138,78,0.25)",borderRadius:18,padding:24,marginBottom:20,textAlign:"center"}}>
-              <img src="/icon.png" alt="" style={{width:42,height:42,borderRadius:10,marginBottom:10}}/>
-              <div style={{fontFamily:"Cinzel,serif",fontSize:10,color:"#B08A4E",letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:12}}>Anchored Steps</div>
-              <p style={{fontSize:18,color:"#F5F1E8",fontStyle:"italic",lineHeight:1.85,marginBottom:12,fontFamily:"EB Garamond,Georgia,serif"}}>&#8220;{shareVerse.text}&#8221;</p>
-              <p style={{fontSize:11,color:"#B08A4E",fontFamily:"Cinzel,serif",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:8}}>{shareVerse.ref}</p>
-              <p style={{fontSize:10,color:"#7e92a2",marginBottom:0}}>Walk steadily. Stay anchored. &mdash; eloraradiance.com</p>
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
-              <button onClick={handleShareImage} style={{background:"linear-gradient(135deg,rgba(176,138,78,0.3),rgba(176,138,78,0.12))",border:"1px solid rgba(176,138,78,0.45)",color:G.gold,padding:"12px",borderRadius:10,cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif",letterSpacing:"0.08em"}}>
-                Share Image &#8599;
-              </button>
-              <button onClick={()=>{
-                const text = shareVerse.text + " - " + shareVerse.ref + " | Anchored Steps";
-                navigator.clipboard.writeText(text).then(()=>alert("Copied!"));
-              }} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.1)",color:G.muted,padding:"12px",borderRadius:10,cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif",letterSpacing:"0.08em"}}>
-                Copy Text
-              </button>
-            </div>
-            <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"12px 14px",marginBottom:12}}>
-              <div style={{fontSize:10,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:8}}>Suggested Caption</div>
-              <p style={{fontSize:13,color:G.muted,lineHeight:1.7,margin:"0 0 10px",fontStyle:"italic"}}>
-                {"“" + shareVerse.text + "” — " + shareVerse.ref}
-                {week ? "\n\nThis week: " + week.title + "." : ""}
-                {"\n\nReading through Anchored Steps — 52 weeks of faith in action.\n\nanchored-steps.vercel.app"}
-              </p>
-              <button onClick={()=>{
-                const cap = "“" + shareVerse.text + "” — " + shareVerse.ref + (week ? "\n\nThis week: " + week.title + "." : "") + "\n\nReading through Anchored Steps — 52 weeks of faith in action.\n\nanchored-steps.vercel.app";
-                navigator.clipboard.writeText(cap).then(()=>alert("Caption copied! Paste it after sharing the image."));
-              }} style={{width:"100%",background:"transparent",border:"1px solid rgba(176,138,78,0.25)",color:G.gold,padding:"8px",borderRadius:8,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif",letterSpacing:"0.08em"}}>
-                Copy Caption
-              </button>
-            </div>
-            <button onClick={()=>setShareVerse(null)} style={{width:"100%",background:"transparent",border:"none",color:G.muted,cursor:"pointer",fontSize:13,fontFamily:"EB Garamond,Georgia,serif"}}>Close</button>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Next Step floating button */}
       {view === "journal" && week && sec !== "weekEnd" && (
