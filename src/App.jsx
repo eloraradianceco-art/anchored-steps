@@ -359,7 +359,8 @@ export default function AnchoredSteps() {
   const shareCardRef = useRef(null);
   const [subExpired, setSubExpired] = useState(false);
   const [view, setView] = useState("journal");
-  const [wk, setWk] = useState(1);
+  const [wk, setWk] = useState(() => parseInt(localStorage.getItem('as1_current_week') || '1'));
+  const [showWeekJump, setShowWeekJump] = useState(false);
   const [sec, setSec] = useState("scripture");
   const [day, setDay] = useState(-1);
   const [flash, setFlash] = useState(false);
@@ -555,6 +556,7 @@ export default function AnchoredSteps() {
 
   const goWk = async (n) => {
     setWk(n); setSec("scripture"); setDay(-1);
+    localStorage.setItem('as1_current_week', String(n));
     setAnimK(a => a+1); setLexWord(null);
     setQuizMode(false); setQuizResult(null); setQuizInput("");
     if (session) {
@@ -820,7 +822,24 @@ export default function AnchoredSteps() {
               <button onClick={() => goWk(Math.max(1,wk-1))} disabled={wk===1} style={{background:G.goldF,border:"1px solid "+G.goldB,color:G.gold,width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:15,flexShrink:0,opacity:wk===1?.3:1}}>&#8249;</button>
               <div style={{flex:1,textAlign:"center"}}>
                 <div style={{fontSize:10,color:G.gold,letterSpacing:"0.16em",textTransform:"uppercase",fontFamily:"Cinzel,serif",marginBottom:1}}>Week {wk} of 52</div>
-                <h1 style={{fontSize:23,fontWeight:600,color:T.cream,fontFamily:"Cinzel,serif"}}>{week.title}</h1>
+                <button onClick={()=>setShowWeekJump(v=>!v)} style={{background:"transparent",border:"none",cursor:"pointer",padding:0,touchAction:"manipulation"}}>
+                <h1 style={{fontSize:23,fontWeight:600,color:T.cream,fontFamily:"Cinzel,serif"}}>{week.title} <span style={{fontSize:13,color:G.muted}}>{showWeekJump?"▲":"▼"}</span></h1>
+              </button>
+              {showWeekJump && (
+                <div onClick={()=>setShowWeekJump(false)} style={{position:"fixed",inset:0,zIndex:800}}>
+                  <div onClick={e=>e.stopPropagation()} style={{position:"fixed",top:150,left:10,right:10,background:G.bg,border:"1px solid "+G.border,borderRadius:16,padding:14,maxHeight:300,overflowY:"auto",display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:5,zIndex:900,boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>
+                    {ALL_WEEKS.map(w=>{
+                      const isCur=w.week===wk
+                      return (
+                        <button key={w.week} onClick={()=>{goWk(w.week);setShowWeekJump(false)}} style={{background:isCur?"linear-gradient(145deg,rgba(176,138,78,0.18),rgba(176,138,78,0.07))":"transparent",border:"1px solid "+(isCur?"rgba(176,138,78,0.4)":G.border),color:isCur?G.gold:G.muted,borderRadius:8,padding:"8px 4px",cursor:"pointer",fontSize:9,fontFamily:"Cinzel,serif",textAlign:"center",lineHeight:1.3,touchAction:"manipulation"}}>
+                          <div style={{fontSize:10,fontWeight:600,marginBottom:1}}>{w.week}</div>
+                          <div style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:8}}>{w.title.split(" ")[0]}</div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
                 <p style={{fontSize:13,color:T.muted,fontStyle:"italic",marginTop:1}}>{week.subtitle}</p>
               </div>
               <button onClick={() => goWk(Math.min(52,wk+1))} disabled={wk===52} style={{background:G.goldF,border:"1px solid "+G.goldB,color:G.gold,width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:15,flexShrink:0,opacity:wk===52?.3:1}}>&#8250;</button>
@@ -1270,6 +1289,9 @@ export default function AnchoredSteps() {
               <div style={{fontSize:13,color:T.muted,marginBottom:16}}>{profile?.email}</div>
               <div style={{fontSize:14,color:T.text,marginBottom:4}}>Plan</div>
               <div style={{fontSize:13,color:G.gold,fontFamily:"Cinzel,serif",marginBottom:20}}>{profile?.plan === "annual" ? "Full Year Access" : "Monthly"}</div>
+              <button onClick={()=>{
+                if(window.confirm("Reset to Week 1? This won't delete your journal entries.")){goWk(1);}
+              }} style={{width:"100%",background:"transparent",border:"1px solid rgba(176,138,78,0.25)",color:G.gold,padding:"11px",borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:"Cinzel,serif",letterSpacing:"0.06em",marginBottom:8}}>↺ Reset to Week 1</button>
               <button onClick={signOut} style={{width:"100%",background:"transparent",border:"1px solid "+T.border,color:T.muted,padding:"11px",borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:"EB Garamond,Georgia,serif"}}>Sign Out</button>
             </div>
           </div>
