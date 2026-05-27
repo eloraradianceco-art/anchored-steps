@@ -176,177 +176,102 @@ function ContextModal({ ae, onClose, G }) {
   );
 }
 
+// Auth is now in ./components/Auth_AS1.jsx — but keep inline version for single-file deploy
+// This updated AuthScreen matches AA's design pattern
 function AuthScreen({onAuth}) {
-  const [screen, setScreen] = useState("login"); // login | signup | code
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [code, setCode] = useState("");
-  const [stayIn, setStayIn] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [msg, setMsg] = useState("");
+  const [mode, setMode] = useState("signin")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [code, setCode] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [msg, setMsg] = useState("")
+  const [resetSent, setResetSent] = useState(false)
 
-  const wrap = style => ({
-    minHeight:"100vh",
-    background:"linear-gradient(155deg,#0F1A24 0%,#1A2A38 55%,#0F1A24 100%)",
-    display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-    padding:"24px",fontFamily:"EB Garamond,Georgia,serif",color:G.text,
-    ...style
-  });
+  const handleSignIn = async () => {
+    setError(""); setLoading(true)
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setLoading(false)
+    if (error) { setError(error.message === "Invalid login credentials" ? "Incorrect email or password." : error.message) }
+    else { onAuth(false) }
+  }
 
-  const card = {
-    background:"rgba(255,255,255,0.04)",border:"1px solid "+G.goldB,
-    borderRadius:16,padding:"32px",width:"100%",maxWidth:400,
-  };
+  const handleSignUp = async () => {
+    if (!code.trim()) { setError("Please enter your access code."); return }
+    setError(""); setLoading(true)
+    const { data: codeRows, error: codeErr } = await supabase.rpc("validate_access_code", { input_code: code.trim() })
+    if (codeErr || !codeRows?.length) { setError("Invalid or already used access code."); setLoading(false); return }
+    const codeData = codeRows[0]
+    const { data: authData, error: authErr } = await supabase.auth.signUp({ email, password })
+    if (authErr) { setError(authErr.message); setLoading(false); return }
+    if (!authData.session) { setMsg("Check your email to confirm your account, then sign in."); setLoading(false); return }
+    await supabase.from("access_codes").update({ used:true, used_by:authData.user.id, used_at:new Date().toISOString() }).eq("id", codeData.code_id)
+    await supabase.from("profiles").update({ plan:codeData.plan_type }).eq("id", authData.user.id)
+    onAuth(true); setLoading(false)
+  }
 
-  const handleLogin = async () => {
-    setLoading(true); setError("");
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) { setError(error.message); setLoading(false); }
-    else { onAuth(); }
-  };
+  const handleForgot = async () => {
+    if (!email) { setError("Enter your email first."); return }
+    setLoading(true)
+    await supabase.auth.resetPasswordForEmail(email, { redirectTo:"https://anchored-steps.vercel.app" })
+    setResetSent(true); setLoading(false)
+  }
 
-  const handleSignup = async () => {
-    if (!code.trim()) { setError("Please enter your access code first."); return; }
-    setLoading(true); setError("");
-
-    // Validate code using security definer function (bypasses RLS)
-    const { data: codeRows, error: codeErr } = await supabase
-      .rpc("validate_access_code", { input_code: code.trim() });
-
-    if (codeErr || !codeRows || codeRows.length === 0) {
-      setError("Invalid or already used access code.");
-      setLoading(false); return;
-    }
-    const codeData = codeRows[0];
-
-    // Create account
-    const { data: authData, error: authErr } = await supabase.auth.signUp({ email, password });
-    if (authErr) { setError(authErr.message); setLoading(false); return; }
-
-    // Handle email confirmation required
-    if (!authData.user) {
-      setMsg("Check your email to confirm your account, then sign in.");
-      setLoading(false);
-      return;
-    }
-
-    // Mark code as used
-    await supabase.from("access_codes").update({
-      used: true,
-      used_by: authData.user?.id,
-      used_at: new Date().toISOString(),
-    }).eq("id", codeData.code_id);
-
-    // Update profile with correct plan
-    await supabase.from("profiles").update({ plan: codeData.plan_type })
-      .eq("id", authData.user?.id);
-
-    setMsg("Account created! Logging you in...");
-    setTimeout(() => onAuth(), 1500);
-  };
-
-  const handleReset = async () => {
-    if (!email) { setError("Enter your email first."); return; }
-    setLoading(true);
-    await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://anchored-steps.vercel.app/reset-password",
-    });
-    setMsg("Check your email for a reset link.");
-    setLoading(false);
-  };
-
-  if (screen === "login") return (
-    <div style={wrap()}>
-      <div style={{fontSize:36,color:G.gold,marginBottom:12}}><img src="/icon.png" alt="⚓" style={{width:56,height:56,borderRadius:12,boxShadow:"0 4px 16px rgba(0,0,0,0.25)"}}/></div>
-      <div style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:600,color:G.cream,marginBottom:4}}>Anchored Steps</div>
-      <div style={{fontSize:12,color:G.muted,letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:28}}>52 Weeks of Faith in Action</div>
-      <div style={card}>
-        <div style={{fontFamily:"Cinzel,serif",fontSize:14,color:G.cream,marginBottom:20,textAlign:"center",letterSpacing:"0.06em"}}>Sign In</div>
-        {error && <p style={{fontSize:12,color:G.red,marginBottom:12,textAlign:"center"}}>{error}</p>}
-        {msg && <p style={{fontSize:12,color:G.green,marginBottom:12,textAlign:"center"}}>{msg}</p>}
-        <label style={LBL_STYLE}>Email</label>
-        <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="your@email.com" type="email" style={INP_STYLE} />
-        <label style={LBL_STYLE}>Password</label>
-        <input value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" type="password" style={INP_STYLE} onKeyDown={e=>e.key==="Enter"&&handleLogin()} />
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-          <input type="checkbox" id="stay" checked={stayIn} onChange={e=>setStayIn(e.target.checked)} />
-          <label htmlFor="stay" style={{fontSize:13,color:G.muted,cursor:"pointer"}}>Stay signed in</label>
-        </div>
-        <button onClick={handleLogin} disabled={loading} style={{width:"100%",background:"linear-gradient(135deg,rgba(180,140,60,0.3),rgba(180,140,60,0.15))",border:"1px solid "+G.goldB,color:G.gold,padding:"12px",borderRadius:8,cursor:"pointer",fontSize:14,fontFamily:"Cinzel,serif",letterSpacing:"0.1em",marginBottom:12}}>
-          {loading ? "Signing in..." : "Sign In"}
-        </button>
-        <div style={{textAlign:"center",fontSize:13,color:G.muted,marginBottom:12}}>
-          <span onClick={handleReset} style={{color:G.gold,cursor:"pointer",textDecoration:"none"}}>Forgot password?</span>
-        </div>
-        <button onClick={()=>{setScreen("signup");setError("");}} style={{width:"100%",background:"transparent",border:"1px solid rgba(176,138,78,0.25)",color:G.text,padding:"11px",borderRadius:8,cursor:"pointer",fontSize:14,fontFamily:"EB Garamond,Georgia,serif",marginBottom:10,transition:"all .2s"}}>
-          Create Account
-        </button>
-        <button onClick={()=>setScreen("plans")} style={{width:"100%",background:"transparent",border:"1px solid rgba(255,255,255,0.06)",color:G.muted,padding:"11px",borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:"EB Garamond,Georgia,serif",transition:"all .2s"}}>
-          View Plans &#8594;
-        </button>
-      </div>
-    </div>
-  );
-
-  if (screen === "plans") return (
-    <div style={wrap()}>
-      <img src="/icon.png" alt="Anchored Steps" style={{width:56,height:56,marginBottom:12,borderRadius:12,boxShadow:"0 4px 16px rgba(0,0,0,0.2)"}}/>
-      <div style={{fontFamily:"Cinzel,serif",fontSize:20,fontWeight:600,color:G.cream,marginBottom:4}}>Choose Your Plan</div>
-      <div style={{fontSize:13,color:G.muted,fontStyle:"italic",marginBottom:28,textAlign:"center"}}>Subscribe to receive your access code instantly by email.</div>
-      <div style={{width:"100%",maxWidth:400}}>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
-          <a href="https://buy.stripe.com/28E4gyfDSfG69KLgQj57W04" target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",background:"linear-gradient(145deg,rgba(176,138,78,0.1),rgba(176,138,78,0.04))",border:"1px solid rgba(176,138,78,0.28)",borderRadius:14,padding:"24px 16px",textAlign:"center"}}>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:G.gold,letterSpacing:"0.1em",marginBottom:10}}>Monthly</div>
-            <div style={{fontSize:32,fontWeight:600,color:G.cream,fontFamily:"Cinzel,serif",marginBottom:4}}>$5.50</div>
-            <div style={{fontSize:12,color:G.muted,marginBottom:16}}>per month</div>
-            <div style={{background:"rgba(176,138,78,0.2)",border:"1px solid rgba(176,138,78,0.3)",borderRadius:8,padding:"10px",fontSize:13,color:G.gold,fontFamily:"EB Garamond,Georgia,serif"}}>Subscribe &#8594;</div>
-          </a>
-          <a href="https://buy.stripe.com/dRmbJ09fu51s9KLgQj57W01" target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",background:"linear-gradient(145deg,rgba(176,138,78,0.16),rgba(176,138,78,0.07))",border:"1px solid rgba(176,138,78,0.4)",borderRadius:14,padding:"24px 16px",textAlign:"center",position:"relative"}}>
-            <div style={{position:"absolute",top:-12,left:"50%",transform:"translateX(-50%)",background:G.gold,color:"#0F1A24",fontSize:9,fontFamily:"Cinzel,serif",padding:"3px 12px",borderRadius:20,whiteSpace:"nowrap",fontWeight:700,letterSpacing:"0.08em"}}>BEST VALUE</div>
-            <div style={{fontFamily:"Cinzel,serif",fontSize:12,color:G.gold,letterSpacing:"0.1em",marginBottom:10}}>Full Year Access</div>
-            <div style={{fontSize:32,fontWeight:600,color:G.cream,fontFamily:"Cinzel,serif",marginBottom:4}}>$39</div>
-            <div style={{fontSize:12,color:G.muted,marginBottom:16}}>full year &#8212; $3.25/mo</div>
-            <div style={{background:"rgba(176,138,78,0.3)",border:"1px solid rgba(176,138,78,0.45)",borderRadius:8,padding:"10px",fontSize:13,color:G.gold,fontFamily:"EB Garamond,Georgia,serif"}}>Subscribe &#8594;</div>
-          </a>
-        </div>
-        <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:12,padding:"16px",marginBottom:20,textAlign:"center"}}>
-          <p style={{fontSize:13,color:G.muted,lineHeight:1.7,margin:0}}>After subscribing, check your email for your unique access code. Then return here and tap <strong style={{color:G.text}}>Create Account</strong> to get started.</p>
-        </div>
-        <button onClick={()=>setScreen("login")} style={{width:"100%",background:"transparent",border:"none",color:G.muted,padding:"8px",cursor:"pointer",fontSize:13,fontFamily:"EB Garamond,Georgia,serif"}}>
-          &#8592; Back to Sign In
-        </button>
-      </div>
-    </div>
-  );
+  const INP_S = { width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid "+G.goldB, borderRadius:10, color:G.cream, fontSize:16, padding:"14px 16px", fontFamily:"'EB Garamond',Georgia,serif", outline:"none", boxSizing:"border-box", marginBottom:12 }
+  const BTN_S = (a) => ({ width:"100%", padding:"16px", borderRadius:12, cursor:a?"pointer":"default", fontSize:14, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.09em", transition:"all .25s", touchAction:"manipulation", border:"none", background:a?"linear-gradient(135deg,rgba(176,138,78,0.4),rgba(176,138,78,0.2))":"rgba(176,138,78,0.08)", color:a?G.cream:G.muted })
+  const LBL_S = { fontSize:10, color:G.muted, letterSpacing:"0.14em", textTransform:"uppercase", fontFamily:"'Cinzel',Georgia,serif", marginBottom:6, display:"block" }
 
   return (
-    <div style={wrap()}>
-      <div style={{fontSize:36,color:G.gold,marginBottom:12}}><img src="/icon.png" alt="⚓" style={{width:56,height:56,borderRadius:12,boxShadow:"0 4px 16px rgba(0,0,0,0.25)"}}/></div>
-      <div style={{fontFamily:"Cinzel,serif",fontSize:22,fontWeight:600,color:G.cream,marginBottom:4}}>Create Your Account</div>
-      <div style={{fontSize:12,color:G.muted,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:28}}>Enter your access code to get started</div>
-      <div style={card}>
-        {error && <p style={{fontSize:12,color:G.red,marginBottom:12,textAlign:"center"}}>{error}</p>}
-        {msg && <p style={{fontSize:12,color:G.green,marginBottom:12,textAlign:"center"}}>{msg}</p>}
-        <label style={LBL_STYLE}>Access Code</label>
-        <input value={code} onChange={e=>setCode(e.target.value)} placeholder="e.g. AS-7X4K2M" style={{...INP_STYLE,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",textTransform:"uppercase"}} />
-        <label style={LBL_STYLE}>Email</label>
-        <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="your@email.com" type="email" style={INP_STYLE} />
-        <label style={LBL_STYLE}>Create Password</label>
-        <input value={password} onChange={e=>setPassword(e.target.value)} placeholder="min 6 characters" type="password" style={INP_STYLE} />
-        <button onClick={handleSignup} disabled={loading} style={{width:"100%",background:"linear-gradient(135deg,rgba(180,140,60,0.3),rgba(180,140,60,0.15))",border:"1px solid "+G.goldB,color:G.gold,padding:"12px",borderRadius:8,cursor:"pointer",fontSize:14,fontFamily:"Cinzel,serif",letterSpacing:"0.1em",marginBottom:12}}>
-          {loading ? "Creating account..." : "Create Account"}
-        </button>
-        <div style={{textAlign:"center",fontSize:13,color:G.muted,marginTop:4}}>
-          Already have an account?{" "}
-          <span onClick={()=>{setScreen("login");setError("");}} style={{color:G.gold,cursor:"pointer"}}>Sign in</span>
-          {" · "}
-          <span onClick={()=>{setScreen("plans");setError("");}} style={{color:G.gold,cursor:"pointer"}}>View Plans</span>
+    <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"flex-start", background:"radial-gradient(ellipse at 50% 0%, rgba(176,138,78,0.1) 0%, transparent 55%), "+G.bg, fontFamily:"'EB Garamond',Georgia,serif", overflowY:"auto", padding:"0 16px 40px" }}>
+      <div style={{ background:"rgba(13,26,42,0.98)", borderRadius:20, border:"1px solid "+G.goldB, padding:"32px 28px 36px", width:"100%", maxWidth:420, marginTop:"8vh", marginBottom:40, boxShadow:"0 12px 40px rgba(0,0,0,0.4)" }}>
+        <div style={{ textAlign:"center", marginBottom:28 }}>
+          <img src="/icon.png" alt="" style={{ width:56, height:56, borderRadius:14, display:"block", margin:"0 auto 12px", boxShadow:"0 4px 16px rgba(0,0,0,0.3)" }}/>
+          <div style={{ fontSize:9, color:G.gold, letterSpacing:"0.2em", textTransform:"uppercase", fontFamily:"'Cinzel',Georgia,serif", marginBottom:6 }}>Elora Radiance Co.</div>
+          <div style={{ fontSize:20, fontWeight:700, color:G.cream, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.05em", marginBottom:6 }}>Anchored Steps</div>
+          <div style={{ fontSize:13, color:G.muted, fontStyle:"italic" }}>{mode==="signin"?"Welcome back" : mode==="forgot"?"Reset your password" : "Create your account"}</div>
         </div>
+
+        {error && <div style={{ background:"rgba(201,72,72,0.1)", border:"1px solid rgba(201,72,72,0.3)", borderRadius:10, padding:"10px 14px", marginBottom:14, fontSize:14, color:"#C94848", lineHeight:1.6 }}>{error}</div>}
+        {msg && <div style={{ background:"rgba(124,146,132,0.12)", border:"1px solid rgba(124,146,132,0.35)", borderRadius:10, padding:"10px 14px", marginBottom:14, fontSize:14, color:G.green, lineHeight:1.6 }}>{msg}</div>}
+        {resetSent && <div style={{ background:"rgba(124,146,132,0.12)", border:"1px solid rgba(124,146,132,0.35)", borderRadius:12, padding:"16px", textAlign:"center", marginBottom:14 }}><div style={{ fontSize:14, color:G.green }}>✓ Check your email for a reset link.</div><button onClick={()=>{setResetSent(false);setMode("signin")}} style={{ marginTop:10, background:"transparent", border:"none", color:G.gold, cursor:"pointer", fontSize:13, fontFamily:"'Cinzel',Georgia,serif" }}>Back to Sign In</button></div>}
+
+        {!resetSent && mode==="signup" && (<><label style={LBL_S}>Access Code</label><input value={code} onChange={e=>setCode(e.target.value)} placeholder="e.g. AS-7X4K2M" style={{ ...INP_S, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.08em", textTransform:"uppercase" }}/></>)}
+        {!resetSent && (<>
+          <label style={LBL_S}>Email</label>
+          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com" onKeyDown={e=>e.key==="Enter"&&(mode==="signin"?handleSignIn():mode==="forgot"?handleForgot():null)} style={INP_S} autoCapitalize="none"/>
+          {mode!=="forgot" && (<><label style={LBL_S}>Password</label><input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder={mode==="signup"?"At least 6 characters":"Your password"} onKeyDown={e=>e.key==="Enter"&&(mode==="signin"?handleSignIn():handleSignUp())} style={{ ...INP_S, marginBottom:20 }}/></>)}
+          <button onClick={mode==="signin"?handleSignIn:mode==="forgot"?handleForgot:handleSignUp} disabled={loading} style={{ ...BTN_S(!loading), marginBottom:12 }}>
+            {loading?"Please wait..." : mode==="signup"?"Create Account" : mode==="forgot"?"Send Reset Link" : "Sign In"}
+          </button>
+        </>)}
+
+        <div style={{ display:"flex", justifyContent:"center", gap:16, flexWrap:"wrap" }}>
+          {mode==="signin"&&<><button onClick={()=>{setMode("signup");setError("");setMsg("")}} style={{ background:"transparent", border:"none", color:G.muted, cursor:"pointer", fontSize:13, fontFamily:"'EB Garamond',Georgia,serif" }}>Create account</button><button onClick={()=>{setMode("forgot");setError("");setMsg("")}} style={{ background:"transparent", border:"none", color:G.muted, cursor:"pointer", fontSize:13, fontFamily:"'EB Garamond',Georgia,serif" }}>Forgot password?</button><button onClick={()=>setMode("plans")} style={{ background:"transparent", border:"none", color:G.gold, cursor:"pointer", fontSize:13, fontFamily:"'EB Garamond',Georgia,serif" }}>View plans →</button></>}
+          {mode!=="signin"&&<button onClick={()=>{setMode("signin");setError("");setMsg("")}} style={{ background:"transparent", border:"none", color:G.muted, cursor:"pointer", fontSize:13, fontFamily:"'EB Garamond',Georgia,serif" }}>← Back to sign in</button>}
+        </div>
+
+        {mode==="plans"&&(
+          <div style={{ marginTop:20, paddingTop:20, borderTop:"1px solid "+G.border }}>
+            <div style={{ fontSize:10, color:G.muted, letterSpacing:"0.14em", textTransform:"uppercase", fontFamily:"'Cinzel',Georgia,serif", marginBottom:14, textAlign:"center" }}>Choose Your Plan</div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:12 }}>
+              {[["Monthly","$5.50/mo","https://buy.stripe.com/28E4gyfDSfG69KLgQj57W04",false],["Full Year","$39 / $3.25 mo","https://buy.stripe.com/dRmbJ09fu51s9KLgQj57W01",true]].map(([label,price,url,best])=>(
+                <a key={label} href={url} target="_blank" rel="noreferrer" style={{ textDecoration:"none", display:"block", background:best?"linear-gradient(145deg,"+G.goldF+",rgba(176,138,78,0.02))":"rgba(255,255,255,0.03)", border:"1px solid "+(best?G.goldB:G.border), borderRadius:12, padding:"18px 12px", textAlign:"center", position:"relative" }}>
+                  {best&&<div style={{ position:"absolute", top:-10, left:"50%", transform:"translateX(-50%)", background:G.gold, color:G.bg, fontSize:8, fontFamily:"'Cinzel',Georgia,serif", padding:"2px 10px", borderRadius:20, fontWeight:700, letterSpacing:"0.08em", whiteSpace:"nowrap" }}>BEST VALUE</div>}
+                  <div style={{ fontSize:11, color:G.gold, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.1em", marginBottom:6 }}>{label}</div>
+                  <div style={{ fontSize:22, fontWeight:700, color:G.cream, fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>{price.split("/")[0]}</div>
+                  <div style={{ fontSize:11, color:G.muted, marginBottom:10 }}>{price.split("/")[1]||""}</div>
+                  <div style={{ background:"rgba(176,138,78,0.15)", border:"1px solid "+G.goldB, borderRadius:8, padding:"8px", fontSize:12, color:G.gold }}>Subscribe →</div>
+                </a>
+              ))}
+            </div>
+            <p style={{ fontSize:12, color:G.muted, lineHeight:1.7, textAlign:"center" }}>After subscribing, check your email for your access code, then create your account above.</p>
+          </div>
+        )}
       </div>
     </div>
-  );
+  )
 }
+
 
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
 
@@ -389,6 +314,7 @@ export default function AnchoredSteps() {
   const [shareVerse, setShareVerse] = useState(null);
   const [shareCardType, setShareCardType] = useState('scripture')
   const [shareCardLight, setShareCardLight] = useState(false)
+  const [captionCopied, setCaptionCopied] = useState(false)
   const [sharingCard, setSharingCard] = useState(false)
   // Year review
   const [showYearReview, setShowYearReview] = useState(false);
@@ -1509,12 +1435,21 @@ export default function AnchoredSteps() {
               </div>
 
               {/* Buttons */}
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:14}}>
                 <button onClick={handleShareImage} disabled={sharingCard} style={{background:'linear-gradient(135deg,rgba(176,138,78,0.3),rgba(176,138,78,0.12))',border:'1px solid rgba(176,138,78,0.45)',color:G.gold,padding:'12px',borderRadius:10,cursor:'pointer',fontSize:12,fontFamily:'Cinzel,serif',letterSpacing:'0.08em',opacity:sharingCard?.6:1}}>
-                  {sharingCard?'Saving...':'Share Image ↗'}
+                  {sharingCard?'Preparing…':'🔗 Share Image'}
                 </button>
-                <button onClick={()=>navigator.clipboard?.writeText(content.body).then(()=>alert('Copied!'))} style={{background:'transparent',border:'1px solid rgba(255,255,255,0.08)',color:G.muted,padding:'12px',borderRadius:10,cursor:'pointer',fontSize:12,fontFamily:'Cinzel,serif',letterSpacing:'0.08em'}}>
+                <button onClick={()=>navigator.clipboard?.writeText(content.body)} style={{background:'transparent',border:'1px solid rgba(255,255,255,0.08)',color:G.muted,padding:'12px',borderRadius:10,cursor:'pointer',fontSize:12,fontFamily:'Cinzel,serif',letterSpacing:'0.08em'}}>
                   Copy Text
+                </button>
+              </div>
+
+              {/* Suggested Caption */}
+              <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:12,padding:'14px 16px'}}>
+                <div style={{fontSize:10,color:G.gold,fontFamily:'Cinzel,serif',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:10}}>Suggested Caption</div>
+                <p style={{fontSize:13,color:G.muted,lineHeight:1.7,margin:'0 0 12px',fontStyle:'italic',whiteSpace:'pre-line'}}>{caption}</p>
+                <button onClick={()=>{navigator.clipboard?.writeText(caption);setCaptionCopied(true);setTimeout(()=>setCaptionCopied(false),2000)}} style={{width:'100%',background:captionCopied?'rgba(124,146,132,0.15)':'transparent',border:'1px solid '+(captionCopied?'rgba(124,146,132,0.4)':'rgba(176,138,78,0.3)'),color:captionCopied?G.green:G.gold,padding:'9px',borderRadius:8,cursor:'pointer',fontSize:11,fontFamily:'Cinzel,serif',letterSpacing:'0.08em',transition:'all .25s'}}>
+                  {captionCopied?'✓ Copied':'Copy Caption'}
                 </button>
               </div>
 
