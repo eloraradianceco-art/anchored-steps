@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { toPng } from "html-to-image";
 import Onboarding from "./Onboarding.jsx";
-import Settings from "./components/Settings_AS1.jsx";
+import Settings from "./components/Settings.jsx";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://cvtukqamaqrhjtdvmslb.supabase.co";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2dHVrcWFtYXFyaGp0ZHZtc2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NDU1MjQsImV4cCI6MjA5MTQyMTUyNH0.gSksF5jV-UpuaUL7x7vhHHOB6Z7Qq0iehtbc2PoSAxw";
@@ -426,7 +426,9 @@ export default function AnchoredSteps() {
     ]);
     if (prof) {
       setProfile(prof);
-      setWk(prof.current_week || 1);
+      // Use localStorage if available (updated by goWk); fall back to DB value
+      const storedWeek = localStorage.getItem('as1_current_week');
+      if (!storedWeek) setWk(prof.current_week || 1);
       // Check subscription status
       if (prof.subscription_status === "canceled") {
         setSubExpired(true);
@@ -674,7 +676,7 @@ export default function AnchoredSteps() {
   if (showSettings) return (
     <Settings
       profile={profile}
-      userId={userId}
+      userId={session?.user?.id}
       supabase={supabase}
       entries={entries}
       wk={wk}
