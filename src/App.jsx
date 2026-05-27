@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { toPng } from "html-to-image";
 import Onboarding from "./Onboarding.jsx";
+import Settings from "./components/Settings_AS1.jsx";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://cvtukqamaqrhjtdvmslb.supabase.co";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2dHVrcWFtYXFyaGp0ZHZtc2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NDU1MjQsImV4cCI6MjA5MTQyMTUyNH0.gSksF5jV-UpuaUL7x7vhHHOB6Z7Qq0iehtbc2PoSAxw";
@@ -281,6 +282,7 @@ export default function AnchoredSteps() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem("onboarding_complete"));
+  const [showSettings, setShowSettings] = useState(false);
   const shareCardRef = useRef(null);
   const [subExpired, setSubExpired] = useState(false);
   const [view, setView] = useState("journal");
@@ -669,6 +671,21 @@ export default function AnchoredSteps() {
   const communityNotes = () => { try { return JSON.parse(localStorage.getItem("community_w"+wk)||"[]"); } catch { return []; } };
 
   // ── Onboarding
+  if (showSettings) return (
+    <Settings
+      profile={profile}
+      userId={userId}
+      supabase={supabase}
+      entries={entries}
+      wk={wk}
+      ALL_WEEKS={ALL_WEEKS}
+      darkMode={darkMode}
+      onToggleDarkMode={() => { const n = !darkMode; setDarkMode(n); localStorage.setItem("as_dark", String(n)); }}
+      onResetWeek={() => goWk(1)}
+      onClose={() => setShowSettings(false)}
+    />
+  )
+
   if (showOnboarding) return (
     <Onboarding onComplete={() => setShowOnboarding(false)} />
   );
@@ -735,7 +752,7 @@ export default function AnchoredSteps() {
         </div>
         <div style={{display:"flex",justifyContent:"center",gap:2,padding:"5px 12px",flexWrap:"nowrap",overflowX:"auto"}}>
           {[["journal","Journal"],["search","Search"],["bookmarks","Saved"],["contents","Contents"],["progress","Progress"],["settings","Settings"]].map(([v,l]) => (
-            <button key={v} onClick={() => setView(v)} style={{background:view===v?"linear-gradient(135deg,rgba(176,138,78,0.18),rgba(176,138,78,0.07))":"transparent",border:"1px solid "+(view===v?"rgba(176,138,78,0.4)":"transparent"),color:view===v?G.gold:G.muted,padding:"4px 8px",borderRadius:6,cursor:"pointer",fontSize:10,fontFamily:"Cinzel,serif",letterSpacing:"0.04em",transition:"all .2s"}}>{l}</button>
+            <button key={v} onClick={() => { if(v==="settings") setShowSettings(true); else setView(v); }} style={{background:view===v?"linear-gradient(135deg,rgba(176,138,78,0.18),rgba(176,138,78,0.07))":"transparent",border:"1px solid "+(view===v?"rgba(176,138,78,0.4)":"transparent"),color:view===v?G.gold:G.muted,padding:"4px 8px",borderRadius:6,cursor:"pointer",fontSize:10,fontFamily:"Cinzel,serif",letterSpacing:"0.04em",transition:"all .2s"}}>{l}</button>
           ))}
         </div>
       </header>
