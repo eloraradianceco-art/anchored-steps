@@ -208,7 +208,7 @@ function AuthScreen({onAuth}) {
     if (!authData.session) { setMsg("Check your email to confirm your account, then sign in."); setLoading(false); return }
     await supabase.from("access_codes").update({ used:true, used_by:authData.user.id, used_at:new Date().toISOString() }).eq("id", codeData.code_id)
     await supabase.from("profiles").update({ plan:codeData.plan_type }).eq("id", authData.user.id)
-    onAuth(true); setLoading(false)
+    setJustSignedUp(true); setLoading(false)
   }
 
   const handleForgot = async () => {
@@ -268,6 +268,48 @@ function AuthScreen({onAuth}) {
             <p style={{ fontSize:12, color:G.muted, lineHeight:1.7, textAlign:"center" }}>After subscribing, check your email for your access code, then create your account above.</p>
           </div>
         )}
+
+        {/* Add to Home Screen — shown after new account created */}
+        {justSignedUp && (
+          <div style={{ marginTop:28, background:'rgba(176,138,78,0.07)',
+            border:'1px solid rgba(176,138,78,0.22)', borderRadius:14, padding:'18px 18px 14px' }}>
+            <div style={{ fontSize:13, color:G.green, fontFamily:"'Cinzel',Georgia,serif",
+              letterSpacing:'0.06em', marginBottom:8 }}>✓ Account Created</div>
+            <div style={{ fontSize:14, color:G.text, lineHeight:1.6, marginBottom:16 }}>
+              You're in. Taking you to Anchored Steps now.
+            </div>
+            <div style={{ fontSize:10, color:G.gold, letterSpacing:'0.16em',
+              textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:8 }}>
+              📱 Add to Your Home Screen
+            </div>
+            <p style={{ fontSize:13, color:G.text, lineHeight:1.65, marginBottom:14 }}>
+              Anchored Steps works like a native app — add it to your home screen for instant one-tap access.
+            </p>
+            {[
+              { os:'🍎 iPhone / iPad (Safari)', steps:['Tap the Share button ⎋ at the bottom of Safari','Scroll and tap "Add to Home Screen"','Tap "Add" — done ✓'] },
+              { os:'🤖 Android (Chrome)', steps:['Tap the three-dot menu ⋮ at the top right','Tap "Add to Home Screen" or "Install App"','Tap "Add" — done ✓'] },
+            ].map(p => (
+              <div key={p.os} style={{ marginBottom:12 }}>
+                <div style={{ fontSize:11, color:G.gold, fontFamily:"'Cinzel',Georgia,serif",
+                  letterSpacing:'0.06em', marginBottom:6 }}>{p.os}</div>
+                {p.steps.map((step,i) => (
+                  <div key={i} style={{ display:'flex', gap:8, marginBottom:4 }}>
+                    <span style={{ fontSize:11, color:G.goldL, flexShrink:0, minWidth:14,
+                      fontFamily:"'Cinzel',Georgia,serif" }}>{i+1}.</span>
+                    <span style={{ fontSize:13, color:G.muted, lineHeight:1.5 }}>{step}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+            <button onClick={()=>{ setJustSignedUp(false); onAuth(true) }}
+              style={{ width:'100%', padding:'14px', borderRadius:10, cursor:'pointer',
+                background:'rgba(176,138,78,0.18)', border:'1px solid rgba(176,138,78,0.4)',
+                color:G.cream, fontSize:13, fontFamily:"'Cinzel',Georgia,serif",
+                letterSpacing:'0.06em', marginTop:6 }}>
+              ⚓ Enter Anchored Steps →
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -280,7 +322,8 @@ export default function AnchoredSteps() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [entries, setEntries] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true)
+  const [justSignedUp, setJustSignedUp] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem("onboarding_complete"));
   const [showSettings, setShowSettings] = useState(false);
   const shareCardRef = useRef(null);
