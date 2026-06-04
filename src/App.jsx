@@ -324,12 +324,12 @@ export default function AnchoredSteps() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true)
   const [justSignedUp, setJustSignedUp] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem("onboarding_complete"));
+  const [showOnboarding, setShowOnboarding] = useState(() => { try { return !localStorage.getItem("onboarding_complete") } catch { return false } });
   const [showSettings, setShowSettings] = useState(false);
   const shareCardRef = useRef(null);
   const [subExpired, setSubExpired] = useState(false);
   const [view, setView] = useState("journal");
-  const [wk, setWk] = useState(() => parseInt(localStorage.getItem('as1_current_week') || '1'));
+  const [wk, setWk] = useState(() => { try { return parseInt(localStorage.getItem('as1_current_week') || '1') } catch { return 1 } });
   const [showWeekJump, setShowWeekJump] = useState(false);
   const [sec, setSec] = useState("scripture");
   const [day, setDay] = useState(-1);
