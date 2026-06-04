@@ -253,19 +253,15 @@ function AuthScreen({onAuth}) {
 
         {mode==="plans"&&(
           <div style={{ marginTop:20, paddingTop:20, borderTop:"1px solid "+G.border }}>
-            <div style={{ fontSize:10, color:G.muted, letterSpacing:"0.14em", textTransform:"uppercase", fontFamily:"'Cinzel',Georgia,serif", marginBottom:14, textAlign:"center" }}>Choose Your Plan</div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:12 }}>
-              {[["Monthly","$5.50/mo","https://buy.stripe.com/28E4gyfDSfG69KLgQj57W04",false],["Full Year","$39 / $3.25 mo","https://buy.stripe.com/dRmbJ09fu51s9KLgQj57W01",true]].map(([label,price,url,best])=>(
-                <a key={label} href={url} target="_blank" rel="noreferrer" style={{ textDecoration:"none", display:"block", background:best?"linear-gradient(145deg,"+G.goldF+",rgba(176,138,78,0.02))":"rgba(255,255,255,0.03)", border:"1px solid "+(best?G.goldB:G.border), borderRadius:12, padding:"18px 12px", textAlign:"center", position:"relative" }}>
-                  {best&&<div style={{ position:"absolute", top:-10, left:"50%", transform:"translateX(-50%)", background:G.gold, color:G.bg, fontSize:8, fontFamily:"'Cinzel',Georgia,serif", padding:"2px 10px", borderRadius:20, fontWeight:700, letterSpacing:"0.08em", whiteSpace:"nowrap" }}>BEST VALUE</div>}
-                  <div style={{ fontSize:11, color:G.gold, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.1em", marginBottom:6 }}>{label}</div>
-                  <div style={{ fontSize:22, fontWeight:700, color:G.cream, fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>{price.split("/")[0]}</div>
-                  <div style={{ fontSize:11, color:G.muted, marginBottom:10 }}>{price.split("/")[1]||""}</div>
-                  <div style={{ background:"rgba(176,138,78,0.15)", border:"1px solid "+G.goldB, borderRadius:8, padding:"8px", fontSize:12, color:G.gold }}>Subscribe →</div>
-                </a>
-              ))}
-            </div>
-            <p style={{ fontSize:12, color:G.muted, lineHeight:1.7, textAlign:"center" }}>After subscribing, check your email for your access code, then create your account above.</p>
+            <div style={{ fontSize:10, color:G.muted, letterSpacing:"0.14em", textTransform:"uppercase", fontFamily:"'Cinzel',Georgia,serif", marginBottom:14, textAlign:"center" }}>One Payment. Lifetime Access.</div>
+            <a href="https://buy.stripe.com/6oUbJ0fDS0Lc2ijarV57W09" target="_blank" rel="noreferrer" style={{ textDecoration:"none", display:"block", background:"linear-gradient(135deg,rgba(176,138,78,0.22),rgba(176,138,78,0.06))", border:"2px solid "+G.gold, borderRadius:14, padding:"22px 18px", textAlign:"center", position:"relative", marginBottom:14 }}>
+              <div style={{ position:"absolute", top:-11, left:"50%", transform:"translateX(-50%)", background:G.gold, color:G.bg, fontSize:9, fontFamily:"'Cinzel',Georgia,serif", padding:"3px 12px", borderRadius:10, fontWeight:700, letterSpacing:"0.12em" }}>LIFETIME ACCESS</div>
+              <div style={{ fontSize:11, color:G.gold, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.12em", marginBottom:8, textTransform:"uppercase" }}>Year 1 — Complete</div>
+              <div style={{ fontSize:34, fontWeight:700, color:G.cream, fontFamily:"'Cinzel',Georgia,serif", marginBottom:4, lineHeight:1 }}>$39</div>
+              <div style={{ fontSize:11, color:G.muted, marginBottom:14, letterSpacing:"0.04em" }}>one-time · no subscription</div>
+              <div style={{ background:"rgba(176,138,78,0.18)", border:"1px solid "+G.goldB, borderRadius:9, padding:"10px 14px", fontSize:12, color:G.gold, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.06em" }}>⚓ Unlock All 52 Weeks →</div>
+            </a>
+            <p style={{ fontSize:12, color:G.muted, lineHeight:1.7, textAlign:"center" }}>After purchase, check your email for your access code, then create your account above.</p>
           </div>
         )}
 
@@ -1238,7 +1234,7 @@ export default function AnchoredSteps() {
             {/* Referral */}
             <div style={{background:T.cardBg,border:"1px solid "+T.border,borderRadius:14,padding:"20px",marginBottom:14}}>
               <div style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:16}}>Refer a Friend</div>
-              <p style={{fontSize:14,color:T.text,lineHeight:1.7,marginBottom:14}}>Share Anchored Steps with someone you know. When they subscribe using your referral link, you both benefit from the journey.</p>
+              <p style={{fontSize:14,color:T.text,lineHeight:1.7,marginBottom:14}}>Share Anchored Steps with someone you know. When they purchase using your referral link, you both benefit from the journey.</p>
               <div style={{background:"rgba(176,138,78,0.08)",border:"1px solid rgba(176,138,78,0.2)",borderRadius:10,padding:"12px 16px",marginBottom:12,fontFamily:"Cinzel,serif",fontSize:13,color:G.gold,letterSpacing:"0.06em",textAlign:"center",wordBreak:"break-all"}}>
                 anchored-steps.vercel.app?ref={profile?.id?.slice(0,8) || "friend"}
               </div>
@@ -1257,7 +1253,7 @@ export default function AnchoredSteps() {
               <div style={{background:"linear-gradient(145deg,rgba(176,138,78,0.12),rgba(176,138,78,0.04))",border:"1px solid rgba(176,138,78,0.35)",borderRadius:14,padding:"20px",marginBottom:14}}>
                 <div style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:12}}>Upgrade Your Plan</div>
                 <p style={{fontSize:14,color:T.text,lineHeight:1.7,marginBottom:14}}>Switch to Full Year Access for $39 — just $3.25/month for the complete year.</p>
-                <a href="https://buy.stripe.com/dRmbJ09fu51s9KLgQj57W01" target="_blank" rel="noreferrer"
+                <a href="https://buy.stripe.com/6oUbJ0fDS0Lc2ijarV57W09" target="_blank" rel="noreferrer"
                   style={{display:"block",background:"linear-gradient(135deg,rgba(176,138,78,0.35),rgba(176,138,78,0.15))",border:"1px solid rgba(176,138,78,0.5)",color:G.gold,padding:"13px",borderRadius:10,textAlign:"center",textDecoration:"none",fontFamily:"Cinzel,serif",fontSize:13,letterSpacing:"0.08em"}}>
                   Upgrade to Full Year Access — $39 &#8594;
                 </a>
@@ -1270,7 +1266,7 @@ export default function AnchoredSteps() {
               <div style={{fontSize:14,color:T.text,marginBottom:4}}>Signed in as</div>
               <div style={{fontSize:13,color:T.muted,marginBottom:16}}>{profile?.email}</div>
               <div style={{fontSize:14,color:T.text,marginBottom:4}}>Plan</div>
-              <div style={{fontSize:13,color:G.gold,fontFamily:"Cinzel,serif",marginBottom:20}}>{profile?.plan === "annual" ? "Full Year Access" : "Monthly"}</div>
+              <div style={{fontSize:13,color:G.gold,fontFamily:"Cinzel,serif",marginBottom:20}}>{"Lifetime Access"}</div>
               <button onClick={()=>{
                 if(window.confirm("Reset to Week 1? This won't delete your journal entries.")){goWk(1);}
               }} style={{width:"100%",background:"transparent",border:"1px solid rgba(176,138,78,0.25)",color:G.gold,padding:"11px",borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:"Cinzel,serif",letterSpacing:"0.06em",marginBottom:8}}>↺ Reset to Week 1</button>
