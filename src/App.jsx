@@ -373,6 +373,14 @@ export default function AnchoredSteps() {
       </div>
     );
   }
+  // Guard: data script must be loaded before component can render
+  if (!window.__APPDATA__) return (
+    <div style={{minHeight:'100vh',background:G.bg,display:'flex',alignItems:'center',
+      justifyContent:'center',flexDirection:'column',gap:16}}>
+      <img src="/icon.png" alt="⚓" style={{width:52,height:52,borderRadius:11}}/>
+      <div style={{fontFamily:'Cinzel,serif',color:G.muted,fontSize:12,letterSpacing:'0.1em'}}>Loading...</div>
+    </div>
+  );
   const ALL_WEEKS = window.__APPDATA__.ALL_WEEKS;
   const LEXICON = window.__APPDATA__.LEXICON;
   const CROSS_REFS = window.__APPDATA__.CROSS_REFS;
