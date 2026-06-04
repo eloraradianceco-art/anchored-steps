@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { toPng } from "html-to-image";
 import Onboarding from "./Onboarding.jsx";
 import Settings from "./components/Settings_AS1.jsx";
 
@@ -598,7 +597,7 @@ export default function AnchoredSteps() {
     setSharingCard(true)
     try {
       const bg = shareCardLight ? '#F5F1E8' : '#0F1A24'
-      const dataUrl = await toPng(shareCardRef.current, { cacheBust: true, pixelRatio: 2, backgroundColor: bg })
+      const dataUrl = await (await import('html-to-image')).toPng(shareCardRef.current, { cacheBust: true, pixelRatio: 2, backgroundColor: bg })
       const res = await fetch(dataUrl)
       const blob = await res.blob()
       const file = new File([blob], 'anchored-steps-card.png', { type: 'image/png' })
@@ -785,7 +784,7 @@ export default function AnchoredSteps() {
             </div>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
               <span style={{fontSize:11,color:darkMode?G.muted:"#7A6248"}}>{profile?.email?.split("@")[0]}</span>
-              <button onClick={signOut} style={{background:"transparent",border:"1px solid "+(darkMode?G.border:"rgba(0,0,0,0.15)"),color:darkMode?G.muted:"#7A6248",padding:"3px 10px",borderRadius:6,cursor:"pointer",fontSize:10,fontFamily:"Cinzel,serif"}}>Sign Out</button>
+              
             </div>
           </div>
         </div>
