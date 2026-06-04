@@ -463,22 +463,23 @@ export default function AnchoredSteps() {
 
   const loadUserData = async (userId) => {
     setLoading(true);
-    const [{ data: prof }, { data: ents }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", userId).single(),
-      supabase.from("journal_entries").select("*").eq("user_id", userId),
-    ]);
-    if (prof) {
-      setProfile(prof);
-      // Use localStorage if available (updated by goWk); fall back to DB value
-      const storedWeek = localStorage.getItem('as1_current_week');
-      if (!storedWeek) setWk(prof.current_week || 1);
-      // Check subscription status
-      if (prof.subscription_status === "canceled") {
-        setSubExpired(true);
+    try {
+      const [{ data: prof }, { data: ents }] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+        supabase.from("journal_entries").select("*").eq("user_id", userId),
+      ]);
+      if (prof) {
+        setProfile(prof);
+        const storedWeek = localStorage.getItem('as1_current_week');
+        if (!storedWeek) setWk(prof.current_week || 1);
+        if (prof.subscription_status === "canceled") setSubExpired(true);
       }
+      if (ents) setEntries(ents);
+    } catch (e) {
+      console.error('loadUserData error:', e);
+    } finally {
+      setLoading(false);
     }
-    if (ents) setEntries(ents);
-    setLoading(false);
   };
 
   // ── Entry helpers
