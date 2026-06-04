@@ -6,6 +6,7 @@
     <title>Anchored Steps — 52 Weeks of Faith in Action</title>
     <link rel="apple-touch-icon" href="/icon.png" />
     <link rel="icon" type="image/png" href="/icon.png" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Anchored Steps" />
@@ -28,6 +29,12 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <div style="padding:40px;text-align:center;color:#F5F1E8;font-family:Georgia,serif">
+        <h1>JavaScript is required</h1>
+        <p>Anchored Steps needs JavaScript enabled to run.</p>
+      </div>
+    </noscript>
     <script src="/data.js"></script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
