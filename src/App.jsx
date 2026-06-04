@@ -187,6 +187,7 @@ function AuthScreen({onAuth}) {
   const [error, setError] = useState("")
   const [msg, setMsg] = useState("")
   const [resetSent, setResetSent] = useState(false)
+  const [justSignedUp, setJustSignedUp] = useState(false)
 
   const handleSignIn = async () => {
     setError(""); setLoading(true)
