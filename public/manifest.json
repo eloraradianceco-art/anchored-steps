@@ -1,0 +1,14 @@
+{
+  "name": "Anchored Steps",
+  "short_name": "Anchored Steps",
+  "description": "52 Weeks of Faith in Action — A Christ-centered digital journal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F1A24",
+  "theme_color": "#0F1A24",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
