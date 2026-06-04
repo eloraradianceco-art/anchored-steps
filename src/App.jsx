@@ -345,7 +345,7 @@ export default function AnchoredSteps() {
   const [communityInput, setCommunityInput] = useState("");
   const [communityDone, setCommunityDone] = useState(false);
   // Settings
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("as_dark") !== "false");
+  const [darkMode, setDarkMode] = useState(() => { try { return localStorage.getItem("as_dark") !== "false" } catch { return true } });
 
   // Search
   const [searchQuery, setSearchQuery] = useState("");
