@@ -739,8 +739,8 @@ export default function AnchoredSteps() {
   if (subExpired) return (
     <div style={{minHeight:"100vh",background:"linear-gradient(155deg,#0F1A24 0%,#1A2A38 55%,#0F1A24 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px",fontFamily:"EB Garamond,Georgia,serif",textAlign:"center"}}>
       <img src="/icon.png" alt="" style={{width:64,height:64,borderRadius:14,marginBottom:16,opacity:.6}}/>
-      <div style={{fontFamily:"Cinzel,serif",fontSize:20,color:"#F5F1E8",marginBottom:8}}>Subscription Ended</div>
-      <p style={{fontSize:16,color:"#A8B3BC",lineHeight:1.7,marginBottom:28,maxWidth:340}}>Your subscription is no longer active. Resubscribe to continue your faith journey.</p>
+      <div style={{fontFamily:"Cinzel,serif",fontSize:20,color:"#F5F1E8",marginBottom:8}}>Access Ended</div>
+      <p style={{fontSize:16,color:"#A8B3BC",lineHeight:1.7,marginBottom:28,maxWidth:340}}>Your access has been revoked. Visit the pricing page to restore access.</p>
       <a href="https://eloraradiance.com/anchored-steps-app" style={{display:"block",background:"linear-gradient(135deg,rgba(176,138,78,0.35),rgba(176,138,78,0.15))",border:"1px solid rgba(176,138,78,0.45)",color:"#B08A4E",padding:"14px 32px",borderRadius:12,textDecoration:"none",fontFamily:"Cinzel,serif",fontSize:14,letterSpacing:"0.1em",marginBottom:12}}>View Plans &#8594;</a>
       <button onClick={signOut} style={{background:"transparent",border:"none",color:"#6C7A86",cursor:"pointer",fontSize:13,fontFamily:"EB Garamond,Georgia,serif"}}>Sign out</button>
     </div>
