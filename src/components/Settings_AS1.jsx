@@ -158,7 +158,7 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
           <div style={{ background:G.bgCard, border:`1px solid ${G.border}`, borderRadius:14, padding:'0 16px' }}>
             <Row icon="✉️" label={profile?.email || 'Your account'}>
               <span style={{ fontSize:11, color:G.gold, fontFamily:"'Cinzel',Georgia,serif" }}>
-                {profile?.plan === 'annual' ? 'Annual ✦' : 'Monthly ✦'}
+                {'Lifetime ✦'}
               </span>
             </Row>
             <Row icon="🚪" label="Sign Out" border={false}>
