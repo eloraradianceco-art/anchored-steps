@@ -364,15 +364,6 @@ export default function AnchoredSteps() {
   // Year review
   const [showYearReview, setShowYearReview] = useState(false);
 
-  // Safety check for data loading
-  if (!window.__APPDATA__) {
-    return (
-      <div style={{minHeight:"100vh",background:"#0b1825",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
-        <img src="/icon.png" alt="Anchored Steps" style={{width:56,height:56,marginBottom:12,borderRadius:12,boxShadow:"0 4px 16px rgba(0,0,0,0.2)"}}/>
-        <div style={{fontFamily:"Cinzel,serif",color:"#7e92a2",fontSize:12,letterSpacing:"0.1em"}}>Loading journal data...</div>
-      </div>
-    );
-  }
   const ALL_WEEKS = window.__APPDATA__?.ALL_WEEKS || [];
   const LEXICON = window.__APPDATA__?.LEXICON || {};
   const CROSS_REFS = window.__APPDATA__?.CROSS_REFS || {};
