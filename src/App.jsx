@@ -373,19 +373,11 @@ export default function AnchoredSteps() {
       </div>
     );
   }
-  // Guard: data script must be loaded before component can render
-  if (!window.__APPDATA__) return (
-    <div style={{minHeight:'100vh',background:G.bg,display:'flex',alignItems:'center',
-      justifyContent:'center',flexDirection:'column',gap:16}}>
-      <img src="/icon.png" alt="⚓" style={{width:52,height:52,borderRadius:11}}/>
-      <div style={{fontFamily:'Cinzel,serif',color:G.muted,fontSize:12,letterSpacing:'0.1em'}}>Loading...</div>
-    </div>
-  );
-  const ALL_WEEKS = window.__APPDATA__.ALL_WEEKS;
-  const LEXICON = window.__APPDATA__.LEXICON;
-  const CROSS_REFS = window.__APPDATA__.CROSS_REFS;
-  const EXCERPTS = window.__APPDATA__.EXCERPTS;
-  const AUTHOR_DATA = window.__APPDATA__.AUTHOR_DATA;
+  const ALL_WEEKS = window.__APPDATA__?.ALL_WEEKS || [];
+  const LEXICON = window.__APPDATA__?.LEXICON || {};
+  const CROSS_REFS = window.__APPDATA__?.CROSS_REFS || {};
+  const EXCERPTS = window.__APPDATA__?.EXCERPTS || {};
+  const AUTHOR_DATA = window.__APPDATA__?.AUTHOR_DATA || {};
 
   // ── Push notification setup
   useEffect(() => {
@@ -724,7 +716,19 @@ export default function AnchoredSteps() {
   };
   const communityNotes = () => { try { return JSON.parse(localStorage.getItem("community_w"+wk)||"[]"); } catch { return []; } };
 
-  // ── Onboarding
+
+  // ── Loading
+  if (loading) return (
+    <div style={{minHeight:"100vh",background:G.bg,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
+      <div style={{fontSize:32,color:G.gold}}><img src="/icon.png" alt="⚓" style={{width:52,height:52,borderRadius:11,boxShadow:"0 4px 16px rgba(0,0,0,0.3)",objectFit:"cover"}}/></div>
+      <div style={{fontFamily:"Cinzel,serif",color:G.muted,fontSize:12,letterSpacing:"0.1em"}}>Loading your journal...</div>
+    </div>
+  );
+
+  // ── Not logged in
+  if (!session) return <AuthScreen onAuth={() => window.location.reload()} />;
+
+// ── Onboarding
   if (showSettings) return (
     <Settings
       profile={profile}
@@ -755,16 +759,6 @@ export default function AnchoredSteps() {
     </div>
   );
 
-  // ── Loading
-  if (loading) return (
-    <div style={{minHeight:"100vh",background:G.bg,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
-      <div style={{fontSize:32,color:G.gold}}><img src="/icon.png" alt="⚓" style={{width:52,height:52,borderRadius:11,boxShadow:"0 4px 14px rgba(0,0,0,0.2)"}}/></div>
-      <div style={{fontFamily:"Cinzel,serif",color:G.muted,fontSize:12,letterSpacing:"0.1em"}}>Loading your journal...</div>
-    </div>
-  );
-
-  // ── Not logged in
-  if (!session) return <AuthScreen onAuth={() => window.location.reload()} />;
 
   // Theme-aware colors
   const T = darkMode ? {
