@@ -459,10 +459,20 @@ export default function AnchoredSteps() {
         setProfile(prof);
         const storedWeek = localStorage.getItem('as1_current_week');
         if (!storedWeek) setWk(prof.current_week || 1);
-        // Cross-device onboarding sync: if profile says onboarded, skip onboarding
+        // Cross-device onboarding sync
         if (prof.onboarded) {
           try { localStorage.setItem("onboarding_complete", "true") } catch {}
           setShowOnboarding(false);
+        }
+        // Cross-device bookmarks sync — server wins if non-empty
+        if (Array.isArray(prof.bookmarks) && prof.bookmarks.length > 0) {
+          setBookmarks(prof.bookmarks);
+          try { localStorage.setItem("as_bookmarks", JSON.stringify(prof.bookmarks)) } catch {}
+        }
+        // Cross-device dark mode sync
+        if (typeof prof.dark_mode === 'boolean') {
+          setDarkMode(prof.dark_mode);
+          try { localStorage.setItem("as_dark", prof.dark_mode ? "true" : "false") } catch {}
         }
       }
       if (ents) setEntries(ents);
@@ -565,7 +575,12 @@ export default function AnchoredSteps() {
       updated = [...bookmarks, { key, ref: verse.ref, text: verse.text, week: weekNum, section: sectionId, date: new Date().toLocaleDateString() }];
     }
     setBookmarks(updated);
-    localStorage.setItem("as_bookmarks", JSON.stringify(updated));
+    try { localStorage.setItem("as_bookmarks", JSON.stringify(updated)) } catch {}
+    // Sync to Supabase (cross-device)
+    if (session?.user?.id) {
+      supabase.from("profiles").update({ bookmarks: updated }).eq("id", session.user.id)
+        .then(({ error }) => { if (error) console.warn("bookmarks sync failed:", error.message) });
+    }
   };
   const isBookmarked = (ref, weekNum) => bookmarks.some(b => b.key === ref + "_" + weekNum);
 
