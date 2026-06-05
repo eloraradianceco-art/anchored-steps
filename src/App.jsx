@@ -459,6 +459,11 @@ export default function AnchoredSteps() {
         setProfile(prof);
         const storedWeek = localStorage.getItem('as1_current_week');
         if (!storedWeek) setWk(prof.current_week || 1);
+        // Cross-device onboarding sync: if profile says onboarded, skip onboarding
+        if (prof.onboarded) {
+          try { localStorage.setItem("onboarding_complete", "true") } catch {}
+          setShowOnboarding(false);
+        }
       }
       if (ents) setEntries(ents);
     } catch (e) {
@@ -731,7 +736,13 @@ export default function AnchoredSteps() {
   )
 
   if (showOnboarding) return (
-    <Onboarding onComplete={() => setShowOnboarding(false)} />
+    <Onboarding onComplete={async () => {
+      try { localStorage.setItem("onboarding_complete", "true") } catch {}
+      if (session?.user?.id) {
+        try { await supabase.from("profiles").update({ onboarded: true }).eq("id", session.user.id) } catch (e) { console.warn("onboarded sync failed:", e) }
+      }
+      setShowOnboarding(false)
+    }} />
   );
 
   // ── Subscription expired
