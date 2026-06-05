@@ -459,7 +459,6 @@ export default function AnchoredSteps() {
         setProfile(prof);
         const storedWeek = localStorage.getItem('as1_current_week');
         if (!storedWeek) setWk(prof.current_week || 1);
-        if (prof.subscription_status === "canceled") setSubExpired(true);
       }
       if (ents) setEntries(ents);
     } catch (e) {
