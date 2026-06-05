@@ -744,7 +744,7 @@ export default function AnchoredSteps() {
       wk={wk}
       ALL_WEEKS={ALL_WEEKS}
       darkMode={darkMode}
-      onToggleDarkMode={() => { const n = !darkMode; setDarkMode(n); localStorage.setItem("as_dark", String(n)); }}
+      onToggleDarkMode={() => { const n = !darkMode; setDarkMode(n); try { localStorage.setItem("as_dark", String(n)) } catch {}; if (session?.user?.id) supabase.from("profiles").update({ dark_mode: n }).eq("id", session.user.id).then(({ error }) => { if (error) console.warn("dark sync:", error.message) }); }}
       onResetWeek={() => goWk(1)}
       onClose={() => setShowSettings(false)}
     />
@@ -1248,7 +1248,7 @@ export default function AnchoredSteps() {
                   <div style={{fontSize:15,color:T.text,marginBottom:2}}>Theme</div>
                   <div style={{fontSize:12,color:T.muted}}>{darkMode ? "Dark mode" : "Light mode"}</div>
                 </div>
-                <button onClick={() => { const n = !darkMode; setDarkMode(n); localStorage.setItem("as_dark",String(n)); }}
+                <button onClick={() => { const n = !darkMode; setDarkMode(n); try { localStorage.setItem("as_dark", String(n)) } catch {}; if (session?.user?.id) supabase.from("profiles").update({ dark_mode: n }).eq("id", session.user.id).then(({ error }) => { if (error) console.warn("dark sync:", error.message) }); }}
                   style={{background:darkMode?"rgba(176,138,78,0.2)":"rgba(0,0,0,0.08)",border:"1px solid "+(darkMode?"rgba(176,138,78,0.4)":"rgba(0,0,0,0.15)"),borderRadius:50,padding:"8px 18px",cursor:"pointer",color:darkMode?G.gold:"#5a4a2a",fontFamily:"Cinzel,serif",fontSize:12,letterSpacing:"0.06em"}}>
                   {darkMode ? "🌙 Dark" : "☀️ Light"}
                 </button>
