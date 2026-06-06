@@ -1013,7 +1013,7 @@ export default function AnchoredSteps() {
                     <p style={{fontSize:14,color:T.muted,fontStyle:"italic",textAlign:"center",padding:"24px 0"}}>Lexicon entries coming soon for this week.</p>
                   )}
                   <label style={LBL}>Your Notes</label>
-                  <textarea rows={5} value={get("lexicon")} onChange={e => set("lexicon",e.target.value)} placeholder="Which word stood out? Why does it matter for how you read this Scripture?" style={INPUT} />
+                  <textarea rows={5} value={get("lexicon")} onChange={e => set("lexicon",e.target.value)} placeholder="Which word stood out? Why does it matter for how you read this Scripture?" style={INP} />
                   <SaveBtn onSave={save} flash={flash} />
                 </div>
               )}
