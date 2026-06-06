@@ -549,7 +549,13 @@ export default function AnchoredSteps() {
   const speak = entry => {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    const utt = new SpeechSynthesisUtterance(entry.transliteration);
+    let text = entry.transliteration || "";
+    if (!text && entry.original) {
+      const m = entry.original.match(/\(([^)]+)\)/);
+      text = m ? m[1].trim() : entry.original;
+    }
+    if (!text) return;
+    const utt = new SpeechSynthesisUtterance(text);
     utt.rate = 0.72;
     utt.onstart = () => setSpeaking(true);
     utt.onend = () => setSpeaking(false);
@@ -990,18 +996,7 @@ export default function AnchoredSteps() {
                       <div style={{fontSize:18,fontFamily:"'Cinzel',Georgia,serif",color:T.cream,letterSpacing:"0.04em",marginBottom:6}}>{entry.word}</div>
                       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:2}}>
                         <div style={{fontSize:15,color:T.gold,fontFamily:"'EB Garamond',Georgia,serif",fontStyle:"italic",flex:1}}>{entry.original}</div>
-                        <button onClick={() => {
-                          if (!window.speechSynthesis) return;
-                          const m = entry.original.match(/\(([^)]+)\)/);
-                          const text = m ? m[1] : entry.original;
-                          window.speechSynthesis.cancel();
-                          const u = new SpeechSynthesisUtterance(text);
-                          u.rate = 0.82; u.pitch = 1.0;
-                          const voices = window.speechSynthesis.getVoices();
-                          if (entry.language === "Greek") { const v = voices.find(x => x.lang.startsWith("el")); if (v) u.voice = v; }
-                          else if (entry.language === "Hebrew" || entry.language === "Aramaic") { const v = voices.find(x => x.lang.startsWith("he")); if (v) u.voice = v; }
-                          window.speechSynthesis.speak(u);
-                        }} aria-label="Hear pronunciation" style={{background:"transparent",border:"1px solid "+T.inputBorder,color:T.gold,width:32,height:32,borderRadius:"50%",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0,touchAction:"manipulation"}}>🔊</button>
+                        <button onClick={() => speak(entry)} aria-label="Hear pronunciation" style={{background:speaking?"rgba(176,138,78,0.35)":"rgba(176,138,78,0.12)",border:"1px solid "+T.inputBorder,color:T.gold,width:32,height:32,borderRadius:"50%",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0,touchAction:"manipulation"}}>{speaking?"▶":"🔊"}</button>
                       </div>
                       <div style={{fontSize:10,color:T.muted,fontFamily:"'Cinzel',Georgia,serif",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:12}}>{entry.language}</div>
                       <div style={{height:1,background:"rgba(176,138,78,0.2)",marginBottom:12}} />
