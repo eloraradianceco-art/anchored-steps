@@ -12,6 +12,7 @@ const SECTIONS = [
   {id:"scripture",label:"📖 Scripture"},
   {id:"verseMap",label:"🗺 Verse Map"},
   {id:"study",label:"📝 Study"},
+  {id:"lexicon",label:"📚 Lexicon"},
   {id:"reflect",label:"🪞 Reflect"},
   {id:"apply",label:"⚡ Apply"},
   {id:"prayer",label:"🙏 Prayer"},
@@ -976,6 +977,29 @@ export default function AnchoredSteps() {
                   <label style={LBL}>Your Notes &amp; Insights</label>
                   <p style={{fontSize:14,color:T.muted,fontStyle:"italic",marginBottom:10,lineHeight:1.6}}>Capture what stands out, what convicts you, or what you want to carry with you this week.</p>
                   <textarea rows={7} value={get("study")} onChange={e => set("study",e.target.value)} placeholder="What is God highlighting for you in these notes?" style={INP} />
+                  <SaveBtn onSave={save} flash={flash} />
+                </div>
+              )}
+
+              {sec === "lexicon" && (
+                <div>
+                  <label style={LBL}>Word Study</label>
+                  <p style={{fontSize:13,color:T.muted,fontStyle:"italic",marginBottom:14,lineHeight:1.6}}>Key Greek &amp; Hebrew words from this week&apos;s Scripture. Tap each to read the original meaning.</p>
+                  {(week?.lexicon || []).map((entry, i) => (
+                    <div key={i} style={{background:"linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))",border:"1px solid rgba(176,138,78,0.25)",borderRadius:14,padding:"18px 18px 16px",marginBottom:14}}>
+                      <div style={{fontSize:18,fontFamily:"'Cinzel',Georgia,serif",color:T.cream,letterSpacing:"0.04em",marginBottom:6}}>{entry.word}</div>
+                      <div style={{fontSize:15,color:T.gold,fontFamily:"'EB Garamond',Georgia,serif",fontStyle:"italic",marginBottom:2}}>{entry.original}</div>
+                      <div style={{fontSize:10,color:T.muted,fontFamily:"'Cinzel',Georgia,serif",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:12}}>{entry.language}</div>
+                      <div style={{height:1,background:"rgba(176,138,78,0.2)",marginBottom:12}} />
+                      <p style={{fontSize:15,color:T.cream,lineHeight:1.7,marginBottom:12,fontFamily:"'EB Garamond',Georgia,serif"}}>{entry.meaning}</p>
+                      {entry.note && <p style={{fontSize:13,color:T.muted,lineHeight:1.7,fontStyle:"italic",fontFamily:"'EB Garamond',Georgia,serif"}}>{entry.note}</p>}
+                    </div>
+                  ))}
+                  {(!week?.lexicon || week.lexicon.length === 0) && (
+                    <p style={{fontSize:14,color:T.muted,fontStyle:"italic",textAlign:"center",padding:"24px 0"}}>Lexicon entries coming soon for this week.</p>
+                  )}
+                  <label style={LBL}>Your Notes</label>
+                  <textarea rows={5} value={get("lexicon")} onChange={e => set("lexicon",e.target.value)} placeholder="Which word stood out? Why does it matter for how you read this Scripture?" style={INPUT} />
                   <SaveBtn onSave={save} flash={flash} />
                 </div>
               )}
