@@ -534,7 +534,7 @@ export default function AnchoredSteps() {
     setWk(n); setSec("scripture"); setDay(-1);
     localStorage.setItem('as1_current_week', String(n));
     setAnimK(a => a+1); setLexWord(null);
-    setQuizMode(false); setQuizResult(null); setQuizInput("");
+    // (quiz state removed — was never declared)
     if (session) {
       await supabase.from("profiles").update({ current_week: n, updated_at: new Date().toISOString() })
         .eq("id", session.user.id);
@@ -858,7 +858,7 @@ export default function AnchoredSteps() {
 
             <div style={{display:"flex",gap:3,marginBottom:20,flexWrap:"wrap"}}>
               {SECTIONS.map(s => (
-                <button key={s.id} onClick={() => { setSec(s.id); setAnimK(a=>a+1); setLexWord(null); setQuizMode(false); }} style={{background:sec===s.id?"linear-gradient(135deg,rgba(176,138,78,0.15),rgba(176,138,78,0.06))":"transparent",border:"1px solid "+(sec===s.id?"rgba(176,138,78,0.35)":G.border),color:sec===s.id?G.gold:G.muted,padding:"6px 10px",borderRadius:8,cursor:"pointer",fontSize:11,transition:"all .18s"}}>{s.label}</button>
+                <button key={s.id} onClick={() => { setSec(s.id); setAnimK(a=>a+1); setLexWord(null); }} style={{background:sec===s.id?"linear-gradient(135deg,rgba(176,138,78,0.15),rgba(176,138,78,0.06))":"transparent",border:"1px solid "+(sec===s.id?"rgba(176,138,78,0.35)":G.border),color:sec===s.id?G.gold:G.muted,padding:"6px 10px",borderRadius:8,cursor:"pointer",fontSize:11,transition:"all .18s"}}>{s.label}</button>
               ))}
             </div>
 
@@ -1552,7 +1552,7 @@ export default function AnchoredSteps() {
           onClick={() => {
             const idx = SECTIONS.findIndex(s => s.id === sec);
             const next = SECTIONS[idx + 1];
-            if (next) { setSec(next.id); setAnimK(a => a+1); setLexWord(null); setQuizMode(false); }
+            if (next) { setSec(next.id); setAnimK(a => a+1); setLexWord(null); }
           }}
           style={{
             position:"fixed",bottom:28,right:20,
