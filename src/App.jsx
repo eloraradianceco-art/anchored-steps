@@ -986,7 +986,7 @@ export default function AnchoredSteps() {
                   <label style={LBL}>Word Study</label>
                   <p style={{fontSize:13,color:T.muted,fontStyle:"italic",marginBottom:14,lineHeight:1.6}}>Key Greek &amp; Hebrew words from this week&apos;s Scripture. Tap each to read the original meaning.</p>
                   {(week?.lexicon || []).map((entry, i) => (
-                    <div key={i} style={{background:"linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))",border:"1px solid rgba(176,138,78,0.25)",borderRadius:14,padding:"18px 18px 16px",marginBottom:14}}>
+                    <div key={i} style={{background:T.cardBg,border:"1px solid rgba(176,138,78,0.32)",borderRadius:14,padding:"18px 18px 16px",marginBottom:14}}>
                       <div style={{fontSize:18,fontFamily:"'Cinzel',Georgia,serif",color:T.cream,letterSpacing:"0.04em",marginBottom:6}}>{entry.word}</div>
                       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:2}}>
                         <div style={{fontSize:15,color:T.gold,fontFamily:"'EB Garamond',Georgia,serif",fontStyle:"italic",flex:1}}>{entry.original}</div>
