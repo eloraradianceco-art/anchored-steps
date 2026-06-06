@@ -1,5 +1,5 @@
-// Anchored Steps Service Worker — v3 (cache-bust + lexicon visibility fix)
-const CACHE = 'anchored-steps-v3-lexicon';
+// Anchored Steps Service Worker — v4 (lexicon card BG fix Jun 6)
+const CACHE = 'anchored-steps-v4-lexcardbg';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
