@@ -988,7 +988,21 @@ export default function AnchoredSteps() {
                   {(week?.lexicon || []).map((entry, i) => (
                     <div key={i} style={{background:"linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))",border:"1px solid rgba(176,138,78,0.25)",borderRadius:14,padding:"18px 18px 16px",marginBottom:14}}>
                       <div style={{fontSize:18,fontFamily:"'Cinzel',Georgia,serif",color:T.cream,letterSpacing:"0.04em",marginBottom:6}}>{entry.word}</div>
-                      <div style={{fontSize:15,color:T.gold,fontFamily:"'EB Garamond',Georgia,serif",fontStyle:"italic",marginBottom:2}}>{entry.original}</div>
+                      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:2}}>
+                        <div style={{fontSize:15,color:T.gold,fontFamily:"'EB Garamond',Georgia,serif",fontStyle:"italic",flex:1}}>{entry.original}</div>
+                        <button onClick={() => {
+                          if (!window.speechSynthesis) return;
+                          const m = entry.original.match(/\(([^)]+)\)/);
+                          const text = m ? m[1] : entry.original;
+                          window.speechSynthesis.cancel();
+                          const u = new SpeechSynthesisUtterance(text);
+                          u.rate = 0.82; u.pitch = 1.0;
+                          const voices = window.speechSynthesis.getVoices();
+                          if (entry.language === "Greek") { const v = voices.find(x => x.lang.startsWith("el")); if (v) u.voice = v; }
+                          else if (entry.language === "Hebrew" || entry.language === "Aramaic") { const v = voices.find(x => x.lang.startsWith("he")); if (v) u.voice = v; }
+                          window.speechSynthesis.speak(u);
+                        }} aria-label="Hear pronunciation" style={{background:"transparent",border:"1px solid "+T.inputBorder,color:T.gold,width:32,height:32,borderRadius:"50%",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,padding:0,touchAction:"manipulation"}}>🔊</button>
+                      </div>
                       <div style={{fontSize:10,color:T.muted,fontFamily:"'Cinzel',Georgia,serif",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:12}}>{entry.language}</div>
                       <div style={{height:1,background:"rgba(176,138,78,0.2)",marginBottom:12}} />
                       <p style={{fontSize:15,color:T.cream,lineHeight:1.7,marginBottom:12,fontFamily:"'EB Garamond',Georgia,serif"}}>{entry.meaning}</p>
