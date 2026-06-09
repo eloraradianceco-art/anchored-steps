@@ -27,7 +27,7 @@ const G = {
   green:"#7C9284",greenF:"rgba(124,146,132,0.12)",greenB:"rgba(124,146,132,0.28)",
   purple:"#A89ACF",purpleF:"rgba(168,154,207,0.08)",purpleB:"rgba(168,154,207,0.22)",
   red:"#D97A7A",redF:"rgba(217,122,122,0.08)",redB:"rgba(217,122,122,0.24)",
-  cream:"#F5F1E8",text:"#E6DED0",muted:"#A8B3BC",dim:"#6C7A86",border:"rgba(255,255,255,0.06)",
+  cream:"#F5F1E8",text:"#E6DED0",muted:"#C0CDD8",dim:"#9AAAB8",border:"rgba(255,255,255,0.06)",
 };
 
 const INP_STYLE = {width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,color:G.cream,fontSize:16,padding:"12px 14px",outline:"none",fontFamily:"EB Garamond,Georgia,serif",marginBottom:12};
@@ -785,7 +785,7 @@ export default function AnchoredSteps() {
   // Theme-aware colors
   const T = darkMode ? {
     bg:"#0F1A24",bgCard:"rgba(255,255,255,0.035)",text:"#E6DED0",
-    muted:"#A8B3BC",border:"rgba(255,255,255,0.08)",cream:"#F5F1E8",
+    muted:"#C0CDD8",border:"rgba(255,255,255,0.08)",cream:"#F5F1E8",
     cardBg:"linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))",
     inputBg:"rgba(255,255,255,0.035)",inputBorder:"rgba(176,138,78,0.18)",
     headerBg:"rgba(15,26,36,0.88)",sectionTitle:"#F5F1E8",bodyText:"#E6DED0",
