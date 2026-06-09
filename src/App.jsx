@@ -183,6 +183,7 @@ function AuthScreen({onAuth}) {
   const [mode, setMode] = useState("signin")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPw, setShowPw] = useState(false)
   const [code, setCode] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -241,7 +242,13 @@ function AuthScreen({onAuth}) {
         {!resetSent && (<>
           <label style={LBL_S}>Email</label>
           <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com" onKeyDown={e=>e.key==="Enter"&&(mode==="signin"?handleSignIn():mode==="forgot"?handleForgot():null)} style={INP_S} autoCapitalize="none"/>
-          {mode!=="forgot" && (<><label style={LBL_S}>Password</label><input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder={mode==="signup"?"At least 6 characters":"Your password"} onKeyDown={e=>e.key==="Enter"&&(mode==="signin"?handleSignIn():handleSignUp())} style={{ ...INP_S, marginBottom:20 }}/></>)}
+          {mode!=="forgot" && (<>
+            <label style={LBL_S}>Password</label>
+            <div style={{position:"relative",marginBottom:20}}>
+              <input type={showPw?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)} placeholder={mode==="signup"?"At least 6 characters":"Your password"} onKeyDown={e=>e.key==="Enter"&&(mode==="signin"?handleSignIn():handleSignUp())} style={{ ...INP_S, marginBottom:0, paddingRight:64 }}/>
+              <button type="button" onClick={()=>setShowPw(s=>!s)} aria-label={showPw?"Hide password":"Show password"} style={{ position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", background:"transparent", border:"none", color:G.gold, fontSize:10, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.1em", textTransform:"uppercase", cursor:"pointer", padding:"8px 10px", touchAction:"manipulation" }}>{showPw?"Hide":"Show"}</button>
+            </div>
+          </>)}
           <button onClick={mode==="signin"?handleSignIn:mode==="forgot"?handleForgot:handleSignUp} disabled={loading} style={{ ...BTN_S(!loading), marginBottom:12 }}>
             {loading?"Please wait..." : mode==="signup"?"Create Account" : mode==="forgot"?"Send Reset Link" : "Sign In"}
           </button>
