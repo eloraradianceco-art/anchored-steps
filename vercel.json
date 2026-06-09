@@ -5,6 +5,15 @@
   "functions": {
     "api/webhook.js": {
       "maxDuration": 10
+    },
+    "api/daily-digest.js": {
+      "maxDuration": 30
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/daily-digest",
+      "schedule": "0 13 * * *"
+    }
+  ]
 }
