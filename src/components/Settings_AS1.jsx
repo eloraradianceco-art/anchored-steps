@@ -202,11 +202,13 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
             <div style={{ fontSize:9, color:G.muted, letterSpacing:'0.14em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>More from Elora Radiance Co.</div>
           </div>
           <div style={{ background:G.bgCard, border:`1px solid ${G.border}`, borderRadius:14, padding:'12px 16px' }}>
-            <p style={{ fontSize:13, color:G.muted, fontStyle:'italic', lineHeight:1.7, marginBottom:14 }}>Scripture-based tools for the believer who is serious about their faith.</p>
+            <p style={{ fontSize:13, color:G.muted, fontStyle:'italic', lineHeight:1.7, marginBottom:14 }}>The rest of the Elora Radiance ecosystem — Scripture-based tools for the whole Christian life.</p>
             {[
               { label:'Armed & Anchored', desc:'Spiritual warfare training — 23 weapons', url:'https://armedandanchored.vercel.app/', icon:'⚔️' },
-              { label:'Anchored Steps · Year 2', desc:'Continue the journey — deeper study', url:'https://anchored-steps-y2.vercel.app/', icon:'⚓' },
+              { label:'Anchored Steps · Year 2', desc:'Daily devotional — deeper study', url:'https://anchored-steps-year2.vercel.app/', icon:'⚓' },
               { label:'The Red Letters', desc:'Complete words of Jesus by theme — free', url:'https://redletters.vercel.app/', icon:'✦' },
+              { label:'Anchored Verse', desc:'Scripture for every emotion — free', url:'https://anchoredverse.vercel.app/', icon:'📖' },
+              { label:'The Living Planner', desc:'Faith-centered life planner', url:'https://the-living-planner.vercel.app/', icon:'📓' },
             ].map(app => (
               <a key={app.url} href={app.url} target="_blank" rel="noopener noreferrer" style={{ display:'flex', alignItems:'center', gap:14, padding:'13px 14px', borderRadius:12, marginBottom:8, background:G.goldF, border:`1px solid ${G.goldB}`, textDecoration:'none', transition:'all .2s' }}>
                 <span style={{ fontSize:22, flexShrink:0 }}>{app.icon}</span>
