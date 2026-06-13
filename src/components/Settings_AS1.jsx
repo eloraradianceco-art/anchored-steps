@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Reviews from './Reviews'
 
 export default function Settings({ profile, userId, supabase, entries, wk, ALL_WEEKS, darkMode, onToggleDarkMode, onResetWeek, onClose }) {
   const [copiedShare, setCopiedShare] = useState(false)
@@ -103,6 +104,8 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
 
   const handleSignOut = async () => { setSigningOut(true); await supabase.auth.signOut() }
 
+  const [showReviews, setShowReviews] = useState(false)
+
   const Row = ({ icon, label, children, border = true }) => (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px 0', borderBottom: border ? `1px solid ${G.border}` : 'none' }}>
       <div style={{ display:'flex', alignItems:'center', gap:12 }}>
@@ -115,6 +118,7 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
 
   return (
     <div style={{ position:'fixed', inset:0, zIndex:400, background: darkMode ? '#0F1A24' : '#F5F1E8', fontFamily:"'EB Garamond',Georgia,serif", overflowY:'auto' }}>
+      {showReviews && <Reviews app="as1" appName="Anchored Steps" eyebrow="Anchored Steps" userEmail={profile?.email} C={{ ...G, red: G.gold, redL: G.gold }} lightMode={!darkMode} onClose={() => setShowReviews(false)} />}
       <div style={{ maxWidth:560, margin:'0 auto', padding:'0 0 80px' }}>
 
         {/* Sticky header */}
@@ -160,6 +164,9 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
               <span style={{ fontSize:11, color:G.gold, fontFamily:"'Cinzel',Georgia,serif" }}>
                 {'Lifetime ✦'}
               </span>
+            </Row>
+            <Row icon="⭐" label="Ratings & Reviews">
+              <button onClick={() => setShowReviews(true)} style={{ background: G.goldF, border: `1px solid ${G.goldB}`, color: G.gold, padding: '6px 16px', borderRadius: 10, fontSize: 12, fontFamily: "'Cinzel',Georgia,serif", cursor: 'pointer', letterSpacing: '0.06em' }}>Open</button>
             </Row>
             <Row icon="🛟" label="Email Support">
               <a href="mailto:eloraradiance.co@gmail.com" style={{ background:G.goldF, border:`1px solid ${G.goldB}`, color:G.gold, padding:'6px 16px', borderRadius:10, fontSize:12, fontFamily:"'Cinzel',Georgia,serif", textDecoration:'none', display:'inline-block', letterSpacing:'0.06em' }}>Contact</a>
