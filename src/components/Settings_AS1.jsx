@@ -247,9 +247,11 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
             <Row icon="⚓" label="Anchored Steps · Year 1">
               <span style={{ fontSize:11, color:G.dim }}>v1.0</span>
             </Row>
+            <a href="https://eloraradiance.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
             <Row icon="🌿" label="Elora Radiance Co." border={false}>
-              <span style={{ fontSize:11, color:G.dim }}>eloraradiance.com</span>
+              <span style={{ fontSize:11, color:G.gold }}>eloraradiance.com &rarr;</span>
             </Row>
+            </a>
           </div>
 
           {/* Export */}
