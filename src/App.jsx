@@ -662,7 +662,11 @@ export default function AnchoredSteps() {
   };
 
   const exportPDF = () => {
-    const printWindow = window.open("", "_blank");
+    const frame = document.createElement("iframe");
+    frame.setAttribute("aria-hidden", "true");
+    frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0";
+    document.body.appendChild(frame);
+    const printWindow = frame.contentWindow;
     const allWeeksData = ALL_WEEKS.map(w => {
       const wEntries = entries.filter(e => e.week === w.week);
       const has = wEntries.some(e => (e.field_value||"").trim());
@@ -700,7 +704,9 @@ export default function AnchoredSteps() {
       ${allWeeksData}
     </body></html>`);
     printWindow.document.close();
-    setTimeout(() => printWindow.print(), 500);
+    const cleanup = () => setTimeout(() => { try { frame.remove() } catch (e) {} }, 1500);
+    printWindow.onafterprint = cleanup;
+    setTimeout(() => { try { printWindow.focus(); printWindow.print() } catch (e) { console.error(e) } cleanup() }, 500);
   };
 
   const exportNotes = () => {
