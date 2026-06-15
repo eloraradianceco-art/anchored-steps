@@ -146,7 +146,7 @@ function LexiconPanel({ entry, lexWord, speaking, onClose, onSpeak, G, T }) {
           {speaking ? "▶ playing..." : "▶ hear"}
         </button>
       </div>
-      <p style={{fontSize:15,color:G.text,lineHeight:1.75}}>{entry.definition || ""}</p>
+      <p style={{fontSize:17,color:G.text,lineHeight:1.75}}>{entry.definition || ""}</p>
     </div>
   );
 }
@@ -168,7 +168,7 @@ function ContextModal({ ae, onClose, G }) {
         {[["Author",ae.author],["Location",ae.location],["Audience",ae.audience],["Commentary",ae.commentary]].map(([lb,val]) => val ? (
           <div key={lb} style={{marginBottom:16,paddingBottom:16,borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
             <div style={{fontSize:10,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:7}}>{lb}</div>
-            <p style={{fontSize:15,color:"#E6DED0",lineHeight:1.85,margin:0}}>{val}</p>
+            <p style={{fontSize:17,color:"#E6DED0",lineHeight:1.85,margin:0}}>{val}</p>
           </div>
         ) : null)}
         <button onClick={onClose} style={{width:"100%",marginTop:4,background:"transparent",border:"1px solid rgba(255,255,255,0.08)",color:G.muted,padding:"11px",borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:"EB Garamond,Georgia,serif"}}>Close</button>
@@ -918,7 +918,7 @@ export default function AnchoredSteps() {
                   {EXCERPTS[wk] && (
                     <div style={{background:"linear-gradient(145deg,rgba(176,138,78,0.09),rgba(176,138,78,0.02))",border:"1px solid rgba(176,138,78,0.2)",borderRadius:14,padding:"20px 22px",marginBottom:14}}>
                       <div style={{fontSize:10,color:G.gold,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:8,fontFamily:"Cinzel,serif"}}>From the Journal</div>
-                      <p style={{fontSize:16,color:T.text,lineHeight:1.8,fontStyle:"italic"}}>{EXCERPTS[wk]}</p>
+                      <p style={{fontSize:18,color:T.text,lineHeight:1.8,fontStyle:"italic"}}>{EXCERPTS[wk]}</p>
                     </div>
                   )}
                 </div>
@@ -958,7 +958,7 @@ export default function AnchoredSteps() {
                       {crossRefs.map((s,i) => {
                         return (
                           <div key={i} style={{borderLeft:"2px solid "+(darkMode?"rgba(176,138,78,0.35)":"rgba(176,138,78,0.5)"),paddingLeft:14,marginBottom:i<crossRefs.length-1?18:0,paddingBottom:i<crossRefs.length-1?18:0,borderBottom:i<crossRefs.length-1?"1px solid "+(darkMode?"rgba(255,255,255,0.06)":"rgba(0,0,0,0.08)"):"none"}}>
-                            <p style={{fontSize:16,color:T.text,lineHeight:1.8,fontStyle:"italic",marginBottom:8}}>
+                            <p style={{fontSize:18,color:T.text,lineHeight:1.8,fontStyle:"italic",marginBottom:8}}>
                               {highlightKeywords(s.text, kwList, darkMode)}
                             </p>
                             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
@@ -1013,8 +1013,8 @@ export default function AnchoredSteps() {
                       </div>
                       <div style={{fontSize:10,color:T.muted,fontFamily:"'Cinzel',Georgia,serif",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:12}}>{entry.language}</div>
                       <div style={{height:1,background:"rgba(176,138,78,0.2)",marginBottom:12}} />
-                      <p style={{fontSize:15,color:T.cream,lineHeight:1.7,marginBottom:12,fontFamily:"'EB Garamond',Georgia,serif"}}>{entry.meaning}</p>
-                      {entry.note && <p style={{fontSize:13,color:T.muted,lineHeight:1.7,fontStyle:"italic",fontFamily:"'EB Garamond',Georgia,serif"}}>{entry.note}</p>}
+                      <p style={{fontSize:17,color:T.cream,lineHeight:1.7,marginBottom:12,fontFamily:"'EB Garamond',Georgia,serif"}}>{entry.meaning}</p>
+                      {entry.note && <p style={{fontSize:15,color:T.muted,lineHeight:1.7,fontStyle:"italic",fontFamily:"'EB Garamond',Georgia,serif"}}>{entry.note}</p>}
                     </div>
                   ))}
                   {(!week?.lexicon || week.lexicon.length === 0) && (
@@ -1033,7 +1033,7 @@ export default function AnchoredSteps() {
                     <div key={i} style={{marginBottom:18}}>
                       <div style={{background:"linear-gradient(145deg,rgba(176,138,78,0.1),rgba(176,138,78,0.04))",border:"1px solid rgba(176,138,78,0.22)",borderRadius:12,padding:"14px 16px",marginBottom:10}}>
                         <span style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.1em",marginRight:8}}>0{i+1}</span>
-                        <span style={{fontSize:16,color:T.cream,fontStyle:"italic",lineHeight:1.7}}>{pr}</span>
+                        <span style={{fontSize:18,color:T.cream,fontStyle:"italic",lineHeight:1.7}}>{pr}</span>
                       </div>
                       <textarea rows={4} value={get("rf"+i)} onChange={e => set("rf"+i,e.target.value)} placeholder="Your honest response..." style={INP} />
                     </div>
@@ -1052,7 +1052,7 @@ export default function AnchoredSteps() {
                     {[{c:G.gold,t:week.applicationChallenge.title,b:week.applicationChallenge.text},{c:G.green,t:week.renewalChallenge.title,b:week.renewalChallenge.text}].map((card,i) => (
                       <div key={i} style={{background:"rgba("+(card.c===G.gold?"180,140,60":"120,184,120")+",0.07)",border:"1px solid rgba("+(card.c===G.gold?"180,140,60":"120,184,120")+",0.24)",borderRadius:11,padding:"14px 16px"}}>
                         <span style={{fontSize:11,color:card.c,fontFamily:"Cinzel,serif",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:6,display:"block"}}>{card.t}</span>
-                        <p style={{fontSize:15,color:T.text,lineHeight:1.65}}>{card.b}</p>
+                        <p style={{fontSize:17,color:T.text,lineHeight:1.65}}>{card.b}</p>
                       </div>
                     ))}
                   </div>
@@ -1274,7 +1274,7 @@ export default function AnchoredSteps() {
                           style={{background:"transparent",border:"none",color:G.red,cursor:"pointer",fontSize:14,padding:"2px 6px"}}>×</button>
                       </div>
                     </div>
-                    <p style={{fontSize:16,color:T.text,fontStyle:"italic",lineHeight:1.8,margin:"0 0 6px"}}>&#8220;{b.text}&#8221;</p>
+                    <p style={{fontSize:18,color:T.text,fontStyle:"italic",lineHeight:1.8,margin:"0 0 6px"}}>&#8220;{b.text}&#8221;</p>
                     <div style={{fontSize:11,color:T.muted}}>Week {b.week} · Saved {b.date}</div>
                   </div>
                 ))}
@@ -1454,7 +1454,7 @@ export default function AnchoredSteps() {
                     <button onClick={()=>setMemRevealed(true)} style={{width:"100%",background:G.goldF,border:`1px solid ${G.goldB}`,color:G.gold,padding:"12px",borderRadius:12,cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",marginBottom:10}}>Reveal Missing Words</button>
                   ) : (
                     <div style={{background:"rgba(124,146,132,0.08)",border:"1px solid rgba(124,146,132,0.25)",borderRadius:10,padding:"12px 14px",marginBottom:12}}>
-                      <p style={{fontSize:14,color:G.text,fontStyle:"italic",lineHeight:1.8,margin:0}}>
+                      <p style={{fontSize:16,color:G.text,fontStyle:"italic",lineHeight:1.8,margin:0}}>
                         {words.map((w,i)=>(
                           <span key={i} style={{color:(i+1)%3===0?G.green:G.text,fontWeight:(i+1)%3===0?600:400}}>{w}{i<words.length-1?" ":""}</span>
                         ))}
@@ -1477,7 +1477,7 @@ export default function AnchoredSteps() {
                       <div style={{fontSize:13,color:G.muted,marginBottom:16}}>{memScore>=90?"Nearly perfect — keep going!":memScore>=70?"Great progress — almost there!":memScore>=50?"Good start — practice more!":"Keep at it — repetition builds memory!"}</div>
                       <div style={{background:"rgba(255,255,255,0.04)",border:`1px solid ${G.border}`,borderRadius:10,padding:"12px",marginBottom:14,textAlign:"left"}}>
                         <div style={{fontSize:10,color:G.muted,letterSpacing:"0.1em",textTransform:"uppercase",fontFamily:"Cinzel,serif",marginBottom:6}}>Full verse</div>
-                        <p style={{fontSize:14,color:G.text,fontStyle:"italic",lineHeight:1.8,margin:0}}>"{quizVerse.text}"</p>
+                        <p style={{fontSize:16,color:G.text,fontStyle:"italic",lineHeight:1.8,margin:0}}>"{quizVerse.text}"</p>
                       </div>
                       {memScore>=70&&<button onClick={markMemorized} style={{width:"100%",background:"rgba(124,146,132,0.15)",border:"1px solid rgba(124,146,132,0.4)",color:G.green,padding:"12px",borderRadius:12,cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",marginBottom:10}}>✓ Mark as Memorized</button>}
                       <button onClick={()=>{setMemTyped('');setMemScore(null);}} style={{width:"100%",background:"transparent",border:"none",color:G.muted,cursor:"pointer",fontSize:13,fontFamily:"EB Garamond,Georgia,serif"}}>Try Again</button>
