@@ -630,7 +630,7 @@ export default function AnchoredSteps() {
       // Wait for fonts + 2 RAFs so the first share captures aligned layout
       try { await document.fonts.ready } catch {}
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
-      const dataUrl = await (await import('html-to-image')).toPng(shareCardRef.current, { cacheBust: true, pixelRatio: 2, backgroundColor: bg })
+      const dataUrl = await (await import('html-to-image')).toPng(shareCardRef.current, { cacheBust: true, pixelRatio: 3, backgroundColor: bg })
       const res = await fetch(dataUrl)
       const blob = await res.blob()
       const file = new File([blob], 'anchored-steps-card.png', { type: 'image/png' })
@@ -1537,16 +1537,16 @@ export default function AnchoredSteps() {
               </div>
               <div ref={shareCardRef} style={{background:cBg,border:'1px solid '+cBord,borderRadius:18,padding:'22px',marginBottom:14,fontFamily:'EB Garamond,Georgia,serif'}}>
                 <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12,paddingBottom:12,borderBottom:'1px solid '+cBord}}>
-                  <img src="/icon.png" alt="" style={{width:34,height:34,borderRadius:8}}/>
+                  <img src="/icon.png" alt="" style={{width:42,height:42,borderRadius:8}}/>
                   <div>
-                    <div style={{fontSize:12,color:cGold,fontFamily:'Cinzel,serif',letterSpacing:'0.06em'}}>Anchored Steps</div>
-                    <div style={{fontSize:10,color:cMuted}}>Week {wk} · {week?.title}</div>
+                    <div style={{fontSize:15,color:cGold,fontFamily:'Cinzel,serif',letterSpacing:'0.06em'}}>Anchored Steps</div>
+                    <div style={{fontSize:12,color:cMuted}}>Week {wk} · {week?.title}</div>
                   </div>
                 </div>
-                <div style={{fontSize:9,color:cGold,fontFamily:'Cinzel,serif',letterSpacing:'0.16em',textTransform:'uppercase',marginBottom:8}}>{ct.icon} {ct.label}</div>
-                <p style={{fontSize:ct.body.length>200?16:18,color:cText,fontStyle:'italic',lineHeight:1.85,margin:'0 0 10px',whiteSpace:'pre-line'}}>{ct.body}</p>
-                {ct.ref&&<div style={{fontSize:10,color:cGold,fontFamily:'Cinzel,serif',letterSpacing:'0.12em',textTransform:'uppercase',marginBottom:6}}>{ct.ref}</div>}
-                <div style={{fontSize:9,color:cMuted,marginTop:6}}>Walk steadily. Stay anchored. — eloraradiance.com</div>
+                <div style={{fontSize:11,color:cGold,fontFamily:'Cinzel,serif',letterSpacing:'0.16em',textTransform:'uppercase',marginBottom:8}}>{ct.icon} {ct.label}</div>
+                <p style={{fontSize:ct.body.length>200?20:23,color:cText,fontStyle:'italic',lineHeight:1.85,margin:'0 0 10px',whiteSpace:'pre-line'}}>{ct.body}</p>
+                {ct.ref&&<div style={{fontSize:13,color:cGold,fontFamily:'Cinzel,serif',letterSpacing:'0.12em',textTransform:'uppercase',marginBottom:6}}>{ct.ref}</div>}
+                <div style={{fontSize:11,color:cMuted,marginTop:6}}>Walk steadily. Stay anchored. — eloraradiance.com</div>
               </div>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:14}}>
                 <button onClick={handleShareImage} disabled={sharingCard} style={{background:'linear-gradient(135deg,rgba(176,138,78,0.3),rgba(176,138,78,0.12))',border:'1px solid rgba(176,138,78,0.45)',color:G.gold,padding:'13px',borderRadius:10,cursor:'pointer',fontSize:12,fontFamily:'Cinzel,serif',letterSpacing:'0.08em',opacity:sharingCard?0.6:1}}>
