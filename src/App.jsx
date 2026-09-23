@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import Onboarding from "./Onboarding.jsx";
 import Settings from "./components/Settings_AS1.jsx";
+import DailySteps from "./components/DailySteps.jsx";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://cvtukqamaqrhjtdvmslb.supabase.co";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2dHVrcWFtYXFyaGp0ZHZtc2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NDU1MjQsImV4cCI6MjA5MTQyMTUyNH0.gSksF5jV-UpuaUL7x7vhHHOB6Z7Qq0iehtbc2PoSAxw";
@@ -332,7 +333,7 @@ export default function AnchoredSteps() {
   const [showSettings, setShowSettings] = useState(false);
   const shareCardRef = useRef(null);
   const [subExpired, setSubExpired] = useState(false);
-  const [view, setView] = useState("journal");
+  const [view, setView] = useState("steps");
   const [wk, setWk] = useState(() => { try { return parseInt(localStorage.getItem('as1_current_week') || '1') } catch { return 1 } });
   const [showWeekJump, setShowWeekJump] = useState(false);
   const [sec, setSec] = useState("scripture");
@@ -834,13 +835,28 @@ export default function AnchoredSteps() {
           </div>
         </div>
         <div style={{display:"flex",justifyContent:"center",gap:2,padding:"5px 12px",flexWrap:"nowrap",overflowX:"auto"}}>
-          {[["journal","Journal"],["search","Search"],["bookmarks","Saved"],["contents","Contents"],["progress","Progress"],["settings","Settings"]].map(([v,l]) => (
+          {[["steps","Steps"],["journal","Journal"],["search","Search"],["bookmarks","Saved"],["contents","Contents"],["progress","Progress"],["settings","Settings"]].map(([v,l]) => (
             <button key={v} onClick={() => { if(v==="settings") setShowSettings(true); else setView(v); }} style={{background:view===v?"linear-gradient(135deg,rgba(176,138,78,0.18),rgba(176,138,78,0.07))":"transparent",border:"1px solid "+(view===v?"rgba(176,138,78,0.4)":"transparent"),color:view===v?G.gold:G.muted,padding:"4px 8px",borderRadius:6,cursor:"pointer",fontSize:10,fontFamily:"Cinzel,serif",letterSpacing:"0.04em",transition:"all .2s"}}>{l}</button>
           ))}
         </div>
       </header>
 
       <main style={{maxWidth:860,margin:"0 auto",padding:"26px 18px 80px"}}>
+
+        {view === "steps" && week && (
+          <DailySteps
+            week={week}
+            wk={wk}
+            totalWeeks={ALL_WEEKS.length || 52}
+            entries={entries}
+            get={get}
+            set={set}
+            streak={streak}
+            darkMode={darkMode}
+            onOpenWeek={() => { setSec("scripture"); setView("journal"); window.scrollTo(0, 0); }}
+            onGoWeek={n => { if (n >= 1 && n <= (ALL_WEEKS.length || 52)) { goWk(n); window.scrollTo(0, 0); } }}
+          />
+        )}
 
         {view === "journal" && week && (
           <div className="fi">
