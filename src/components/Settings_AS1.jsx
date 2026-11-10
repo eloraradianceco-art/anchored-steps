@@ -133,7 +133,7 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
       <div style={{ maxWidth:560, margin:'0 auto', padding:'0 0 80px' }}>
 
         {/* Sticky header */}
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px 20px', borderBottom:`1px solid ${G.border}`, position:'sticky', top:0, zIndex:10, background: darkMode ? '#0F1A24' : '#F5F1E8', backdropFilter:'blur(12px)' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'calc(16px + env(safe-area-inset-top, 0px)) 20px 16px', borderBottom:`1px solid ${G.border}`, position:'sticky', top:0, zIndex:10, background: darkMode ? '#0F1A24' : '#F5F1E8', backdropFilter:'blur(12px)' }}>
           <div>
             <div style={{ fontSize:9, color:G.gold, letterSpacing:'0.16em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif" }}>Anchored Steps · Year 1</div>
             <div style={{ fontSize:18, fontWeight:700, color:G.cream, fontFamily:"'Cinzel',Georgia,serif" }}>Settings</div>

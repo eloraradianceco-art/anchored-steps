@@ -92,7 +92,7 @@ export default function Reviews({ app, appName, eyebrow, userEmail, C, lightMode
       <div style={{ maxWidth: 560, margin: '0 auto', padding: '0 0 80px' }}>
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid ' + C.border, position: 'sticky', top: 0, zIndex: 10, background: (C.bg || (lightMode ? '#F2EDE3' : '#070E17')), backdropFilter: 'blur(12px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'calc(16px + env(safe-area-inset-top, 0px)) 20px 16px', borderBottom: '1px solid ' + C.border, position: 'sticky', top: 0, zIndex: 10, background: (C.bg || (lightMode ? '#F2EDE3' : '#070E17')), backdropFilter: 'blur(12px)' }}>
           <div>
             <div style={{ fontSize: 9, color: C.redL, letterSpacing: '0.16em', textTransform: 'uppercase', fontFamily: cin }}>{eyebrow || appName}</div>
             <div style={{ fontSize: 18, fontWeight: 700, color: C.cream, fontFamily: cin }}>Ratings &amp; Reviews</div>
