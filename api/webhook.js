@@ -25,13 +25,14 @@ const LINK_APP = {
 // Fallback for checkouts without a known link: where the buyer is sent afterwards.
 const HOST_APP = {
   "anchored-steps.vercel.app": "as1",
+  "anchored-steps-year2.vercel.app": "as2",
   "anchored-steps-y2.vercel.app": "as2",
   "armedandanchored.vercel.app": "aa",
 };
 
 const APP_INFO = {
   as1: { name: "Anchored Steps", tagline: "52 Weeks of Faith in Action", url: "https://anchored-steps.vercel.app", prefix: "AS-" },
-  as2: { name: "Anchored Steps · Year 2", tagline: "52 More Weeks of Faith in Action", url: "https://anchored-steps-y2.vercel.app", prefix: "Y2-" },
+  as2: { name: "Anchored Steps · Year 2", tagline: "52 More Weeks of Faith in Action", url: "https://anchored-steps-year2.vercel.app", prefix: "Y2-" },
 };
 
 function appForSession(session) {
