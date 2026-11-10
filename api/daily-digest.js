@@ -4,32 +4,49 @@
 const DIGEST_TO = "eloraradiance.co@gmail.com";
 const DIGEST_FROM = "Elora Radiance Digest <reports@eloraradiance.com>";
 
+// Year 1, Year 2 and Armed & Anchored share one database and one sign-in.
+// Each app's list is the accounts that have that app unlocked. Sign-in times are per account, not per app.
+const HUB_URL = process.env.VITE_SUPABASE_URL;
+const HUB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const APPS = [
-  { name: "Anchored Steps Year 1", url: process.env.VITE_SUPABASE_URL,    key: process.env.SUPABASE_SERVICE_ROLE_KEY },
-  { name: "Anchored Steps Year 2", url: process.env.SUPABASE_AS2_URL,     key: process.env.SUPABASE_AS2_SERVICE_KEY },
-  { name: "Armed & Anchored",       url: process.env.SUPABASE_AA_URL,      key: process.env.SUPABASE_AA_SERVICE_KEY },
-  { name: "The Red Letters",        url: process.env.SUPABASE_RL_URL,      key: process.env.SUPABASE_RL_SERVICE_KEY },
+  { name: "Anchored Steps Year 1", url: HUB_URL, key: HUB_KEY, table: "profiles",     idCol: "id" },
+  { name: "Anchored Steps Year 2", url: HUB_URL, key: HUB_KEY, table: "as2_profiles", idCol: "user_id" },
+  { name: "Armed & Anchored",       url: HUB_URL, key: HUB_KEY, table: "aa_profiles",  idCol: "id" },
+  { name: "The Red Letters",        url: process.env.SUPABASE_RL_URL, key: process.env.SUPABASE_RL_SERVICE_KEY },
 ];
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+const userCache = {};
+async function fetchAllUsers(url, key) {
+  if (!userCache[url]) {
+    userCache[url] = (async () => {
+      const r = await fetch(`${url}/auth/v1/admin/users?per_page=1000`, {
+        headers: { "Authorization": `Bearer ${key}`, "apikey": key },
+      });
+      if (!r.ok) throw new Error(`${r.status}: ${(await r.text()).slice(0, 180)}`);
+      const data = await r.json();
+      return data.users || [];
+    })();
+  }
+  return userCache[url];
+}
 
 async function fetchAppUsers(app) {
   if (!app.url || !app.key) {
     return { app: app.name, error: "Missing env vars", users: [] };
   }
   try {
-    const r = await fetch(`${app.url}/auth/v1/admin/users?per_page=500`, {
-      headers: {
-        "Authorization": `Bearer ${app.key}`,
-        "apikey": app.key,
-      },
-    });
-    if (!r.ok) {
-      const text = await r.text();
-      return { app: app.name, error: `${r.status}: ${text.slice(0,180)}`, users: [] };
+    let users = await fetchAllUsers(app.url, app.key);
+    if (app.table) {
+      const r = await fetch(`${app.url}/rest/v1/${app.table}?select=${app.idCol}`, {
+        headers: { "Authorization": `Bearer ${app.key}`, "apikey": app.key },
+      });
+      if (!r.ok) throw new Error(`${r.status}: ${(await r.text()).slice(0, 180)}`);
+      const ids = new Set((await r.json()).map(row => row[app.idCol]));
+      users = users.filter(u => ids.has(u.id));
     }
-    const data = await r.json();
-    return { app: app.name, users: data.users || [] };
+    return { app: app.name, users };
   } catch (e) {
     return { app: app.name, error: String(e.message || e), users: [] };
   }

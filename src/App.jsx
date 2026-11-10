@@ -34,7 +34,9 @@ const G = {
 const INP_STYLE = {width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,color:G.cream,fontSize:16,padding:"12px 14px",outline:"none",fontFamily:"EB Garamond,Georgia,serif",marginBottom:12};
 const LBL_STYLE = {fontSize:10,color:G.gold,letterSpacing:"0.15em",textTransform:"uppercase",marginBottom:8,display:"block",fontFamily:"Cinzel,serif"};
 
-function todayStr() { return new Date().toISOString().split("T")[0]; }
+// Local calendar date (YYYY-MM-DD). Streak days are counted in the reader's own time zone.
+function todayStr() { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function localDate(ymd) { const [y, m, d] = String(ymd).split("-").map(Number); return new Date(y, (m || 1) - 1, d || 1); }
 
 function highlightKeywords(text, keywords, darkMode) {
   try {
@@ -72,7 +74,7 @@ function calcStreak(entries) {
   let streak = 0;
   let cursor = new Date(); cursor.setHours(0,0,0,0);
   for (let i = 0; i < days.length; i++) {
-    const d = new Date(days[i]); d.setHours(0,0,0,0);
+    const d = localDate(days[i]);
     const diff = Math.round((cursor - d) / 86400000);
     if (diff === 0 || diff === 1) { streak++; cursor = d; } else break;
   }
@@ -178,6 +180,40 @@ function ContextModal({ ae, onClose, G }) {
   );
 }
 
+const PENDING_CODE_KEY = "as1_pending_code";
+const BUY_LINK = "https://buy.stripe.com/6oUbJ0fDS0Lc2ijarV57W09";
+
+// Signed in, but Year 1 isn't unlocked on this account (e.g. they came from Armed & Anchored).
+function NoAccessScreen({ email, onUnlocked, onSignOut }) {
+  const [code, setCode] = useState("")
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState("")
+  const redeem = async () => {
+    if (!code.trim()) { setErr("Enter the access code from your purchase email."); return }
+    setBusy(true); setErr("")
+    const { data, error } = await supabase.rpc("redeem_access_code", { input_code: code.trim(), for_app: "as1" })
+    setBusy(false)
+    if (error || !data) { setErr("That code isn't valid or has already been used."); return }
+    onUnlocked()
+  }
+  const buy = BUY_LINK + (email ? "?prefilled_email=" + encodeURIComponent(email) : "")
+  return (
+    <div style={{ minHeight:"100vh", background:"linear-gradient(155deg,#0F1A24 0%,#1A2A38 55%,#0F1A24 100%)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"32px 20px", textAlign:"center", fontFamily:"'EB Garamond',Georgia,serif" }}>
+      <img src="/icon.png" alt="" style={{ width:64, height:64, borderRadius:14, marginBottom:16 }}/>
+      <div style={{ fontFamily:"Cinzel,serif", fontSize:20, color:"#F5F1E8", marginBottom:8 }}>Unlock Anchored Steps</div>
+      <p style={{ fontSize:16, color:"#A8B3BC", lineHeight:1.7, margin:"0 0 22px", maxWidth:360 }}>You're signed in as {email}, but Year 1 isn't on this account yet. Enter your access code, or get access below.</p>
+      <div style={{ width:"100%", maxWidth:340 }}>
+        <input value={code} onChange={e=>setCode(e.target.value)} onKeyDown={e=>e.key==="Enter"&&redeem()} placeholder="e.g. AS-7X4K2M" autoCapitalize="characters" style={{ width:"100%", boxSizing:"border-box", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(176,138,78,0.35)", borderRadius:10, color:"#F5F1E8", fontSize:16, padding:"14px 16px", fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:10 }}/>
+        {err && <div style={{ fontSize:14, color:"#C94848", marginBottom:10 }}>{err}</div>}
+        <button onClick={redeem} disabled={busy} style={{ width:"100%", padding:"15px", borderRadius:12, border:"none", background:"linear-gradient(135deg,rgba(176,138,78,0.4),rgba(176,138,78,0.2))", color:"#F5F1E8", fontFamily:"'Cinzel',Georgia,serif", fontSize:14, letterSpacing:"0.09em", marginBottom:12 }}>{busy ? "Checking..." : "Unlock with Code"}</button>
+        <a href={buy} target="_blank" rel="noreferrer" style={{ display:"block", border:"1px solid rgba(176,138,78,0.45)", borderRadius:12, padding:"13px", color:"#B08A4E", textDecoration:"none", fontFamily:"'Cinzel',Georgia,serif", fontSize:13, letterSpacing:"0.08em", marginBottom:8 }}>Get Lifetime Access · $39</a>
+        <p style={{ fontSize:13, color:"#6C7A86", lineHeight:1.6, margin:"0 0 18px" }}>After purchase, your access code arrives by email.</p>
+        <button onClick={onSignOut} style={{ background:"transparent", border:"none", color:"#6C7A86", cursor:"pointer", fontSize:13, fontFamily:"EB Garamond,Georgia,serif" }}>Sign out</button>
+      </div>
+    </div>
+  )
+}
+
 // Auth is now in ./components/Auth_AS1.jsx — but keep inline version for single-file deploy
 // This updated AuthScreen matches AA's design pattern
 function AuthScreen({onAuth}) {
@@ -200,17 +236,26 @@ function AuthScreen({onAuth}) {
     else { onAuth(false) }
   }
 
+  // One account works across Elora Radiance apps. The code is redeemed by the app
+  // right after sign-in (see loadUserData), so it works for new and existing accounts.
   const handleSignUp = async () => {
     if (!code.trim()) { setError("Please enter your access code."); return }
+    if (!email || password.length < 6) { setError("Enter your email and a password of at least 6 characters."); return }
     setError(""); setLoading(true)
     const { data: codeRows, error: codeErr } = await supabase.rpc("validate_access_code", { input_code: code.trim() })
     if (codeErr || !codeRows?.length) { setError("Invalid or already used access code."); setLoading(false); return }
-    const codeData = codeRows[0]
-    const { data: authData, error: authErr } = await supabase.auth.signUp({ email, password })
+    try { localStorage.setItem(PENDING_CODE_KEY, code.trim()) } catch {}
+    let { data: authData, error: authErr } = await supabase.auth.signUp({ email, password, options: { data: { app: "as1" } } })
+    if (authErr && /already (registered|exists)/i.test(authErr.message)) {
+      const res = await supabase.auth.signInWithPassword({ email, password })
+      if (res.error) {
+        setError("This email already has an Elora Radiance account (from Armed & Anchored or Year 2). Enter that password to add Anchored Steps to it, or use Forgot password.")
+        setLoading(false); return
+      }
+      authData = res.data; authErr = null
+    }
     if (authErr) { setError(authErr.message); setLoading(false); return }
-    if (!authData.session) { setMsg("Check your email to confirm your account, then sign in."); setLoading(false); return }
-    await supabase.from("access_codes").update({ used:true, used_by:authData.user.id, used_at:new Date().toISOString() }).eq("id", codeData.code_id)
-    await supabase.from("profiles").update({ plan:codeData.plan_type }).eq("id", authData.user.id)
+    if (!authData?.session) { setMsg("Check your email to confirm your account, then sign in. Your code will be applied then."); setLoading(false); return }
     setJustSignedUp(true); setLoading(false)
   }
 
@@ -233,6 +278,7 @@ function AuthScreen({onAuth}) {
           <div style={{ fontSize:9, color:G.gold, letterSpacing:"0.2em", textTransform:"uppercase", fontFamily:"'Cinzel',Georgia,serif", marginBottom:6 }}>Elora Radiance Co.</div>
           <div style={{ fontSize:20, fontWeight:700, color:G.cream, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.05em", marginBottom:6 }}>Anchored Steps</div>
           <div style={{ fontSize:13, color:G.muted, fontStyle:"italic" }}>{mode==="signin"?"Welcome back" : mode==="forgot"?"Reset your password" : "Create your account"}</div>
+          {mode==="signup" && <div style={{ fontSize:13, color:G.muted, lineHeight:1.6, marginTop:10 }}>Already use Armed &amp; Anchored or Year 2? Use that same email and password.</div>}
         </div>
 
         {error && <div style={{ background:"rgba(201,72,72,0.1)", border:"1px solid rgba(201,72,72,0.3)", borderRadius:10, padding:"10px 14px", marginBottom:14, fontSize:14, color:"#C94848", lineHeight:1.6 }}>{error}</div>}
@@ -333,6 +379,7 @@ export default function AnchoredSteps() {
   const [showSettings, setShowSettings] = useState(false);
   const shareCardRef = useRef(null);
   const [subExpired, setSubExpired] = useState(false);
+  const [noAccess, setNoAccess] = useState(false);
   const [view, setView] = useState("steps");
   const [wk, setWk] = useState(() => { try { return parseInt(localStorage.getItem('as1_current_week') || '1') } catch { return 1 } });
   const [showWeekJump, setShowWeekJump] = useState(false);
@@ -452,7 +499,7 @@ export default function AnchoredSteps() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setSession(session);
       if (session) loadUserData(session.user.id);
-      else { setLoading(false); setProfile(null); setEntries([]); }
+      else { setLoading(false); setProfile(null); setEntries([]); setNoAccess(false); }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -460,10 +507,22 @@ export default function AnchoredSteps() {
   const loadUserData = async (userId) => {
     setLoading(true);
     try {
-      const [{ data: prof }, { data: ents }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+      const fetchProfile = () => supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+      let [{ data: prof, error: profErr }, { data: ents }] = await Promise.all([
+        fetchProfile(),
         supabase.from("journal_entries").select("*").eq("user_id", userId),
       ]);
+      // A Year 1 profile means Year 1 is unlocked. Apply a code saved during sign-up, if any.
+      if (!prof && !profErr) {
+        let pending = null;
+        try { pending = localStorage.getItem(PENDING_CODE_KEY) } catch {}
+        if (pending) {
+          const { error: redeemErr } = await supabase.rpc("redeem_access_code", { input_code: pending, for_app: "as1" });
+          if (!redeemErr) { try { localStorage.removeItem(PENDING_CODE_KEY) } catch {} }
+          ({ data: prof, error: profErr } = await fetchProfile());
+        }
+      }
+      setNoAccess(!prof && !profErr);
       if (prof) {
         setProfile(prof);
         const storedWeek = localStorage.getItem('as1_current_week');
@@ -757,6 +816,9 @@ export default function AnchoredSteps() {
 
   // ── Not logged in
   if (!session) return <AuthScreen onAuth={() => window.location.reload()} />;
+
+  // ── Signed in, but Year 1 not unlocked on this account
+  if (noAccess) return <NoAccessScreen email={session.user?.email} onUnlocked={() => loadUserData(session.user.id)} onSignOut={signOut} />;
 
 // ── Onboarding
   if (showSettings) return (
