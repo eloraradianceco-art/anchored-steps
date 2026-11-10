@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Reviews from './Reviews'
 
-export default function Settings({ profile, userId, supabase, entries, wk, ALL_WEEKS, darkMode, onToggleDarkMode, onResetWeek, onClose }) {
+export default function Settings({ profile, userId, supabase, entries, wk, ALL_WEEKS, darkMode, onToggleDarkMode, onResetWeek, onClose, savedCount, onOpenSaved }) {
   const [copiedShare, setCopiedShare] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
   const [exporting, setExporting] = useState(false)
@@ -26,7 +26,7 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
     entries?.some(e => e.week === w.week && ['study','rfj','apply','prayer'].includes(e.field_key) && (e.field_value||'').trim())
   ).length : 0
   const versesMemorized = entries?.filter(e => e.field_key?.startsWith('mem_') && e.field_value === '1').length || 0
-  const bookmarks = entries?.filter(e => e.field_key === 'bookmark' && e.field_value === '1').length || 0
+  const bookmarks = typeof savedCount === 'number' ? savedCount : (entries?.filter(e => e.field_key === 'bookmark' && e.field_value === '1').length || 0)
 
   const shareText = `I've been using Anchored Steps — a 52-week Scripture devotional with daily study, reflection, prayer, and journal. Worth every week.\n\nanchored-steps.vercel.app`
 
@@ -165,6 +165,17 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
               {resetDone ? '✓ Reset to Week 1' : '↺ Reset to Week 1'}
             </button>
           </div>
+
+          {/* Saved verses */}
+          {onOpenSaved && (
+            <button onClick={onOpenSaved} style={{ width:'100%', marginTop:10, display:'flex', alignItems:'center', justifyContent:'space-between', background:G.bgCard, border:`1px solid ${G.border}`, borderRadius:14, padding:'14px 16px', cursor:'pointer', textAlign:'left' }}>
+              <span style={{ display:'flex', alignItems:'center', gap:12 }}>
+                <span style={{ fontSize:18, width:26, textAlign:'center', color:G.gold }}>☆</span>
+                <span style={{ fontSize:16, color:G.text, fontFamily:"'EB Garamond',Georgia,serif" }}>Saved verses</span>
+              </span>
+              <span style={{ fontSize:13, color:G.gold, fontFamily:"'Cinzel',Georgia,serif" }}>{bookmarks} →</span>
+            </button>
+          )}
 
           {/* Account */}
           <div style={{ marginTop:24, marginBottom:8 }}>

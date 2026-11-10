@@ -832,6 +832,8 @@ export default function AnchoredSteps() {
       darkMode={darkMode}
       onToggleDarkMode={() => { const n = !darkMode; setDarkMode(n); try { localStorage.setItem("as_dark", String(n)) } catch {}; if (session?.user?.id) supabase.from("profiles").update({ dark_mode: n }).eq("id", session.user.id).then(({ error }) => { if (error) console.warn("dark sync:", error.message) }); }}
       onResetWeek={() => goWk(1)}
+      savedCount={bookmarks.length}
+      onOpenSaved={() => { setShowSettings(false); doSearch(""); setView("search"); window.scrollTo(0, 0); }}
       onClose={() => setShowSettings(false)}
     />
   )
@@ -876,6 +878,27 @@ export default function AnchoredSteps() {
   const week = ALL_WEEKS.find(w => w.week === wk);
   const INP = {width:"100%",background:T.inputBg,border:"1px solid "+T.inputBorder,borderRadius:12,color:T.text,fontSize:17,lineHeight:1.9,padding:"16px 18px",fontFamily:"EB Garamond,Georgia,serif",outline:"none",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.02)"};
   const LBL = {fontSize:10,color:G.gold,letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:12,display:"block",fontFamily:"Cinzel,serif"};
+  // Saved verses (shown on the Search screen before you type)
+  const savedCards = (
+    <>
+      {bookmarks.map((b,i) => (
+        <div key={i} style={{background:T.cardBg,border:"1px solid rgba(176,138,78,0.25)",borderRadius:14,padding:"18px 20px",marginBottom:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+            <span style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",textTransform:"uppercase"}}>{b.ref}</span>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={() => { goWk(b.week); setSec("scripture"); setView("journal"); }}
+                style={{background:"transparent",border:"1px solid rgba(176,138,78,0.25)",color:G.gold,padding:"2px 10px",borderRadius:10,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif"}}>Go →</button>
+              <button onClick={() => toggleBookmark(b, b.week, b.section)}
+                style={{background:"transparent",border:"none",color:G.red,cursor:"pointer",fontSize:14,padding:"2px 6px"}}>×</button>
+            </div>
+          </div>
+          <p style={{fontSize:18,color:T.text,fontStyle:"italic",lineHeight:1.8,margin:"0 0 6px"}}>&#8220;{b.text}&#8221;</p>
+          <div style={{fontSize:11,color:T.muted}}>Week {b.week} · Saved {b.date}</div>
+        </div>
+      ))}
+    </>
+  );
+
   const kwList = week ? week.keywords.split(",").map(k => k.trim()) : [];
   const crossRefs = CROSS_REFS[String(wk)] || CROSS_REFS[wk] || [];
 
@@ -896,10 +919,10 @@ export default function AnchoredSteps() {
             </div>
           </div>
         </div>
-        <div style={{display:"flex",justifyContent:"center",gap:2,padding:"5px 12px",flexWrap:"nowrap",overflowX:"auto"}}>
-          {[["steps","Steps"],["journal","Journal"],["search","Search"],["bookmarks","Saved"],["contents","Contents"],["progress","Progress"],["settings","Settings"]].map(([v,l]) => (
-            <button key={v} onClick={() => { if(v==="settings") setShowSettings(true); else setView(v); }} style={{background:view===v?"linear-gradient(135deg,rgba(176,138,78,0.18),rgba(176,138,78,0.07))":"transparent",border:"1px solid "+(view===v?"rgba(176,138,78,0.4)":"transparent"),color:view===v?G.gold:G.muted,padding:"4px 8px",borderRadius:6,cursor:"pointer",fontSize:10,fontFamily:"Cinzel,serif",letterSpacing:"0.04em",transition:"all .2s"}}>{l}</button>
-          ))}
+        <div style={{display:"flex",justifyContent:"center",gap:2,padding:"5px 8px",flexWrap:"nowrap",overflowX:"auto"}}>
+          {[["steps","Steps"],["contents","Contents"],["search","Search"],["progress","Progress"],["settings","Settings"]].map(([v,l]) => { const on = view===v || (v==="steps" && view==="journal"); return (
+            <button key={v} onClick={() => { if(v==="settings") setShowSettings(true); else { setView(v); window.scrollTo(0, 0); } }} style={{background:on?"linear-gradient(135deg,rgba(176,138,78,0.18),rgba(176,138,78,0.07))":"transparent",border:"1px solid "+(on?"rgba(176,138,78,0.4)":"transparent"),color:on?G.gold:G.muted,padding:"6px 9px",borderRadius:7,cursor:"pointer",fontSize:11.5,fontFamily:"Cinzel,serif",letterSpacing:"0.04em",transition:"all .2s",whiteSpace:"nowrap"}}>{l}</button>
+          ); })}
         </div>
       </header>
 
@@ -1321,41 +1344,17 @@ export default function AnchoredSteps() {
                 ))}
               </div>
             )}
-            {!searchQuery && (
+            {!searchQuery && bookmarks.length === 0 && (
               <div style={{textAlign:"center",padding:"40px 0"}}>
                 <div style={{fontSize:36,marginBottom:12}}>🔍</div>
-                <p style={{fontSize:15,color:T.muted,fontStyle:"italic"}}>Start typing to search your journal...</p>
+                <p style={{fontSize:15,color:T.muted,fontStyle:"italic"}}>Start typing to search your journal.</p>
+                <p style={{fontSize:14,color:T.muted,fontStyle:"italic",marginTop:6}}>Tap ☆ on any scripture to save it. Your saved verses show up here.</p>
               </div>
             )}
-          </div>
-        )}
-
-        {view === "bookmarks" && (
-          <div className="fi">
-            <h2 style={{fontFamily:"Cinzel,serif",fontSize:20,color:T.cream,marginBottom:4}}>Saved Verses</h2>
-            <p style={{fontSize:14,color:T.muted,fontStyle:"italic",marginBottom:20}}>Verses you&#8217;ve bookmarked for quick reference.</p>
-            {bookmarks.length === 0 ? (
-              <div style={{textAlign:"center",padding:"40px 0"}}>
-                <div style={{fontSize:36,marginBottom:12}}>☆</div>
-                <p style={{fontSize:15,color:T.muted,fontStyle:"italic"}}>No saved verses yet. Tap ☆ on any scripture to save it here.</p>
-              </div>
-            ) : (
+            {!searchQuery && bookmarks.length > 0 && (
               <div>
-                {bookmarks.map((b,i) => (
-                  <div key={i} style={{background:T.cardBg,border:"1px solid rgba(176,138,78,0.25)",borderRadius:14,padding:"18px 20px",marginBottom:12}}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
-                      <span style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",textTransform:"uppercase"}}>{b.ref}</span>
-                      <div style={{display:"flex",gap:8}}>
-                        <button onClick={() => { goWk(b.week); setSec("scripture"); setView("journal"); }}
-                          style={{background:"transparent",border:"1px solid rgba(176,138,78,0.25)",color:G.gold,padding:"2px 10px",borderRadius:10,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif"}}>Go →</button>
-                        <button onClick={() => toggleBookmark(b, b.week, b.section)}
-                          style={{background:"transparent",border:"none",color:G.red,cursor:"pointer",fontSize:14,padding:"2px 6px"}}>×</button>
-                      </div>
-                    </div>
-                    <p style={{fontSize:18,color:T.text,fontStyle:"italic",lineHeight:1.8,margin:"0 0 6px"}}>&#8220;{b.text}&#8221;</p>
-                    <div style={{fontSize:11,color:T.muted}}>Week {b.week} · Saved {b.date}</div>
-                  </div>
-                ))}
+                <div style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:14}}>☆ Saved verses · {bookmarks.length}</div>
+                {savedCards}
               </div>
             )}
           </div>
