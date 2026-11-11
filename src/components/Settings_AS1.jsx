@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Reviews from './Reviews'
 import ReminderSettings from './ReminderSettings'
 import AccountPrivacy from './AccountPrivacy'
+import ScriptureCredits from './ScriptureCredits'
 
 export default function Settings({ profile, userId, supabase, entries, wk, ALL_WEEKS, darkMode, onToggleDarkMode, onResetWeek, onClose, savedCount, onOpenSaved }) {
   const [copiedShare, setCopiedShare] = useState(false)
@@ -211,6 +212,8 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
             text: G.text, muted: G.muted, card: G.bgCard, border: G.border, dark: darkMode,
             danger: darkMode ? '#D9786B' : '#A8443A', dangerF: darkMode ? 'rgba(217,120,107,0.12)' : 'rgba(168,68,58,0.08)', dangerB: darkMode ? 'rgba(217,120,107,0.35)' : 'rgba(168,68,58,0.3)',
           }} />
+
+          <ScriptureCredits notices={['ESV', 'NIV', 'NKJV', 'NLT', 'KJV']} theme={{ text: G.text, muted: G.muted, card: G.bgCard, border: G.border }} />
 
           {/* Appearance */}
           <div style={{ marginTop:24, marginBottom:8 }}>
