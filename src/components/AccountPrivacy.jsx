@@ -21,7 +21,7 @@ export default function AccountPrivacy({ supabase, theme: t, label = 'Privacy & 
     setBusy(true); setError('')
     const { error: rpcError } = await supabase.rpc('delete_my_account')
     if (rpcError) {
-      setError("We couldn't delete your account. Please try again, or email eloraradiance.co@gmail.com and we'll do it for you.")
+      setError("We couldn't delete your account. Please try again, or email support@eloraradiance.com and we'll do it for you.")
       setBusy(false)
       return
     }

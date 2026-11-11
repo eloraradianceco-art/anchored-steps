@@ -12,7 +12,7 @@ const crypto = require("crypto");
 const webpush = require("web-push");
 
 const VAPID_PUBLIC_KEY = "BFqWoG-75HGUXY-JHYdrh2cinBepOmHGprWojb12kuu5QL3Zq-xKAUsy8zHbLxL84Jsa6x4vhHuSfU_Pio-_vZw";
-const CONTACT = "mailto:eloraradiance.co@gmail.com";
+const CONTACT = "mailto:support@eloraradiance.com";
 const MAX_ITEMS = 500;
 
 const APPS = {

@@ -634,7 +634,10 @@ export default function AnchoredSteps() {
 
   // checkQuiz replaced by inline memo scoring
 
-  const daysComplete = n => entries.filter(e => e.week === n && e.field_key.startsWith("tr_") && (e.field_value||"").trim()).length;
+  // A week's progress (0-7): the Daily Steps done, or the older daily tracker if that's further along.
+  const trackerDays = n => entries.filter(e => e.week === n && e.field_key.startsWith("tr_") && (e.field_value||"").trim()).length;
+  const stepsDone = n => entries.filter(e => e.week === n && /^ds_[1-7]$/.test(e.field_key) && (e.field_value||"").trim()).length;
+  const daysComplete = n => Math.max(stepsDone(n), trackerDays(n));
   const weeksActive = ALL_WEEKS.filter(w => daysComplete(w.week) > 0).length;
   const streak = calcStreak(entries);
 
