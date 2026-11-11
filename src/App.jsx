@@ -102,6 +102,20 @@ function SaveBtn({onSave, flash, G = G_DARK}) {
   );
 }
 
+// Safari (iOS 26) colors the status-bar area and its bottom bar from the page background,
+// and the phone's Reduce Transparency setting decides whether that area is see-through
+// (blurred page) or solid. Keeping the page background, the header and theme-color one
+// solid color makes the top of the app look the same with the setting on or off.
+function paintChrome(color) {
+  try {
+    document.documentElement.style.backgroundColor = color;
+    document.body.style.backgroundColor = color;
+    let m = document.querySelector('meta[name="theme-color"]');
+    if (!m) { m = document.createElement("meta"); m.setAttribute("name", "theme-color"); document.head.appendChild(m); }
+    m.setAttribute("content", color);
+  } catch { /* no DOM */ }
+}
+
 // ── AUTH SCREENS ──────────────────────────────────────────────────────────────
 
 function YearReviewModal({ entries, ALL_WEEKS, onClose, G }) {
@@ -443,6 +457,9 @@ export default function AnchoredSteps() {
   const [darkMode, setDarkMode] = useState(() => { try { return localStorage.getItem("as_dark") !== "false" } catch { return true } });
   // Palette for everything inside the app: readable light colors in light mode.
   const G = darkMode ? G_DARK : G_LIGHT;
+  // Sign-in, unlock, onboarding and loading screens are dark; the app follows the theme.
+  const chromeColor = (!session || loading || noAccess || subExpired || showOnboarding || darkMode) ? "#0F1A24" : "#F2EDE3";
+  useEffect(() => { paintChrome(chromeColor); }, [chromeColor]);
 
   // Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -849,13 +866,13 @@ export default function AnchoredSteps() {
     muted:"#C0CDD8",border:"rgba(255,255,255,0.08)",cream:"#F5F1E8",
     cardBg:"linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))",
     inputBg:"rgba(255,255,255,0.035)",inputBorder:"rgba(176,138,78,0.18)",
-    headerBg:"rgba(15,26,36,0.88)",sectionTitle:"#F5F1E8",bodyText:"#E6DED0",
+    headerBg:"#0F1A24",sectionTitle:"#F5F1E8",bodyText:"#E6DED0",
   } : {
     bg:"#F2EDE3",bgCard:"rgba(0,0,0,0.03)",text:"#2C2416",
     muted:"#5E4E3C",border:"rgba(176,138,78,0.2)",cream:"#2C2416",
     cardBg:"linear-gradient(145deg,rgba(255,255,255,0.95),rgba(255,255,255,0.8))",
     inputBg:"rgba(255,255,255,0.9)",inputBorder:"rgba(176,138,78,0.35)",
-    headerBg:"rgba(242,237,227,0.95)",sectionTitle:"#2C2416",bodyText:"#3D2E1A",
+    headerBg:"#F2EDE3",sectionTitle:"#2C2416",bodyText:"#3D2E1A",
   };
 
   const week = ALL_WEEKS.find(w => w.week === wk);
@@ -888,7 +905,7 @@ export default function AnchoredSteps() {
   return (
     <div style={{minHeight:"100vh",background:darkMode?"linear-gradient(155deg,#0F1A24 0%,#1A2A38 50%,#0F1A24 100%)":"linear-gradient(155deg,#F5F1E8 0%,#EDE5D4 50%,#F5F1E8 100%)"}}>
 
-      <header style={{position:"sticky",top:0,zIndex:100,paddingTop:"env(safe-area-inset-top, 0px)",marginTop:"calc(-1 * env(safe-area-inset-top, 0px))",background:T.headerBg || "rgba(15,26,36,0.88)",backdropFilter:"blur(14px)",borderBottom:"1px solid rgba(176,138,78,0.14)"}}>
+      <header style={{position:"sticky",top:0,zIndex:100,paddingTop:"env(safe-area-inset-top, 0px)",marginTop:"calc(-1 * env(safe-area-inset-top, 0px))",background:T.headerBg || "#0F1A24",borderBottom:"1px solid rgba(176,138,78,0.14)"}}>
         <div style={{borderBottom:"1px solid rgba(180,140,60,0.12)",padding:"10px 18px"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
