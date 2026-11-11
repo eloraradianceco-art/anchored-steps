@@ -180,34 +180,68 @@ function ContextModal({ ae, onClose, G }) {
   );
 }
 
-const PENDING_CODE_KEY = "as1_pending_code";
 const BUY_LINK = "https://buy.stripe.com/6oUbJ0fDS0Lc2ijarV57W09";
+const CHECKOUT_KEY = "as1_checkout_session";
+const JUST_PAID_KEY = "as1_just_paid";
 
-// Signed in, but Year 1 isn't unlocked on this account (e.g. they came from Armed & Anchored).
-function NoAccessScreen({ email, onUnlocked, onSignOut }) {
-  const [code, setCode] = useState("")
+// Stripe sends buyers back with ?paid=true&session_id=… . Keep the checkout id until the
+// purchase is applied to an account (they may still need to create one), then tidy the URL.
+(function rememberCheckout() {
+  try {
+    const q = new URLSearchParams(window.location.search);
+    const s = q.get("session_id");
+    if (s && /^cs_/.test(s)) localStorage.setItem(CHECKOUT_KEY, s);
+    if (q.get("paid") === "true" || s) sessionStorage.setItem(JUST_PAID_KEY, "1");
+    if (q.has("session_id") || q.has("paid")) {
+      q.delete("session_id"); q.delete("paid");
+      const rest = q.toString();
+      window.history.replaceState(null, "", window.location.pathname + (rest ? "?" + rest : "") + window.location.hash);
+    }
+  } catch { /* storage unavailable */ }
+})();
+
+const justPaid = () => { try { return sessionStorage.getItem(JUST_PAID_KEY) === "1" } catch { return false } };
+
+// No access codes: a Year 1 purchase unlocks the account with the same email, the account
+// that was signed in at checkout, or the checkout this browser just came back from.
+async function claimPurchase() {
+  let checkout = null;
+  try { checkout = localStorage.getItem(CHECKOUT_KEY) } catch {}
+  const { data, error } = await supabase.rpc("claim_purchase", { p_app: "as1", checkout_session: checkout });
+  if (error) { console.error("claim_purchase:", error.message); return false }
+  if (data) { try { localStorage.removeItem(CHECKOUT_KEY); sessionStorage.removeItem(JUST_PAID_KEY) } catch {} }
+  return !!data;
+}
+
+function buyLink(email, userId) {
+  const q = new URLSearchParams();
+  if (email) q.set("prefilled_email", email);
+  if (userId) q.set("client_reference_id", userId);
+  const qs = q.toString();
+  return BUY_LINK + (qs ? "?" + qs : "");
+}
+
+// Signed in, but no Year 1 purchase is linked to this account yet (e.g. they came from Armed & Anchored).
+function NoAccessScreen({ email, userId, onUnlocked, onSignOut }) {
   const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState("")
-  const redeem = async () => {
-    if (!code.trim()) { setErr("Enter the access code from your purchase email."); return }
-    setBusy(true); setErr("")
-    const { data, error } = await supabase.rpc("redeem_access_code", { input_code: code.trim(), for_app: "as1" })
+  const [msg, setMsg] = useState("")
+  const check = async () => {
+    setBusy(true); setMsg("")
+    const ok = await claimPurchase()
     setBusy(false)
-    if (error || !data) { setErr("That code isn't valid or has already been used."); return }
-    onUnlocked()
+    if (ok) onUnlocked()
+    else setMsg("We don't see a Year 1 purchase for " + (email || "this account") + " yet. If you just paid, give it a minute and check again.")
   }
-  const buy = BUY_LINK + (email ? "?prefilled_email=" + encodeURIComponent(email) : "")
   return (
     <div style={{ minHeight:"100vh", background:"linear-gradient(155deg,#0F1A24 0%,#1A2A38 55%,#0F1A24 100%)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"32px 20px", textAlign:"center", fontFamily:"'EB Garamond',Georgia,serif" }}>
       <img src="/icon.png" alt="" style={{ width:64, height:64, borderRadius:14, marginBottom:16 }}/>
       <div style={{ fontFamily:"Cinzel,serif", fontSize:20, color:"#F5F1E8", marginBottom:8 }}>Unlock Anchored Steps</div>
-      <p style={{ fontSize:16, color:"#A8B3BC", lineHeight:1.7, margin:"0 0 22px", maxWidth:360 }}>You're signed in as {email}, but Year 1 isn't on this account yet. Enter your access code, or get access below.</p>
+      <p style={{ fontSize:16, color:"#A8B3BC", lineHeight:1.7, margin:"0 0 22px", maxWidth:360 }}>You're signed in as {email}, but Year 1 isn't on this account yet. Already bought it? It unlocks for the email you used at checkout.</p>
       <div style={{ width:"100%", maxWidth:340 }}>
-        <input value={code} onChange={e=>setCode(e.target.value)} onKeyDown={e=>e.key==="Enter"&&redeem()} placeholder="e.g. AS-7X4K2M" autoCapitalize="characters" style={{ width:"100%", boxSizing:"border-box", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(176,138,78,0.35)", borderRadius:10, color:"#F5F1E8", fontSize:16, padding:"14px 16px", fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:10 }}/>
-        {err && <div style={{ fontSize:14, color:"#C94848", marginBottom:10 }}>{err}</div>}
-        <button onClick={redeem} disabled={busy} style={{ width:"100%", padding:"15px", borderRadius:12, border:"none", background:"linear-gradient(135deg,rgba(176,138,78,0.4),rgba(176,138,78,0.2))", color:"#F5F1E8", fontFamily:"'Cinzel',Georgia,serif", fontSize:14, letterSpacing:"0.09em", marginBottom:12 }}>{busy ? "Checking..." : "Unlock with Code"}</button>
-        <a href={buy} target="_blank" rel="noreferrer" style={{ display:"block", border:"1px solid rgba(176,138,78,0.45)", borderRadius:12, padding:"13px", color:"#B08A4E", textDecoration:"none", fontFamily:"'Cinzel',Georgia,serif", fontSize:13, letterSpacing:"0.08em", marginBottom:8 }}>Get Lifetime Access · $39</a>
-        <p style={{ fontSize:13, color:"#6C7A86", lineHeight:1.6, margin:"0 0 18px" }}>After purchase, your access code arrives by email.</p>
+        <a href={buyLink(email, userId)} target="_blank" rel="noreferrer" style={{ display:"block", borderRadius:12, padding:"15px", background:"linear-gradient(135deg,rgba(176,138,78,0.4),rgba(176,138,78,0.2))", color:"#F5F1E8", textDecoration:"none", fontFamily:"'Cinzel',Georgia,serif", fontSize:14, letterSpacing:"0.09em", marginBottom:10 }}>Get Lifetime Access · $39</a>
+        <button onClick={check} disabled={busy} style={{ width:"100%", padding:"13px", borderRadius:12, border:"1px solid rgba(176,138,78,0.45)", background:"transparent", color:"#B08A4E", fontFamily:"'Cinzel',Georgia,serif", fontSize:13, letterSpacing:"0.08em", marginBottom:10, cursor:busy?"default":"pointer" }}>{busy ? "Checking..." : "I've Paid · Check Again"}</button>
+        {msg && <div style={{ fontSize:14, color:"#A8B3BC", lineHeight:1.6, marginBottom:10 }}>{msg}</div>}
+        <p style={{ fontSize:13, color:"#6C7A86", lineHeight:1.6, margin:"0 0 18px" }}>Paid with a different email? Sign out and sign in with that one.</p>
         <button onClick={onSignOut} style={{ background:"transparent", border:"none", color:"#6C7A86", cursor:"pointer", fontSize:13, fontFamily:"EB Garamond,Georgia,serif" }}>Sign out</button>
       </div>
     </div>
@@ -217,14 +251,14 @@ function NoAccessScreen({ email, onUnlocked, onSignOut }) {
 // Auth is now in ./components/Auth_AS1.jsx — but keep inline version for single-file deploy
 // This updated AuthScreen matches AA's design pattern
 function AuthScreen({onAuth}) {
-  const [mode, setMode] = useState("signin")
+  const paid = justPaid()
+  const [mode, setMode] = useState(paid ? "signup" : "signin")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPw, setShowPw] = useState(false)
-  const [code, setCode] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [msg, setMsg] = useState("")
+  const [msg, setMsg] = useState(paid ? "Payment received. Create your account (or sign in) to open Year 1." : "")
   const [resetSent, setResetSent] = useState(false)
   const [justSignedUp, setJustSignedUp] = useState(false)
 
@@ -236,15 +270,11 @@ function AuthScreen({onAuth}) {
     else { onAuth(false) }
   }
 
-  // One account works across Elora Radiance apps. The code is redeemed by the app
-  // right after sign-in (see loadUserData), so it works for new and existing accounts.
+  // One account works across Elora Radiance apps. The purchase is applied right after
+  // sign-in (see loadUserData), so it works for new and existing accounts.
   const handleSignUp = async () => {
-    if (!code.trim()) { setError("Please enter your access code."); return }
     if (!email || password.length < 6) { setError("Enter your email and a password of at least 6 characters."); return }
     setError(""); setLoading(true)
-    const { data: codeRows, error: codeErr } = await supabase.rpc("validate_access_code", { input_code: code.trim() })
-    if (codeErr || !codeRows?.length) { setError("Invalid or already used access code."); setLoading(false); return }
-    try { localStorage.setItem(PENDING_CODE_KEY, code.trim()) } catch {}
     let { data: authData, error: authErr } = await supabase.auth.signUp({ email, password, options: { data: { app: "as1" } } })
     if (authErr && /already (registered|exists)/i.test(authErr.message)) {
       const res = await supabase.auth.signInWithPassword({ email, password })
@@ -255,7 +285,7 @@ function AuthScreen({onAuth}) {
       authData = res.data; authErr = null
     }
     if (authErr) { setError(authErr.message); setLoading(false); return }
-    if (!authData?.session) { setMsg("Check your email to confirm your account, then sign in. Your code will be applied then."); setLoading(false); return }
+    if (!authData?.session) { setMsg("Check your email to confirm your account, then sign in."); setLoading(false); return }
     setJustSignedUp(true); setLoading(false)
   }
 
@@ -278,14 +308,13 @@ function AuthScreen({onAuth}) {
           <div style={{ fontSize:9, color:G.gold, letterSpacing:"0.2em", textTransform:"uppercase", fontFamily:"'Cinzel',Georgia,serif", marginBottom:6 }}>Elora Radiance Co.</div>
           <div style={{ fontSize:20, fontWeight:700, color:G.cream, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.05em", marginBottom:6 }}>Anchored Steps</div>
           <div style={{ fontSize:13, color:G.muted, fontStyle:"italic" }}>{mode==="signin"?"Welcome back" : mode==="forgot"?"Reset your password" : "Create your account"}</div>
-          {mode==="signup" && <div style={{ fontSize:13, color:G.muted, lineHeight:1.6, marginTop:10 }}>Already use Armed &amp; Anchored or Year 2? Use that same email and password.</div>}
+          {mode==="signup" && <div style={{ fontSize:13, color:G.muted, lineHeight:1.6, marginTop:10 }}>Use the email you paid with. Already use Armed &amp; Anchored or Year 2? Use that same email and password.</div>}
         </div>
 
         {error && <div style={{ background:"rgba(201,72,72,0.1)", border:"1px solid rgba(201,72,72,0.3)", borderRadius:10, padding:"10px 14px", marginBottom:14, fontSize:14, color:"#C94848", lineHeight:1.6 }}>{error}</div>}
         {msg && <div style={{ background:"rgba(124,146,132,0.12)", border:"1px solid rgba(124,146,132,0.35)", borderRadius:10, padding:"10px 14px", marginBottom:14, fontSize:14, color:G.green, lineHeight:1.6 }}>{msg}</div>}
         {resetSent && <div style={{ background:"rgba(124,146,132,0.12)", border:"1px solid rgba(124,146,132,0.35)", borderRadius:12, padding:"16px", textAlign:"center", marginBottom:14 }}><div style={{ fontSize:14, color:G.green }}>✓ Check your email for a reset link.</div><button onClick={()=>{setResetSent(false);setMode("signin")}} style={{ marginTop:10, background:"transparent", border:"none", color:G.gold, cursor:"pointer", fontSize:13, fontFamily:"'Cinzel',Georgia,serif" }}>Back to Sign In</button></div>}
 
-        {!resetSent && mode==="signup" && (<><label style={LBL_S}>Access Code</label><input value={code} onChange={e=>setCode(e.target.value)} placeholder="e.g. AS-7X4K2M" style={{ ...INP_S, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.08em", textTransform:"uppercase" }}/></>)}
         {!resetSent && (<>
           <label style={LBL_S}>Email</label>
           <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com" onKeyDown={e=>e.key==="Enter"&&(mode==="signin"?handleSignIn():mode==="forgot"?handleForgot():null)} style={INP_S} autoCapitalize="none"/>
@@ -316,7 +345,7 @@ function AuthScreen({onAuth}) {
               <div style={{ fontSize:11, color:G.muted, marginBottom:14, letterSpacing:"0.04em" }}>one-time · no subscription</div>
               <div style={{ background:"rgba(176,138,78,0.18)", border:"1px solid "+G.goldB, borderRadius:9, padding:"10px 14px", fontSize:12, color:G.gold, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.06em" }}>⚓ Unlock All 52 Weeks →</div>
             </a>
-            <p style={{ fontSize:12, color:G.muted, lineHeight:1.7, textAlign:"center" }}>After purchase, check your email for your access code, then create your account above.</p>
+            <p style={{ fontSize:12, color:G.muted, lineHeight:1.7, textAlign:"center" }}>After purchase, create your account above with the same email you used at checkout.</p>
           </div>
         )}
 
@@ -451,15 +480,15 @@ export default function AnchoredSteps() {
         fetchProfile(),
         supabase.from("journal_entries").select("*").eq("user_id", userId),
       ]);
-      // A Year 1 profile means Year 1 is unlocked. Apply a code saved during sign-up, if any.
+      // A Year 1 profile means Year 1 is unlocked. Otherwise apply a matching purchase.
+      // Right after checkout Stripe's notice can take a few seconds, so keep trying briefly.
       if (!prof && !profErr) {
-        let pending = null;
-        try { pending = localStorage.getItem(PENDING_CODE_KEY) } catch {}
-        if (pending) {
-          const { error: redeemErr } = await supabase.rpc("redeem_access_code", { input_code: pending, for_app: "as1" });
-          if (!redeemErr) { try { localStorage.removeItem(PENDING_CODE_KEY) } catch {} }
-          ({ data: prof, error: profErr } = await fetchProfile());
+        const tries = justPaid() ? 8 : 1;
+        for (let i = 0; i < tries; i++) {
+          if (await claimPurchase()) break;
+          if (i < tries - 1) await new Promise(r => setTimeout(r, 2000));
         }
+        ({ data: prof, error: profErr } = await fetchProfile());
       }
       setNoAccess(!prof && !profErr);
       if (prof) {
@@ -757,7 +786,7 @@ export default function AnchoredSteps() {
   if (!session) return <AuthScreen onAuth={() => window.location.reload()} />;
 
   // ── Signed in, but Year 1 not unlocked on this account
-  if (noAccess) return <NoAccessScreen email={session.user?.email} onUnlocked={() => loadUserData(session.user.id)} onSignOut={signOut} />;
+  if (noAccess) return <NoAccessScreen email={session.user?.email} userId={session.user?.id} onUnlocked={() => loadUserData(session.user.id)} onSignOut={signOut} />;
 
 // ── Onboarding
   if (showSettings) return (

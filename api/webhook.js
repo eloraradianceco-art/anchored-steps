@@ -2,8 +2,10 @@ const Stripe = require("stripe");
 const { createClient } = require("@supabase/supabase-js");
 
 // One Stripe webhook for every Elora Radiance sale. Anchored Steps Year 1, Year 2 and
-// Armed & Anchored share one database and one sign-in, so this endpoint unlocks the
-// right app for each purchase. Sales of other products are ignored here.
+// Armed & Anchored share one database and one sign-in, so this endpoint records each
+// purchase for the right app. There are no access codes and no emails: the app unlocks
+// when the buyer signs in with the email they paid with (or comes back from checkout).
+// Sales of other products are ignored here.
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(
@@ -30,14 +32,10 @@ const HOST_APP = {
   "armedandanchored.vercel.app": "aa",
 };
 
-const APP_INFO = {
-  as1: { name: "Anchored Steps", tagline: "52 Weeks of Faith in Action", url: "https://anchored-steps.vercel.app", prefix: "AS-" },
-  as2: { name: "Anchored Steps · Year 2", tagline: "52 More Weeks of Faith in Action", url: "https://anchored-steps-year2.vercel.app", prefix: "Y2-" },
-};
+const APPS = ["as1", "as2", "aa"];
 
 function appForSession(session) {
-  if (session.metadata && APP_INFO[session.metadata.app]) return session.metadata.app;
-  if (session.metadata && session.metadata.app === "aa") return "aa";
+  if (session.metadata && APPS.includes(session.metadata.app)) return session.metadata.app;
   if (session.payment_link && LINK_APP[session.payment_link]) return LINK_APP[session.payment_link];
   try {
     const host = new URL(session.success_url).host;
@@ -46,63 +44,7 @@ function appForSession(session) {
   return null;
 }
 
-function generateCode(prefix) {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = prefix;
-  for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return code;
-}
-
-async function sendEmail(to, code, plan, app) {
-  const info = APP_INFO[app];
-  const planLabel = plan === "weekly" ? "Weekly Plan" : "Lifetime Access";
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: "Anchored Steps <noreply@eloraradiance.com>",
-      to: [to],
-      subject: `Your ${info.name} Access Code`,
-      html: `
-        <div style="background:#0b1825;padding:40px 20px;font-family:Georgia,serif;max-width:520px;margin:0 auto;border-radius:16px;">
-          <div style="text-align:center;margin-bottom:24px;">
-            <div style="font-size:36px;">&#9875;</div>
-            <h1 style="color:#ede3cd;font-size:22px;margin:8px 0 4px;font-family:Georgia,serif;">${info.name}</h1>
-            <p style="color:#7e92a2;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;margin:0;">${info.tagline}</p>
-          </div>
-          <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(180,140,60,0.28);border-radius:12px;padding:28px;margin-bottom:24px;">
-            <p style="color:#d8cfc0;font-size:16px;line-height:1.7;margin:0 0 20px;">Thank you for your purchase of ${info.name} (${planLabel}). Your unique access code is below:</p>
-            <div style="background:rgba(180,140,60,0.1);border:1px solid rgba(180,140,60,0.4);border-radius:10px;padding:18px;text-align:center;margin-bottom:20px;">
-              <div style="color:#7e92a2;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px;font-family:Georgia,serif;">Your Access Code</div>
-              <div style="color:#c9a84c;font-size:28px;font-weight:bold;letter-spacing:0.15em;font-family:Georgia,serif;">${code}</div>
-            </div>
-            <p style="color:#7e92a2;font-size:13px;line-height:1.6;margin:0 0 20px;">Tap Create account and enter this code. Already have an account from another Elora Radiance app? Sign in with it and enter the code when asked. Each code can only be used once.</p>
-            <div style="text-align:center;">
-              <a href="${info.url}" style="display:inline-block;background:linear-gradient(135deg,rgba(180,140,60,0.4),rgba(180,140,60,0.2));border:1px solid rgba(180,140,60,0.5);color:#ede3cd;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:15px;letter-spacing:0.08em;">Open Your Journal &#8594;</a>
-            </div>
-          </div>
-          <div style="text-align:center;">
-            <p style="color:#3e5060;font-size:12px;line-height:1.6;font-style:italic;margin:0;">"Walk steadily. Stay anchored. Trust God with every step."</p>
-            <p style="color:#3e5060;font-size:11px;margin:8px 0 0;">Elora Radiance Co. &mdash; eloraradiance.com</p>
-          </div>
-        </div>
-      `,
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.json();
-    console.error("Resend error:", err);
-    throw new Error("Failed to send email");
-  }
-
-  return response.json();
-}
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function getRawBody(req) {
   const chunks = [];
@@ -182,7 +124,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ received: true });
   }
 
-  // Access is granted once per checkout. Renewal invoices don't create new codes.
+  // Access is granted once per checkout; renewal invoices are ignored.
   if (event.type !== "checkout.session.completed") {
     return res.status(200).json({ received: true });
   }
@@ -203,9 +145,16 @@ module.exports = async function handler(req, res) {
   const amount = session.amount_total ?? session.amount_paid ?? null;
 
   // Record the purchase. Stripe can resend an event, so a repeat is skipped here.
+  // A signed-in buyer's account id comes through as client_reference_id.
+  const ref = session.client_reference_id;
+  const row = { app, email: customerEmail, stripe_session_id: session.id, amount };
+  if (ref && UUID.test(ref)) {
+    const { data } = await supabase.auth.admin.getUserById(ref);
+    if (data && data.user) row.user_id = data.user.id;
+  }
   const { data: purchase, error: purchaseErr } = await supabase
     .from("purchases")
-    .insert({ app, email: customerEmail, stripe_session_id: session.id, amount })
+    .insert(row)
     .select("id")
     .single();
   if (purchaseErr) {
@@ -220,37 +169,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ received: true });
   }
 
-  if (!customerEmail) {
-    console.error("No customer email found");
-    return res.status(200).json({ received: true });
-  }
-
-  // Year 1 or Year 2: create a one-time access code and email it.
-  const plan = amount != null && amount <= 200 ? "weekly" : "annual";
-  let code;
-  for (let attempts = 0; attempts < 10; attempts++) {
-    code = generateCode(APP_INFO[app].prefix);
-    const { data } = await supabase.from("access_codes").select("code").eq("code", code).maybeSingle();
-    if (!data) break;
-  }
-
-  // Saving the code also sends the welcome email from the database.
-  const { error: insertError } = await supabase
-    .from("access_codes")
-    .insert({ code, plan, app, used: false, customer_email: customerEmail });
-
-  if (insertError) {
-    console.error("Failed to insert code:", insertError);
-    await supabase.from("purchases").delete().eq("id", purchase.id);
-    return res.status(500).json({ error: "Failed to create access code" });
-  }
-
-  try {
-    await sendEmail(customerEmail, code, plan, app);
-    console.log(`${app} code ${code} sent to ${customerEmail}`);
-  } catch (emailErr) {
-    console.error("Email failed:", emailErr);
-  }
-
+  // Year 1 or Year 2: the app applies the purchase when the buyer signs in (claim_purchase).
+  console.log(`${app} purchase ${session.id} recorded${row.user_id ? " for a signed-in account" : ""}`);
   return res.status(200).json({ received: true });
 };
