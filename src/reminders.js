@@ -1,15 +1,14 @@
 // Daily reminders, shared by every Elora Radiance app.
 //
 // On the website (and the app saved to a Home Screen) this uses real web push: the device
-// subscribes once, the time and time zone are saved on the shared database, and the server
-// (anchored-steps.vercel.app/api/send-reminders, run every 15 minutes) sends the reminder
-// even when the app is closed.
+// subscribes once and its time and time zone are saved on the shared database. Every 15
+// minutes the database sends whatever is due through anchored-steps.vercel.app/api/
+// send-reminders, so the reminder arrives even when the app is closed.
 //
 // Inside the App Store app, the phone schedules the reminders itself. That build sets
 // window.__nativeReminders, and every function below hands off to it.
 
 const VAPID_PUBLIC_KEY = 'BFqWoG-75HGUXY-JHYdrh2cinBepOmHGprWojb12kuu5QL3Zq-xKAUsy8zHbLxL84Jsa6x4vhHuSfU_Pio-_vZw'
-const SENDER_URL = 'https://anchored-steps.vercel.app/api/send-reminders'
 const DEFAULT_TIME = '07:00'
 
 export function nativeReminders() {
@@ -103,13 +102,8 @@ export async function sendTestReminder(supabase, app) {
   const native = nativeReminders()
   if (native) return native.test()
   const sub = await currentSubscription()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) throw new Error('signed-out')
-  const r = await fetch(SENDER_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-    body: JSON.stringify({ app, endpoint: sub ? sub.endpoint : undefined }),
-  })
-  if (!r.ok) throw new Error('test-failed')
-  return r.json()
+  const { data, error } = await supabase.rpc('request_test_reminder', { p_app: app, p_endpoint: sub ? sub.endpoint : null })
+  if (error) throw new Error(/not signed in/i.test(error.message || '') ? 'signed-out' : 'test-failed')
+  if (!data) throw new Error('test-failed')
+  return { sent: true }
 }

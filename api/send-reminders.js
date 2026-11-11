@@ -1,25 +1,25 @@
-// Daily reminders (web push) for Year 1, Year 2, Armed & Anchored and The Red Letters.
+// Daily reminders (web push) relay for Year 1, Year 2, Armed & Anchored and The Red Letters.
 //
-// Two ways in:
-//   1. Every 15 minutes Supabase (pg_cron + pg_net) POSTs here with the x-cron-secret header.
-//      We claim the reminders that are due in each person's own time zone and send them.
-//   2. A signed-in person taps "Send a test" in Settings: the app POSTs { app, endpoint } with
-//      their access token, and we send a test to that device only.
+// The shared Supabase database decides who is due (every 15 minutes, in each person's own
+// time zone) and POSTs the batch here with the app's push keys; "Send a test" in Settings
+// does the same for one device. This function only encrypts and delivers the messages and
+// reports which devices are gone, so it needs no Vercel settings.
 //
-// Push keys and the cron secret live in public.app_secrets (server-only, no browser access).
+// Only our database can use it: a request is accepted only when its private push key
+// matches the public key every Elora Radiance app ships with.
 
-const { createClient } = require("@supabase/supabase-js");
+const crypto = require("crypto");
 const webpush = require("web-push");
 
-// The database address is public; the service key must come from the Vercel settings.
-const HUB_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "https://cvtukqamaqrhjtdvmslb.supabase.co";
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+const VAPID_PUBLIC_KEY = "BFqWoG-75HGUXY-JHYdrh2cinBepOmHGprWojb12kuu5QL3Zq-xKAUsy8zHbLxL84Jsa6x4vhHuSfU_Pio-_vZw";
+const CONTACT = "mailto:eloraradiance.co@gmail.com";
+const MAX_ITEMS = 500;
 
 const APPS = {
-  aa:  { title: "Armed & Anchored",           url: "https://armedandanchored.vercel.app",      icon: "/icon.png" },
-  as1: { title: "Anchored Steps",             url: "https://anchored-steps.vercel.app",        icon: "/icon.png" },
-  as2: { title: "Anchored Steps · Year 2",    url: "https://anchored-steps-year2.vercel.app",  icon: "/icon2.png" },
-  rl:  { title: "The Red Letters",            url: "https://redletters.vercel.app",            icon: "/icon.png" },
+  aa:  { title: "Armed & Anchored",        url: "https://armedandanchored.vercel.app",     icon: "/icon.png" },
+  as1: { title: "Anchored Steps",          url: "https://anchored-steps.vercel.app",       icon: "/icon.png" },
+  as2: { title: "Anchored Steps · Year 2", url: "https://anchored-steps-year2.vercel.app", icon: "/icon2.png" },
+  rl:  { title: "The Red Letters",         url: "https://redletters.vercel.app",           icon: "/icon.png" },
 };
 
 const MESSAGES = {
@@ -61,15 +61,15 @@ const MESSAGES = {
   ],
 };
 
-const ALLOWED_ORIGINS = new Set(Object.values(APPS).map(a => a.url));
+const b64url = (buf) => Buffer.from(buf).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
-function cors(req, res) {
-  const origin = req.headers.origin;
-  if (origin && ALLOWED_ORIGINS.has(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Vary", "Origin");
-    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+function keyPairMatches(privateKey) {
+  try {
+    const ecdh = crypto.createECDH("prime256v1");
+    ecdh.setPrivateKey(Buffer.from(String(privateKey).replace(/-/g, "+").replace(/_/g, "/"), "base64"));
+    return b64url(ecdh.getPublicKey()) === VAPID_PUBLIC_KEY;
+  } catch (e) {
+    return false;
   }
 }
 
@@ -77,95 +77,51 @@ function dayOfYear(d = new Date()) {
   return Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
 }
 
-function messageFor(app, offset = 0) {
-  const list = MESSAGES[app] || MESSAGES.as1;
-  return list[(dayOfYear() + offset) % list.length];
-}
-
 function formatTime(t) {
   const [h, m] = String(t || "07:00").split(":").map(Number);
-  const hour = ((h + 11) % 12) + 1;
-  return `${hour}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
+  return `${((h + 11) % 12) + 1}:${String(m || 0).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
 }
 
-async function sendAll(supa, rows, buildPayload) {
+function payloadFor(kind, item) {
+  const app = APPS[item.app] || APPS.as1;
+  const list = MESSAGES[item.app] || MESSAGES.as1;
+  const body = kind === "test"
+    ? `Reminders are on. You'll hear from us every day at ${formatTime(item.remind_time)}.`
+    : list[dayOfYear() % list.length];
+  return JSON.stringify({ title: app.title, body, url: app.url + "/", icon: app.icon, tag: kind === "test" ? "reminder-test" : "daily-reminder" });
+}
+
+module.exports = async (req, res) => {
+  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+
+  let body = req.body || {};
+  if (typeof body === "string") { try { body = JSON.parse(body); } catch (e) { body = {}; } }
+  const { kind = "daily", items = [], vapid = {} } = body;
+
+  if (vapid.public !== VAPID_PUBLIC_KEY || !keyPairMatches(vapid.private)) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  if (!Array.isArray(items) || items.length > MAX_ITEMS) return res.status(400).json({ error: "Bad batch" });
+
+  webpush.setVapidDetails(CONTACT, VAPID_PUBLIC_KEY, vapid.private);
+
   let sent = 0, failed = 0;
   const gone = [];
-  await Promise.all(rows.map(async (row) => {
-    const app = APPS[row.app] || APPS.as1;
-    const payload = JSON.stringify({ ...buildPayload(row), url: app.url + "/", icon: app.icon });
+  await Promise.all(items.map(async (item) => {
+    if (!item || !/^https:\/\//.test(item.endpoint || "")) { failed++; return; }
     try {
       await webpush.sendNotification(
-        { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } },
-        payload,
+        { endpoint: item.endpoint, keys: { p256dh: item.p256dh, auth: item.auth } },
+        payloadFor(kind, item),
         { TTL: 3600, urgency: "normal" }
       );
       sent++;
     } catch (err) {
       failed++;
-      if (err && (err.statusCode === 404 || err.statusCode === 410)) gone.push(row.endpoint);
-      else console.warn("push failed", row.app, err && err.statusCode, err && err.body);
+      if (err && (err.statusCode === 404 || err.statusCode === 410)) gone.push(item.endpoint);
+      else console.warn("push failed", item.app, err && err.statusCode, err && String(err.body || "").slice(0, 200));
     }
   }));
-  let removed = 0;
-  if (gone.length) {
-    const { data } = await supa.rpc("drop_push_subscriptions", { p_endpoints: gone });
-    removed = data || 0;
-  }
-  return { sent, failed, removed };
-}
 
-module.exports = async (req, res) => {
-  cors(req, res);
-  if (req.method === "OPTIONS") return res.status(204).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
-  if (!SERVICE_KEY) {
-    // Names only, never values: tells us which Vercel setting is missing.
-    const present = Object.keys(process.env).filter(k => /SUPABASE|STRIPE|RESEND|CRON/.test(k)).sort();
-    return res.status(500).json({ error: "Server not configured", missing: "SUPABASE_SERVICE_ROLE_KEY", present });
-  }
-
-  const supa = createClient(HUB_URL, SERVICE_KEY, { auth: { persistSession: false } });
-
-  const { data: secrets, error: secretErr } = await supa.from("app_secrets").select("name, value");
-  if (secretErr) return res.status(500).json({ error: "Could not load settings" });
-  const s = Object.fromEntries((secrets || []).map(r => [r.name, r.value]));
-  webpush.setVapidDetails("mailto:eloraradiance.co@gmail.com", s.vapid_public, s.vapid_private);
-
-  const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-
-  // 1. Scheduled run from Supabase
-  const cronHeader = req.headers["x-cron-secret"];
-  if (cronHeader && s.cron_secret && cronHeader === s.cron_secret) {
-    const { data: due, error } = await supa.rpc("claim_due_push_reminders");
-    if (error) return res.status(500).json({ error: error.message });
-    const result = await sendAll(supa, due || [], (row) => ({
-      title: APPS[row.app] ? APPS[row.app].title : "Elora Radiance",
-      body: messageFor(row.app),
-      tag: "daily-reminder",
-    }));
-    return res.status(200).json({ due: (due || []).length, ...result });
-  }
-
-  // 2. "Send a test" from a signed-in person
-  const token = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-  if (!token) return res.status(401).json({ error: "Unauthorized" });
-  const { data: userData, error: userErr } = await supa.auth.getUser(token);
-  if (userErr || !userData || !userData.user) return res.status(401).json({ error: "Unauthorized" });
-  if (!APPS[body.app]) return res.status(400).json({ error: "Unknown app" });
-
-  let q = supa.from("push_subscriptions")
-    .select("endpoint, p256dh, auth, app, remind_time")
-    .eq("user_id", userData.user.id).eq("app", body.app);
-  if (body.endpoint) q = q.eq("endpoint", body.endpoint);
-  const { data: rows, error: rowsErr } = await q;
-  if (rowsErr) return res.status(500).json({ error: rowsErr.message });
-  if (!rows || !rows.length) return res.status(404).json({ error: "No reminder set on this device" });
-
-  const result = await sendAll(supa, rows, (row) => ({
-    title: APPS[row.app].title,
-    body: `Reminders are on. You'll hear from us every day at ${formatTime(row.remind_time)}.`,
-    tag: "reminder-test",
-  }));
-  return res.status(200).json(result);
+  return res.status(200).json({ kind, sent, failed, gone });
 };
