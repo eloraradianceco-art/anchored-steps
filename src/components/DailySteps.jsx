@@ -774,7 +774,7 @@ const CSS = `
 
 .ds-overlay{position:fixed;inset:0;z-index:1000;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .ds-session{min-height:100%;display:flex;flex-direction:column;max-width:460px;margin:0 auto;padding:0 22px}
-.ds-top{position:sticky;top:0;background:var(--bg);z-index:5;padding-top:calc(8px + env(safe-area-inset-top,0px))}
+.ds-top{position:sticky;top:0;background:var(--bg);z-index:5;padding-top:calc(8px + var(--safe-top, env(safe-area-inset-top, 0px)))}
 .ds-head{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding-bottom:8px}
 .ds-icon{width:44px;height:44px;border-radius:50%;border:0;background:transparent;display:grid;place-items:center;color:var(--muted)!important;cursor:pointer;margin-left:-10px}
 .ds-stitle{text-align:center;font-family:Cinzel,Georgia,serif;font-weight:600;font-size:15px;color:var(--ink);letter-spacing:.06em}
@@ -852,7 +852,7 @@ const CSS = `
 .ds-rc em{color:var(--muted)}
 .ds-by{color:var(--muted);font-style:italic}
 
-.ds-done{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:calc(36px + env(safe-area-inset-top,0px)) 22px calc(28px + env(safe-area-inset-bottom,0px));max-width:460px;margin:0 auto}
+.ds-done{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:calc(36px + var(--safe-top, env(safe-area-inset-top, 0px))) 22px calc(28px + env(safe-area-inset-bottom,0px));max-width:460px;margin:0 auto}
 .ds-ring{width:150px;height:150px;position:relative;margin-bottom:22px;color:var(--gold);flex:none}
 .ds-ring>svg{width:100%;height:100%;transform:rotate(-90deg)}
 .ds-ring-bg{fill:none;stroke:var(--line);stroke-width:6}

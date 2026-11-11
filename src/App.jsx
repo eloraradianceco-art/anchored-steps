@@ -128,7 +128,7 @@ function YearReviewModal({ entries, ALL_WEEKS, onClose, G }) {
 
 function YearReview({ weeksComplete, versesMemorized, prayersWritten, totalDays, onClose, G }) {
   return (
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:"calc(24px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px))",overflowY:"auto"}} onClick={onClose}>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:"calc(24px + var(--safe-top, env(safe-area-inset-top, 0px))) 24px calc(24px + env(safe-area-inset-bottom, 0px))",overflowY:"auto"}} onClick={onClose}>
       <div style={{background:"linear-gradient(145deg,#0F1A24,#1A2A38)",border:"1px solid rgba(176,138,78,0.4)",borderRadius:20,padding:32,maxWidth:420,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.6)",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
         <div style={{textAlign:"center",marginBottom:24}}>
           <img src="/icon.png" alt="" style={{width:56,height:56,borderRadius:14,marginBottom:12}}/>
@@ -184,7 +184,7 @@ function LexiconPanel({ entry, lexWord, speaking, onClose, onSpeak, G, T }) {
 function ContextModal({ ae, onClose, G }) {
   if (!ae) return null;
   return (
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:"calc(24px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px))"}} onClick={onClose}>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:"calc(24px + var(--safe-top, env(safe-area-inset-top, 0px))) 24px calc(24px + env(safe-area-inset-bottom, 0px))"}} onClick={onClose}>
       <div style={{background:"linear-gradient(145deg,#0F1A24,#1A2A38)",border:"1px solid rgba(176,138,78,0.4)",borderRadius:20,padding:28,maxWidth:420,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.5)",maxHeight:"85vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
           <div style={{fontSize:10,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.14em",textTransform:"uppercase"}}>Scripture Context</div>
@@ -905,7 +905,7 @@ export default function AnchoredSteps() {
   return (
     <div style={{minHeight:"100vh",background:darkMode?"linear-gradient(155deg,#0F1A24 0%,#1A2A38 50%,#0F1A24 100%)":"linear-gradient(155deg,#F5F1E8 0%,#EDE5D4 50%,#F5F1E8 100%)"}}>
 
-      <header style={{position:"sticky",top:0,zIndex:100,paddingTop:"env(safe-area-inset-top, 0px)",marginTop:"calc(-1 * env(safe-area-inset-top, 0px))",background:T.headerBg || "#0F1A24",borderBottom:"1px solid rgba(176,138,78,0.14)"}}>
+      <header style={{position:"sticky",top:0,zIndex:100,paddingTop:"var(--safe-top, env(safe-area-inset-top, 0px))",marginTop:"calc(-1 * env(safe-area-inset-top, 0px))",background:T.headerBg || "#0F1A24",borderBottom:"1px solid rgba(176,138,78,0.14)"}}>
         <div style={{borderBottom:"1px solid rgba(180,140,60,0.12)",padding:"10px 18px"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -954,7 +954,7 @@ export default function AnchoredSteps() {
               </button>
               {showWeekJump && (
                 <div onClick={()=>setShowWeekJump(false)} style={{position:"fixed",inset:0,zIndex:800}}>
-                  <div onClick={e=>e.stopPropagation()} style={{position:"fixed",top:"calc(150px + env(safe-area-inset-top, 0px))",left:10,right:10,background:G.bg,border:"1px solid "+G.border,borderRadius:16,padding:14,maxHeight:300,overflowY:"auto",display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:5,zIndex:900,boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>
+                  <div onClick={e=>e.stopPropagation()} style={{position:"fixed",top:"calc(150px + var(--safe-top, env(safe-area-inset-top, 0px)))",left:10,right:10,background:G.bg,border:"1px solid "+G.border,borderRadius:16,padding:14,maxHeight:300,overflowY:"auto",display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:5,zIndex:900,boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>
                     {ALL_WEEKS.map(w=>{
                       const isCur=w.week===wk
                       return (
@@ -1473,7 +1473,7 @@ export default function AnchoredSteps() {
         }
         const closeModal=()=>{setQuizVerse(null);setMemMode(null);setMemRevealed(false);setMemTyped('');setMemScore(null);}
         return (
-          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",zIndex:600,display:"flex",alignItems:"center",justifyContent:"center",padding:"calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px))",overflowY:"auto"}} onClick={()=>{if(!memMode)closeModal()}}>
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",zIndex:600,display:"flex",alignItems:"center",justifyContent:"center",padding:"calc(16px + var(--safe-top, env(safe-area-inset-top, 0px))) 16px calc(16px + env(safe-area-inset-bottom, 0px))",overflowY:"auto"}} onClick={()=>{if(!memMode)closeModal()}}>
             <div onClick={e=>e.stopPropagation()} style={{background:`linear-gradient(145deg,${G.bg},${darkMode?'rgba(13,26,42,1)':G.bgMid})`,border:`1px solid ${G.goldB}`,borderRadius:20,padding:24,maxWidth:420,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
                 <div style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.16em",textTransform:"uppercase"}}>{memMode?"← ":""}✦ Memorize</div>
@@ -1595,7 +1595,7 @@ export default function AnchoredSteps() {
         const cGold = shareCardLight?'#7A5C28':'#B08A4E'
         const cMuted= shareCardLight?'#7A6248':'#A8B3BC'
         return (
-          <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:500,display:'flex',alignItems:'flex-start',justifyContent:'center',overflowY:'auto',padding:'calc(16px + env(safe-area-inset-top, 0px)) 16px calc(48px + env(safe-area-inset-bottom, 0px))'}} onClick={()=>setShareVerse(null)}>
+          <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:500,display:'flex',alignItems:'flex-start',justifyContent:'center',overflowY:'auto',padding:'calc(16px + var(--safe-top, env(safe-area-inset-top, 0px))) 16px calc(48px + env(safe-area-inset-bottom, 0px))'}} onClick={()=>setShareVerse(null)}>
             <div style={{background:'linear-gradient(145deg,#0F1A24,#1A2A38)',border:'1px solid rgba(176,138,78,0.22)',borderRadius:20,padding:22,width:'100%',maxWidth:420,marginTop:24}} onClick={e=>e.stopPropagation()}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
                 <div style={{fontSize:10,color:G.gold,fontFamily:'Cinzel,serif',letterSpacing:'0.18em',textTransform:'uppercase'}}>Share Card</div>
