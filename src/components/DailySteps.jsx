@@ -713,7 +713,7 @@ export default function DailySteps({ week, wk, totalWeeks = 52, entries = [], ge
    STYLES (scoped to .ds-root)
    ───────────────────────────────────────────────────────────── */
 const CSS = `
-.ds-root{--bg:#0F1A24;--panel:#152331;--ink:#F5F1E8;--body:#E6DED0;--muted:#9AAAB8;--line:rgba(255,255,255,.1);--gold:#B08A4E;--goldL:#D6B97A;--goldSoft:rgba(176,138,78,.16);--onGold:#0F1A24;--sage:#8FA697;--sageSoft:rgba(124,146,132,.18);--rose:#D97A7A;--roseSoft:rgba(217,122,122,.14);font-family:"EB Garamond",Garamond,Georgia,serif;color:var(--body);-webkit-font-smoothing:antialiased;font-size:18px;line-height:1.55}
+.ds-root{--bg:#0F1A24;--panel:#152331;--ink:#F5F1E8;--body:#E6DED0;--muted:#A9B8C5;--line:rgba(255,255,255,.1);--gold:#CFA968;--goldL:#D6B97A;--goldSoft:rgba(176,138,78,.16);--onGold:#0F1A24;--sage:#8FA697;--sageSoft:rgba(124,146,132,.18);--rose:#D97A7A;--roseSoft:rgba(217,122,122,.14);font-family:"EB Garamond",Garamond,Georgia,serif;color:var(--body);-webkit-font-smoothing:antialiased;font-size:18px;line-height:1.55}
 .ds-root.ds-light{--bg:#F2EDE3;--panel:#FBF8F2;--ink:#2C2416;--body:#3D2E1A;--muted:#5E4E3C;--line:rgba(122,98,72,.24);--gold:#7A5A1E;--goldL:#6B4E18;--goldSoft:rgba(176,138,78,.15);--onGold:#FBF8F2;--sage:#56705F;--sageSoft:rgba(124,146,132,.18);--rose:#B25656;--roseSoft:rgba(217,122,122,.15)}
 .ds-root *,.ds-root *::before,.ds-root *::after{box-sizing:border-box}
 .ds-root p,.ds-root h1,.ds-root h2,.ds-root h3,.ds-root blockquote,.ds-root ol{margin:0;padding:0}
@@ -754,7 +754,7 @@ const CSS = `
 .ds-meta{font-size:15px;color:var(--muted);white-space:nowrap}
 .is-cur .ds-meta{color:var(--gold);font-weight:600}
 .is-done .ds-meta{color:var(--sage)}
-.is-locked .ds-name,.is-locked .ds-blurb,.is-locked .ds-mark{opacity:.55}
+.is-locked .ds-name,.is-locked .ds-blurb,.is-locked .ds-mark{opacity:.8}
 .ds-light .is-locked .ds-name,.ds-light .is-locked .ds-blurb,.ds-light .is-locked .ds-mark{opacity:.92}
 .ds-anchor-row{display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:center;margin-top:4px}
 .ds-anchor-ic{width:44px;height:48px;display:grid;place-items:center;color:var(--muted);position:relative;z-index:1}

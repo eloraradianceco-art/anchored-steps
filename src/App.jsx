@@ -26,10 +26,10 @@ const SECTIONS = [
 // directly; inside the app, G switches to G_LIGHT in light mode (see AnchoredSteps).
 const G_DARK = {
   bg:"#0F1A24",bgCard:"rgba(255,255,255,0.035)",bgMid:"#1A2A38",
-  gold:"#B08A4E",goldL:"#D6B97A",goldF:"rgba(176,138,78,0.12)",goldB:"rgba(176,138,78,0.28)",
-  green:"#7C9284",greenF:"rgba(124,146,132,0.12)",greenB:"rgba(124,146,132,0.28)",
-  purple:"#A89ACF",purpleF:"rgba(168,154,207,0.08)",purpleB:"rgba(168,154,207,0.22)",
-  red:"#D97A7A",redF:"rgba(217,122,122,0.08)",redB:"rgba(217,122,122,0.24)",
+  gold:"#CFA968",goldL:"#DDC28C",goldF:"rgba(176,138,78,0.12)",goldB:"rgba(176,138,78,0.28)",
+  green:"#9DB5A6",greenF:"rgba(124,146,132,0.12)",greenB:"rgba(124,146,132,0.28)",
+  purple:"#BCB0E0",purpleF:"rgba(168,154,207,0.08)",purpleB:"rgba(168,154,207,0.22)",
+  red:"#E89090",redF:"rgba(217,122,122,0.08)",redB:"rgba(217,122,122,0.24)",
   cream:"#F5F1E8",text:"#E6DED0",muted:"#C0CDD8",dim:"#9AAAB8",border:"rgba(255,255,255,0.06)",
 };
 const G = G_DARK;
@@ -1246,11 +1246,11 @@ export default function AnchoredSteps() {
                 return (
                   <button key={w.week} onClick={() => { goWk(w.week); setView("journal"); }} style={{background:cur?"linear-gradient(145deg,rgba(176,138,78,0.16),rgba(176,138,78,0.06))":done>0?"linear-gradient(145deg,rgba(124,146,132,0.1),rgba(124,146,132,0.03))":G.bgCard,border:"1px solid "+(cur?"rgba(176,138,78,0.4)":done>0?"rgba(124,146,132,0.3)":G.border),borderRadius:12,padding:"12px 14px",cursor:"pointer",textAlign:"left",transition:"all .25s",boxShadow:cur?"0 4px 16px rgba(0,0,0,0.1)":"none"}}>
                     <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}>
-                      <span style={{fontSize:9,color:cur?G.gold:darkMode?"rgba(140,160,175,0.6)":G.muted,fontFamily:"Cinzel,serif",letterSpacing:"0.1em"}}>WEEK {w.week}</span>
+                      <span style={{fontSize:9,color:cur?G.gold:darkMode?G.dim:G.muted,fontFamily:"Cinzel,serif",letterSpacing:"0.1em"}}>WEEK {w.week}</span>
                       {done > 0 && <span style={{fontSize:9,color:G.green}}>{done}/7</span>}
                     </div>
                     <div style={{fontSize:13,color:cur?(darkMode?G.cream:"#2C2416"):T.text,fontWeight:600,lineHeight:1.3}}>{w.title}</div>
-                    <div style={{fontSize:10,color:darkMode?"rgba(140,160,175,0.65)":G.text,marginTop:2,fontStyle:"italic"}}>{w.subtitle.substring(0,42)}{w.subtitle.length>42?"...":""}</div>
+                    <div style={{fontSize:10,color:darkMode?G.dim:G.text,marginTop:2,fontStyle:"italic"}}>{w.subtitle.substring(0,42)}{w.subtitle.length>42?"...":""}</div>
                   </button>
                 );
               })}
@@ -1289,7 +1289,7 @@ export default function AnchoredSteps() {
                   const pct = done/7;
                   const bg = cur?G.gold:pct===1?G.green:pct>0?"rgba(120,184,120,"+(0.25+pct*0.55)+")":"rgba(255,255,255,0.045)";
                   return (
-                    <button key={w.week} onClick={() => { goWk(w.week); setView("journal"); }} title={"Week "+w.week+": "+w.title} style={{width:26,height:26,borderRadius:6,background:bg,border:"1px solid "+(cur?"rgba(176,138,78,0.8)":"transparent"),cursor:"pointer",fontSize:9,color:pct>0||cur?"#fff":G.dim,transition:"all .2s",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:cur?"0 0 8px rgba(176,138,78,0.4)":"none"}}>
+                    <button key={w.week} onClick={() => { goWk(w.week); setView("journal"); }} title={"Week "+w.week+": "+w.title} style={{width:26,height:26,borderRadius:6,background:bg,border:"1px solid "+(cur?"rgba(176,138,78,0.8)":"transparent"),cursor:"pointer",fontSize:9,color:cur?G.bg:pct===1?(darkMode?G.bg:"#fff"):pct>0?G.cream:G.dim,transition:"all .2s",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:cur?"0 0 8px rgba(176,138,78,0.4)":"none"}}>
                       {w.week}
                     </button>
                   );
@@ -1639,9 +1639,9 @@ export default function AnchoredSteps() {
           }}
           style={{
             position:"fixed",bottom:28,right:20,
-            background:"linear-gradient(135deg,rgba(176,138,78,0.4),rgba(176,138,78,0.2))",
+            backgroundColor:G.bg,backgroundImage:"linear-gradient(135deg,rgba(176,138,78,0.4),rgba(176,138,78,0.2))",
             border:"1px solid rgba(176,138,78,0.5)",
-            color:G.gold,padding:"10px 20px",borderRadius:50,
+            color:darkMode?G.goldL:G.gold,padding:"10px 20px",borderRadius:50,
             cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif",
             letterSpacing:"0.07em",boxShadow:"0 4px 20px rgba(0,0,0,0.35)",
             backdropFilter:"blur(10px)",zIndex:200,
