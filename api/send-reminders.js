@@ -11,8 +11,9 @@
 const { createClient } = require("@supabase/supabase-js");
 const webpush = require("web-push");
 
-const HUB_URL = process.env.VITE_SUPABASE_URL;
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// The database address is public; the service key must come from the Vercel settings.
+const HUB_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "https://cvtukqamaqrhjtdvmslb.supabase.co";
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
 
 const APPS = {
   aa:  { title: "Armed & Anchored",           url: "https://armedandanchored.vercel.app",      icon: "/icon.png" },
@@ -118,7 +119,11 @@ module.exports = async (req, res) => {
   cors(req, res);
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
-  if (!HUB_URL || !SERVICE_KEY) return res.status(500).json({ error: "Server not configured" });
+  if (!SERVICE_KEY) {
+    // Names only, never values: tells us which Vercel setting is missing.
+    const present = Object.keys(process.env).filter(k => /SUPABASE|STRIPE|RESEND|CRON/.test(k)).sort();
+    return res.status(500).json({ error: "Server not configured", missing: "SUPABASE_SERVICE_ROLE_KEY", present });
+  }
 
   const supa = createClient(HUB_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
