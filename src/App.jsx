@@ -22,13 +22,26 @@ const SECTIONS = [
   {id:"community",label:"🌿 Community"},
 ];
 
-const G = {
+// Dark palette. Module-level screens (sign-in, unlock, loading) are always dark and use it
+// directly; inside the app, G switches to G_LIGHT in light mode (see AnchoredSteps).
+const G_DARK = {
   bg:"#0F1A24",bgCard:"rgba(255,255,255,0.035)",bgMid:"#1A2A38",
   gold:"#B08A4E",goldL:"#D6B97A",goldF:"rgba(176,138,78,0.12)",goldB:"rgba(176,138,78,0.28)",
   green:"#7C9284",greenF:"rgba(124,146,132,0.12)",greenB:"rgba(124,146,132,0.28)",
   purple:"#A89ACF",purpleF:"rgba(168,154,207,0.08)",purpleB:"rgba(168,154,207,0.22)",
   red:"#D97A7A",redF:"rgba(217,122,122,0.08)",redB:"rgba(217,122,122,0.24)",
   cream:"#F5F1E8",text:"#E6DED0",muted:"#C0CDD8",dim:"#9AAAB8",border:"rgba(255,255,255,0.06)",
+};
+const G = G_DARK;
+// Light palette: same keys, colors chosen to stay readable (4.5:1 or better) on the cream
+// background and on tinted cards.
+const G_LIGHT = {
+  bg:"#F2EDE3",bgCard:"rgba(0,0,0,0.03)",bgMid:"#E8E0D2",
+  gold:"#5E4414",goldL:"#523B10",goldF:"rgba(139,106,48,0.10)",goldB:"rgba(139,106,48,0.32)",
+  green:"#335C45",greenF:"rgba(51,92,69,0.10)",greenB:"rgba(51,92,69,0.32)",
+  purple:"#4E3F8C",purpleF:"rgba(78,63,140,0.08)",purpleB:"rgba(78,63,140,0.28)",
+  red:"#8E2B27",redF:"rgba(142,43,39,0.07)",redB:"rgba(142,43,39,0.28)",
+  cream:"#2C2416",text:"#3D2E1A",muted:"#5E4E3C",dim:"#6E6052",border:"rgba(120,90,50,0.18)",
 };
 
 const INP_STYLE = {width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,color:G.cream,fontSize:16,padding:"12px 14px",outline:"none",fontFamily:"EB Garamond,Georgia,serif",marginBottom:12};
@@ -81,7 +94,7 @@ function calcStreak(entries) {
   return streak;
 }
 
-function SaveBtn({onSave, flash}) {
+function SaveBtn({onSave, flash, G = G_DARK}) {
   return (
     <button onClick={onSave} style={{marginTop:20,background:flash?"rgba(124,146,132,0.14)":"linear-gradient(135deg,rgba(176,138,78,0.24),rgba(176,138,78,0.10))",border:"1px solid "+(flash?"rgba(124,146,132,0.35)":"rgba(176,138,78,0.30)"),color:flash?G.green:G.gold,padding:"11px 22px",borderRadius:10,cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",transition:"all .25s ease"}}>
       {flash ? "✓ Saved" : "Save Entry"}
@@ -428,6 +441,8 @@ export default function AnchoredSteps() {
   const [communityDone, setCommunityDone] = useState(false);
   // Settings
   const [darkMode, setDarkMode] = useState(() => { try { return localStorage.getItem("as_dark") !== "false" } catch { return true } });
+  // Palette for everything inside the app: readable light colors in light mode.
+  const G = darkMode ? G_DARK : G_LIGHT;
 
   // Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -837,7 +852,7 @@ export default function AnchoredSteps() {
     headerBg:"rgba(15,26,36,0.88)",sectionTitle:"#F5F1E8",bodyText:"#E6DED0",
   } : {
     bg:"#F2EDE3",bgCard:"rgba(0,0,0,0.03)",text:"#2C2416",
-    muted:"#7A6248",border:"rgba(176,138,78,0.2)",cream:"#2C2416",
+    muted:"#5E4E3C",border:"rgba(176,138,78,0.2)",cream:"#2C2416",
     cardBg:"linear-gradient(145deg,rgba(255,255,255,0.95),rgba(255,255,255,0.8))",
     inputBg:"rgba(255,255,255,0.9)",inputBorder:"rgba(176,138,78,0.35)",
     headerBg:"rgba(242,237,227,0.95)",sectionTitle:"#2C2416",bodyText:"#3D2E1A",
@@ -1054,7 +1069,7 @@ export default function AnchoredSteps() {
                     <p style={{fontSize:14,color:T.muted,fontStyle:"italic",marginBottom:10,lineHeight:1.7}}>What is God showing you through this passage? Write what stands out, convicts, or encourages you.</p>
                     <textarea rows={6} value={get("vm_pr")} onChange={e => set("vm_pr",e.target.value)} placeholder="Write your reflection here..." style={INP} />
                   </div>
-                  <SaveBtn onSave={save} flash={flash} />
+                  <SaveBtn onSave={save} flash={flash} G={G} />
                 </div>
               )}
 
@@ -1065,7 +1080,7 @@ export default function AnchoredSteps() {
                   <label style={LBL}>Your Notes &amp; Insights</label>
                   <p style={{fontSize:14,color:T.muted,fontStyle:"italic",marginBottom:10,lineHeight:1.6}}>Capture what stands out, what convicts you, or what you want to carry with you this week.</p>
                   <textarea rows={7} value={get("study")} onChange={e => set("study",e.target.value)} placeholder="What is God highlighting for you in these notes?" style={INP} />
-                  <SaveBtn onSave={save} flash={flash} />
+                  <SaveBtn onSave={save} flash={flash} G={G} />
                 </div>
               )}
 
@@ -1091,7 +1106,7 @@ export default function AnchoredSteps() {
                   )}
                   <label style={LBL}>Your Notes</label>
                   <textarea rows={5} value={get("lexicon")} onChange={e => set("lexicon",e.target.value)} placeholder="Which word stood out? Why does it matter for how you read this Scripture?" style={INP} />
-                  <SaveBtn onSave={save} flash={flash} />
+                  <SaveBtn onSave={save} flash={flash} G={G} />
                 </div>
               )}
 
@@ -1110,7 +1125,7 @@ export default function AnchoredSteps() {
                   <label style={{...LBL,marginTop:12}}>Journal Notes</label>
                   <p style={{fontSize:14,color:T.muted,fontStyle:"italic",marginBottom:10,lineHeight:1.6}}>Any additional thoughts, feelings, or prayers stirred by this week&#8217;s reflection.</p>
                   <textarea rows={6} value={get("rfj")} onChange={e => set("rfj",e.target.value)} placeholder="Write freely here..." style={INP} />
-                  <SaveBtn onSave={save} flash={flash} />
+                  <SaveBtn onSave={save} flash={flash} G={G} />
                 </div>
               )}
 
@@ -1132,7 +1147,7 @@ export default function AnchoredSteps() {
                   <label style={LBL}>How Will You Live This Out?</label>
                   <p style={{fontSize:14,color:T.muted,fontStyle:"italic",marginBottom:10,lineHeight:1.6}}>Faith is meant to be walked out. What is one specific way you will live this out this week?</p>
                   <textarea rows={5} value={get("apply")} onChange={e => set("apply",e.target.value)} placeholder="Write your specific plan here..." style={INP} />
-                  <SaveBtn onSave={save} flash={flash} />
+                  <SaveBtn onSave={save} flash={flash} G={G} />
                 </div>
               )}
 
@@ -1146,7 +1161,7 @@ export default function AnchoredSteps() {
                   <label style={LBL}>Write Your Own Prayer</label>
                   <p style={{fontSize:14,color:T.muted,fontStyle:"italic",marginBottom:10,lineHeight:1.6}}>Write honestly. Bring your heart before God.</p>
                   <textarea rows={10} value={get("prayer")} onChange={e => set("prayer",e.target.value)} placeholder="Speak freely to Him here..." style={{...INP,minHeight:200,lineHeight:2}} />
-                  <SaveBtn onSave={save} flash={flash} />
+                  <SaveBtn onSave={save} flash={flash} G={G} />
                 </div>
               )}
 
@@ -1163,7 +1178,7 @@ export default function AnchoredSteps() {
                       {day === i && <textarea className="fu" rows={3} value={get("tr_"+i)} onChange={e => set("tr_"+i,e.target.value)} placeholder={d+": How did you experience gratitude, growth, or God's presence today?"} style={INP} />}
                     </div>
                   ))}
-                  <SaveBtn onSave={save} flash={flash} />
+                  <SaveBtn onSave={save} flash={flash} G={G} />
                 </div>
               )}
 
@@ -1194,7 +1209,7 @@ export default function AnchoredSteps() {
                       </button>
                     </div>
                   )}
-                  <SaveBtn onSave={save} flash={flash} />
+                  <SaveBtn onSave={save} flash={flash} G={G} />
                 </div>
               )}
 
@@ -1231,11 +1246,11 @@ export default function AnchoredSteps() {
                 return (
                   <button key={w.week} onClick={() => { goWk(w.week); setView("journal"); }} style={{background:cur?"linear-gradient(145deg,rgba(176,138,78,0.16),rgba(176,138,78,0.06))":done>0?"linear-gradient(145deg,rgba(124,146,132,0.1),rgba(124,146,132,0.03))":G.bgCard,border:"1px solid "+(cur?"rgba(176,138,78,0.4)":done>0?"rgba(124,146,132,0.3)":G.border),borderRadius:12,padding:"12px 14px",cursor:"pointer",textAlign:"left",transition:"all .25s",boxShadow:cur?"0 4px 16px rgba(0,0,0,0.1)":"none"}}>
                     <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}>
-                      <span style={{fontSize:9,color:cur?G.gold:darkMode?"rgba(140,160,175,0.6)":"rgba(100,80,55,0.6)",fontFamily:"Cinzel,serif",letterSpacing:"0.1em"}}>WEEK {w.week}</span>
+                      <span style={{fontSize:9,color:cur?G.gold:darkMode?"rgba(140,160,175,0.6)":G.muted,fontFamily:"Cinzel,serif",letterSpacing:"0.1em"}}>WEEK {w.week}</span>
                       {done > 0 && <span style={{fontSize:9,color:G.green}}>{done}/7</span>}
                     </div>
                     <div style={{fontSize:13,color:cur?(darkMode?G.cream:"#2C2416"):T.text,fontWeight:600,lineHeight:1.3}}>{w.title}</div>
-                    <div style={{fontSize:10,color:darkMode?"rgba(140,160,175,0.65)":"rgba(90,75,55,0.7)",marginTop:2,fontStyle:"italic"}}>{w.subtitle.substring(0,42)}{w.subtitle.length>42?"...":""}</div>
+                    <div style={{fontSize:10,color:darkMode?"rgba(140,160,175,0.65)":G.text,marginTop:2,fontStyle:"italic"}}>{w.subtitle.substring(0,42)}{w.subtitle.length>42?"...":""}</div>
                   </button>
                 );
               })}
@@ -1418,12 +1433,12 @@ export default function AnchoredSteps() {
       </main>
 
       {/* Year in Review Modal */}
-      {showYearReview && <YearReviewModal entries={entries} ALL_WEEKS={ALL_WEEKS} onClose={()=>setShowYearReview(false)} G={G} />}
+      {showYearReview && <YearReviewModal entries={entries} ALL_WEEKS={ALL_WEEKS} onClose={()=>setShowYearReview(false)} G={G_DARK} />}
 
 
       {/* Scripture Context Modal - Author, Location, Audience, Commentary */}
       {openAuthor && (
-        <ContextModal ae={openAuthor} onClose={()=>setOpenAuthor(null)} G={G} />
+        <ContextModal ae={openAuthor} onClose={()=>setOpenAuthor(null)} G={G_DARK} />
       )}
 
       {/* Memorize Modal — 3 modes */}
@@ -1442,7 +1457,7 @@ export default function AnchoredSteps() {
         const closeModal=()=>{setQuizVerse(null);setMemMode(null);setMemRevealed(false);setMemTyped('');setMemScore(null);}
         return (
           <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",zIndex:600,display:"flex",alignItems:"center",justifyContent:"center",padding:"calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px))",overflowY:"auto"}} onClick={()=>{if(!memMode)closeModal()}}>
-            <div onClick={e=>e.stopPropagation()} style={{background:`linear-gradient(145deg,${G.bg},rgba(13,26,42,1))`,border:`1px solid ${G.goldB}`,borderRadius:20,padding:24,maxWidth:420,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
+            <div onClick={e=>e.stopPropagation()} style={{background:`linear-gradient(145deg,${G.bg},${darkMode?'rgba(13,26,42,1)':G.bgMid})`,border:`1px solid ${G.goldB}`,borderRadius:20,padding:24,maxWidth:420,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.6)"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
                 <div style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.16em",textTransform:"uppercase"}}>{memMode?"← ":""}✦ Memorize</div>
                 <button onClick={closeModal} style={{background:"transparent",border:"none",color:G.muted,cursor:"pointer",fontSize:20,lineHeight:1}}>×</button>
@@ -1537,6 +1552,7 @@ export default function AnchoredSteps() {
 
       {/* Share Card Modal */}
       {shareVerse && (()=>{
+        const G = G_DARK; // the share sheet is always dark
         const TYPES = [
           {id:'scripture', icon:'📖', label:'Scripture',   body:shareVerse?.text||'',                                                          ref:shareVerse?.ref||null, show:true},
           {id:'study',     icon:'📝', label:'Study',       body:week?.studyNotes||'',                                                          ref:null, show:!!(week?.studyNotes)},

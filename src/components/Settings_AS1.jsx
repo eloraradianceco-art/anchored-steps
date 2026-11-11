@@ -16,9 +16,9 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
     border: darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
     cream: darkMode ? '#EDE6D6' : '#1A1209',
     text: darkMode ? '#C8BEAA' : '#3D2E1A',
-    muted: darkMode ? '#7C90A2' : '#7A6A5A',
-    dim: darkMode ? '#4E6070' : '#B0A090',
-    gold: darkMode ? '#B08A4E' : '#8B6A30',
+    muted: darkMode ? '#7C90A2' : '#5E4E3C',
+    dim: darkMode ? '#4E6070' : '#6E6052',
+    gold: darkMode ? '#B08A4E' : '#6B4E18',
     goldF: darkMode ? 'rgba(176,138,78,0.11)' : 'rgba(139,106,48,0.1)',
     goldB: darkMode ? 'rgba(176,138,78,0.28)' : 'rgba(139,106,48,0.28)',
     green: '#7C9284', greenF: 'rgba(124,146,132,0.15)', greenB: 'rgba(124,146,132,0.4)',
@@ -210,7 +210,7 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
 
           <AccountPrivacy supabase={supabase} theme={{
             text: G.text, muted: G.muted, card: G.bgCard, border: G.border, dark: darkMode,
-            danger: darkMode ? '#D9786B' : '#A8443A', dangerF: darkMode ? 'rgba(217,120,107,0.12)' : 'rgba(168,68,58,0.08)', dangerB: darkMode ? 'rgba(217,120,107,0.35)' : 'rgba(168,68,58,0.3)',
+            danger: darkMode ? '#D9786B' : '#8E2B27', dangerF: darkMode ? 'rgba(217,120,107,0.12)' : 'rgba(168,68,58,0.08)', dangerB: darkMode ? 'rgba(217,120,107,0.35)' : 'rgba(168,68,58,0.3)',
           }} />
 
           <ScriptureCredits notices={['ESV', 'NIV', 'NKJV', 'NLT', 'KJV']} theme={{ text: G.text, muted: G.muted, card: G.bgCard, border: G.border }} />
