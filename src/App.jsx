@@ -422,71 +422,10 @@ export default function AnchoredSteps() {
   const EXCERPTS = window.__APPDATA__?.EXCERPTS || {};
   const AUTHOR_DATA = window.__APPDATA__?.AUTHOR_DATA || {};
 
-  // ── Push notification setup
+  // ── Service worker (shows daily reminders sent by the server; see Settings → Daily Reminder)
   useEffect(() => {
-    if (!("serviceWorker" in navigator) || !("Notification" in window)) return;
-
-    // Register service worker
-    navigator.serviceWorker.register("/sw.js").then(reg => {
-      console.log("SW registered");
-
-      // Ask for permission after user is logged in
-      if (Notification.permission === "default") {
-        setTimeout(() => {
-          Notification.requestPermission().then(perm => {
-            if (perm === "granted") {
-              // Schedule daily reminder check
-              scheduleDailyReminder(reg);
-            }
-          });
-        }, 5000); // Ask after 5 seconds so it's not immediate
-      } else if (Notification.permission === "granted") {
-        scheduleDailyReminder(reg);
-      }
-    }).catch(err => console.log("SW error:", err));
-
-    function scheduleDailyReminder(reg) {
-      // Store last notification time
-      const lastNotif = localStorage.getItem("last_notif");
-      const now = new Date();
-      const today = now.toISOString().split("T")[0];
-
-      if (lastNotif === today) return; // Already notified today
-
-      // Check if it's morning time (7-9am) or evening (7-9pm)
-      const hour = now.getHours();
-      const isGoodTime = (hour >= 7 && hour <= 9) || (hour >= 19 && hour <= 21);
-
-      if (isGoodTime) {
-        // Monday = weekly encouragement with opening verse
-        const isMonday = now.getDay() === 1;
-        const currentWeek = ALL_WEEKS.find(w => w.week === (parseInt(localStorage.getItem("as_current_week") || "1")));
-        const weekTitle = currentWeek ? currentWeek.title : "Faith in Action";
-        const weekVerse = currentWeek ? currentWeek.scriptures[0].ref : "";
-
-        const messages = isMonday ? [
-          "New week. New theme: " + weekTitle + ". " + weekVerse + " is waiting for you.",
-          "This week: " + weekTitle + ". Your journal is ready. Walk steadily.",
-        ] : [
-          "Your journal is waiting. A few minutes with God changes everything.",
-          "Walk steadily today. Your anchor holds.",
-          "Ready for your time with God? Week " + (parseInt(localStorage.getItem("as_current_week") || "1")) + " is waiting.",
-          "Stay anchored. Open your journal today.",
-          "Faith grows through intention. Your journal is ready.",
-          "Presence over perfection. Come as you are.",
-        ];
-        const msg = messages[Math.floor(Math.random() * messages.length)];
-
-        reg.showNotification("Anchored Steps ⚓", {
-          body: msg,
-          icon: "/icon.png",
-          badge: "/icon.png",
-          tag: "anchored-daily",
-        });
-
-        localStorage.setItem("last_notif", today);
-      }
-    }
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker.register("/sw.js").catch(err => console.log("SW error:", err));
   }, []);
 
   // ── Auth listener

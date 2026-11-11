@@ -4,7 +4,7 @@
 const DIGEST_TO = "eloraradiance.co@gmail.com";
 const DIGEST_FROM = "Elora Radiance Digest <reports@eloraradiance.com>";
 
-// Year 1, Year 2 and Armed & Anchored share one database and one sign-in.
+// Year 1, Year 2, Armed & Anchored and The Red Letters share one database and one sign-in.
 // Each app's list is the accounts that have that app unlocked. Sign-in times are per account, not per app.
 const HUB_URL = process.env.VITE_SUPABASE_URL;
 const HUB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -12,7 +12,7 @@ const APPS = [
   { name: "Anchored Steps Year 1", url: HUB_URL, key: HUB_KEY, table: "profiles",     idCol: "id" },
   { name: "Anchored Steps Year 2", url: HUB_URL, key: HUB_KEY, table: "as2_profiles", idCol: "user_id" },
   { name: "Armed & Anchored",       url: HUB_URL, key: HUB_KEY, table: "aa_profiles",  idCol: "id" },
-  { name: "The Red Letters",        url: process.env.SUPABASE_RL_URL, key: process.env.SUPABASE_RL_SERVICE_KEY },
+  { name: "The Red Letters",        url: HUB_URL, key: HUB_KEY, table: "rl_profiles",  idCol: "id" },
 ];
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;

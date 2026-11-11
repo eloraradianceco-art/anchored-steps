@@ -1,6 +1,9 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ],
   "functions": {
     "api/webhook.js": {
@@ -8,6 +11,9 @@
     },
     "api/daily-digest.js": {
       "maxDuration": 30
+    },
+    "api/send-reminders.js": {
+      "maxDuration": 25
     }
   },
   "crons": [

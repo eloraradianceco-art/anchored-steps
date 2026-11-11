@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Reviews from './Reviews'
+import ReminderSettings from './ReminderSettings'
 
 export default function Settings({ profile, userId, supabase, entries, wk, ALL_WEEKS, darkMode, onToggleDarkMode, onResetWeek, onClose, savedCount, onOpenSaved }) {
   const [copiedShare, setCopiedShare] = useState(false)
@@ -176,6 +177,11 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
               <span style={{ fontSize:13, color:G.gold, fontFamily:"'Cinzel',Georgia,serif" }}>{bookmarks} →</span>
             </button>
           )}
+
+          <ReminderSettings supabase={supabase} app="as1" theme={{
+            text: G.text, muted: G.muted, accent: G.gold, accentF: G.goldF, accentB: G.goldB,
+            card: G.bgCard, border: G.border, dark: darkMode,
+          }} />
 
           {/* Account */}
           <div style={{ marginTop:24, marginBottom:8 }}>
