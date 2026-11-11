@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Reviews from './Reviews'
 import ReminderSettings from './ReminderSettings'
+import AccountPrivacy from './AccountPrivacy'
 
 export default function Settings({ profile, userId, supabase, entries, wk, ALL_WEEKS, darkMode, onToggleDarkMode, onResetWeek, onClose, savedCount, onOpenSaved }) {
   const [copiedShare, setCopiedShare] = useState(false)
@@ -205,6 +206,11 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
               </button>
             </Row>
           </div>
+
+          <AccountPrivacy supabase={supabase} theme={{
+            text: G.text, muted: G.muted, card: G.bgCard, border: G.border, dark: darkMode,
+            danger: darkMode ? '#D9786B' : '#A8443A', dangerF: darkMode ? 'rgba(217,120,107,0.12)' : 'rgba(168,68,58,0.08)', dangerB: darkMode ? 'rgba(217,120,107,0.35)' : 'rgba(168,68,58,0.3)',
+          }} />
 
           {/* Appearance */}
           <div style={{ marginTop:24, marginBottom:8 }}>
