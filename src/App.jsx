@@ -149,7 +149,7 @@ function YearReview({ weeksComplete, versesMemorized, prayersWritten, totalDays,
           <p style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.1em",margin:0,textTransform:"uppercase"}}>Matthew 25:21</p>
         </div>
         <button onClick={() => {
-          const text = "I just completed 52 weeks of Anchored Steps — a year of faith, Scripture, and intentional time with God. " + weeksComplete + " weeks. " + versesMemorized + " verses memorized. " + prayersWritten + " prayers written. Walk steadily. Stay anchored. anchored-steps.vercel.app";
+          const text = "I just completed 52 weeks of Anchored Steps — a year of faith, Scripture, and intentional time with God. " + weeksComplete + " weeks. " + versesMemorized + " verses memorized. " + prayersWritten + " prayers written. Walk steadily. Stay anchored. steps.eloraradiance.com";
           if(navigator.share){ navigator.share({text}); }
           else { navigator.clipboard.writeText(text).then(()=>alert("Copied!")); }
         }} style={{width:"100%",background:"linear-gradient(135deg,rgba(176,138,78,0.3),rgba(176,138,78,0.12))",border:"1px solid rgba(176,138,78,0.45)",color:G.gold,padding:"13px",borderRadius:10,cursor:"pointer",fontSize:13,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",marginBottom:10}}>
@@ -319,7 +319,7 @@ function AuthScreen({onAuth}) {
   const handleForgot = async () => {
     if (!email) { setError("Enter your email first."); return }
     setLoading(true)
-    await supabase.auth.resetPasswordForEmail(email, { redirectTo:"https://anchored-steps.vercel.app" })
+    await supabase.auth.resetPasswordForEmail(email, { redirectTo:"https://steps.eloraradiance.com" })
     setResetSent(true); setLoading(false)
   }
 
@@ -710,7 +710,7 @@ export default function AnchoredSteps() {
         '',
         'Anchored Steps — 52 weeks of faith in action.',
         '',
-        'anchored-steps.vercel.app',
+        'steps.eloraradiance.com',
       ].filter(l => l !== undefined).join('\n').replace(/\n{3,}/g, '\n\n').trim()
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], title: 'Anchored Steps', text: caption })
@@ -1390,10 +1390,10 @@ export default function AnchoredSteps() {
               <div style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:16}}>Refer a Friend</div>
               <p style={{fontSize:14,color:T.text,lineHeight:1.7,marginBottom:14}}>Share Anchored Steps with someone you know. When they purchase using your referral link, you both benefit from the journey.</p>
               <div style={{background:"rgba(176,138,78,0.08)",border:"1px solid rgba(176,138,78,0.2)",borderRadius:10,padding:"12px 16px",marginBottom:12,fontFamily:"Cinzel,serif",fontSize:13,color:G.gold,letterSpacing:"0.06em",textAlign:"center",wordBreak:"break-all"}}>
-                anchored-steps.vercel.app?ref={profile?.id?.slice(0,8) || "friend"}
+                steps.eloraradiance.com?ref={profile?.id?.slice(0,8) || "friend"}
               </div>
               <button onClick={() => {
-                const link = "https://anchored-steps.vercel.app?ref=" + (profile?.id?.slice(0,8) || "friend");
+                const link = "https://steps.eloraradiance.com?ref=" + (profile?.id?.slice(0,8) || "friend");
                 const msg = "I've been using Anchored Steps — a 52-week digital faith journal. Walk steadily with God this year. " + link;
                 if(navigator.share){ navigator.share({text: msg}); }
                 else { navigator.clipboard.writeText(link).then(()=>alert("Link copied!")); }
@@ -1590,7 +1590,7 @@ export default function AnchoredSteps() {
           'Week '+wk+': '+(week?.title||''),
           '',
           'Anchored Steps — 52 weeks of faith in action.',
-          'anchored-steps.vercel.app',
+          'steps.eloraradiance.com',
         ].filter(Boolean).join('\n')
         const cBg   = shareCardLight?'linear-gradient(155deg,#F5F1E8 0%,#EDE8DC 100%)':'linear-gradient(155deg,#0F1A24 0%,#1A2A38 100%)'
         const cBord = shareCardLight?'rgba(0,0,0,0.1)':'rgba(176,138,78,0.25)'

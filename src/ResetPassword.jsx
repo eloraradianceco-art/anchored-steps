@@ -75,7 +75,7 @@ export default function ResetPassword() {
     } else {
       setMessage("Password updated! Taking you to your journal...");
       setTimeout(() => {
-        window.location.href = "https://anchored-steps.vercel.app";
+        window.location.href = "https://steps.eloraradiance.com";
       }, 2000);
     }
     setLoading(false);

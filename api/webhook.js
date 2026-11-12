@@ -28,6 +28,9 @@ const LINK_APP = {
 };
 // Fallback for checkouts without a known link: where the buyer is sent afterwards.
 const HOST_APP = {
+  "steps.eloraradiance.com": "as1",
+  "steps2.eloraradiance.com": "as2",
+  "armed.eloraradiance.com": "aa",
   "anchored-steps.vercel.app": "as1",
   "anchored-steps-year2.vercel.app": "as2",
   "anchored-steps-y2.vercel.app": "as2",
@@ -52,7 +55,7 @@ const PLANNER_LINKS = {
   plink_1TWRbmBr8nMXOo8tQiPvzLsI: 14, // Pro yearly, 14-day free trial
 };
 const PLANNER_PRODUCTS = new Set(["prod_USPtK8Gz0UkLuE", "prod_UVSUALsRwiiehH"]); // Pro monthly, Pro yearly
-const PLANNER_HOST = "the-living-planner.vercel.app";
+const PLANNER_HOSTS = new Set(["planner.eloraradiance.com", "the-living-planner.vercel.app"]);
 const PLANNER_URL = "https://pxvgolgwrlqzjykvzzzy.supabase.co";
 // Public (anon) key: it can only call stripe_sync_subscription, which also requires the secret below.
 const PLANNER_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4dmdvbGd3cmxxemp5a3Z6enp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMjQxODIsImV4cCI6MjA5MjcwMDE4Mn0.MtT8fz4P_V1yZG-T1t1pO-FZeQk4Ua8J404Mvi65ZYI";
@@ -89,7 +92,7 @@ const idOf = (v) => (v && typeof v === "object" ? v.id : v) || null;
 function isPlannerCheckout(session) {
   if (session.payment_link && PLANNER_LINKS[session.payment_link] !== undefined) return true;
   if (session.metadata && session.metadata.app === "tlp") return true;
-  try { return session.mode === "subscription" && new URL(session.success_url).host === PLANNER_HOST; } catch (e) { return false; }
+  try { return session.mode === "subscription" && PLANNER_HOSTS.has(new URL(session.success_url).host); } catch (e) { return false; }
 }
 
 function isPlannerSubscription(sub) {

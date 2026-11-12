@@ -31,11 +31,11 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
   const versesMemorized = entries?.filter(e => e.field_key?.startsWith('mem_') && e.field_value === '1').length || 0
   const bookmarks = typeof savedCount === 'number' ? savedCount : (entries?.filter(e => e.field_key === 'bookmark' && e.field_value === '1').length || 0)
 
-  const shareText = `I've been using Anchored Steps — a 52-week Scripture devotional with daily study, reflection, prayer, and journal. Worth every week.\n\nanchored-steps.vercel.app`
+  const shareText = `I've been using Anchored Steps — a 52-week Scripture devotional with daily study, reflection, prayer, and journal. Worth every week.\n\nsteps.eloraradiance.com`
 
   const handleShare = async () => {
     if (navigator.share) {
-      try { await navigator.share({ title: 'Anchored Steps', text: shareText, url: 'https://anchored-steps.vercel.app' }) } catch {}
+      try { await navigator.share({ title: 'Anchored Steps', text: shareText, url: 'https://steps.eloraradiance.com' }) } catch {}
     } else {
       try { await navigator.clipboard.writeText(shareText); setCopiedShare(true); setTimeout(() => setCopiedShare(false), 2500) } catch {}
     }
@@ -49,7 +49,7 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
       const get = (week, key) => data?.find(e => e.week === week && e.field_key === key)?.field_value || ''
       const lines = []
       lines.push('ANCHORED STEPS — YEAR 1 JOURNAL')
-      lines.push('Elora Radiance Co. | anchored-steps.vercel.app')
+      lines.push('Elora Radiance Co. | steps.eloraradiance.com')
       lines.push(`Exported: ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}`)
       lines.push('='.repeat(50))
       if (ALL_WEEKS) {
@@ -100,7 +100,7 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
         if (prayer) html += `<h3>Prayer</h3><p>${prayer.split('\n').join('<br/>')}</p>`
       }
     }
-    html += `<hr/><p style="text-align:center;font-size:12px;color:#999">Walk steadily. Stay anchored. — anchored-steps.vercel.app</p></body></html>`
+    html += `<hr/><p style="text-align:center;font-size:12px;color:#999">Walk steadily. Stay anchored. — steps.eloraradiance.com</p></body></html>`
     // Print via a hidden iframe so we never navigate away or trap the user (critical in standalone PWA mode)
     const frame = document.createElement('iframe')
     frame.setAttribute('aria-hidden', 'true')
@@ -248,11 +248,11 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
           <div style={{ background:G.bgCard, border:`1px solid ${G.border}`, borderRadius:14, padding:'12px 16px' }}>
             <p style={{ fontSize:13, color:G.muted, fontStyle:'italic', lineHeight:1.7, marginBottom:14 }}>The rest of the Elora Radiance ecosystem — Scripture-based tools for the whole Christian life.</p>
             {[
-              { label:'Armed & Anchored', desc:'Spiritual warfare training — 26 weapons', url:'https://armedandanchored.vercel.app/', icon:'⚔️' },
-              { label:'Anchored Steps · Year 2', desc:'52 weeks of deeper study', url:'https://anchored-steps-year2.vercel.app/', icon:'⚓' },
-              { label:'The Red Letters', desc:'The words of Jesus by theme — free', url:'https://redletters.vercel.app/', icon:'✦' },
-              { label:'Anchored Verse', desc:'Scripture for every emotion — free', url:'https://anchoredverse.vercel.app/', icon:'📖' },
-              { label:'The Living Planner', desc:'Faith-centered life planner', url:'https://the-living-planner.vercel.app/', icon:'📓' },
+              { label:'Armed & Anchored', desc:'Spiritual warfare training — 26 weapons', url:'https://armed.eloraradiance.com/', icon:'⚔️' },
+              { label:'Anchored Steps · Year 2', desc:'52 weeks of deeper study', url:'https://steps2.eloraradiance.com/', icon:'⚓' },
+              { label:'The Red Letters', desc:'The words of Jesus by theme — free', url:'https://redletters.eloraradiance.com/', icon:'✦' },
+              { label:'Anchored Verse', desc:'Scripture for every emotion — free', url:'https://verse.eloraradiance.com/', icon:'📖' },
+              { label:'The Living Planner', desc:'Faith-centered life planner', url:'https://planner.eloraradiance.com/', icon:'📓' },
             ].map(app => (
               <a key={app.url} href={app.url} target="_blank" rel="noopener noreferrer" style={{ display:'flex', alignItems:'center', gap:14, padding:'13px 14px', borderRadius:12, marginBottom:8, background:G.goldF, border:`1px solid ${G.goldB}`, textDecoration:'none', transition:'all .2s' }}>
                 <span style={{ fontSize:22, flexShrink:0 }}>{app.icon}</span>

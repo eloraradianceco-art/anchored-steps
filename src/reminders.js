@@ -2,7 +2,7 @@
 //
 // On the website (and the app saved to a Home Screen) this uses real web push: the device
 // subscribes once and its time and time zone are saved on the shared database. Every 15
-// minutes the database sends whatever is due through anchored-steps.vercel.app/api/
+// minutes the database sends whatever is due through steps.eloraradiance.com/api/
 // send-reminders, so the reminder arrives even when the app is closed.
 //
 // Inside the App Store app, the phone schedules the reminders itself. That build sets

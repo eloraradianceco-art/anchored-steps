@@ -16,10 +16,10 @@ const CONTACT = "mailto:support@eloraradiance.com";
 const MAX_ITEMS = 500;
 
 const APPS = {
-  aa:  { title: "Armed & Anchored",        url: "https://armedandanchored.vercel.app",     icon: "/icon.png" },
-  as1: { title: "Anchored Steps",          url: "https://anchored-steps.vercel.app",       icon: "/icon.png" },
-  as2: { title: "Anchored Steps · Year 2", url: "https://anchored-steps-year2.vercel.app", icon: "/icon2.png" },
-  rl:  { title: "The Red Letters",         url: "https://redletters.vercel.app",           icon: "/icon.png" },
+  aa:  { title: "Armed & Anchored",        url: "https://armed.eloraradiance.com",     icon: "/icon.png" },
+  as1: { title: "Anchored Steps",          url: "https://steps.eloraradiance.com",       icon: "/icon.png" },
+  as2: { title: "Anchored Steps · Year 2", url: "https://steps2.eloraradiance.com", icon: "/icon2.png" },
+  rl:  { title: "The Red Letters",         url: "https://redletters.eloraradiance.com",           icon: "/icon.png" },
 };
 
 const MESSAGES = {
@@ -88,7 +88,9 @@ function payloadFor(kind, item) {
   const body = kind === "test"
     ? `Reminders are on. You'll hear from us every day at ${formatTime(item.remind_time)}.`
     : list[dayOfYear() % list.length];
-  return JSON.stringify({ title: app.title, body, url: app.url + "/", icon: app.icon, tag: kind === "test" ? "reminder-test" : "daily-reminder" });
+  // "/" opens the app at whatever address the device subscribed from (its own service worker origin),
+  // so phones that still have the old vercel.app Home Screen app open that one.
+  return JSON.stringify({ title: app.title, body, url: "/", icon: app.icon, tag: kind === "test" ? "reminder-test" : "daily-reminder" });
 }
 
 module.exports = async (req, res) => {
