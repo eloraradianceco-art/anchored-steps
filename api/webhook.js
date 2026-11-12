@@ -5,6 +5,8 @@ const { createClient } = require("@supabase/supabase-js");
 // Armed & Anchored share one database and one sign-in, so this endpoint records each
 // purchase for the right app. There are no access codes and no emails: the app unlocks
 // when the buyer signs in with the email they paid with (or comes back from checkout).
+// The Living Planner Pro subscription lives in its own database: checkouts, renewals and
+// cancellations are passed to it (plannerSync), and that is the only way Pro turns on or off.
 // Sales of other products are ignored here.
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -42,6 +44,97 @@ function appForSession(session) {
     if (HOST_APP[host]) return HOST_APP[host];
   } catch (e) { /* no success url */ }
   return null;
+}
+
+// ── The Living Planner ───────────────────────────────────────────────────
+const PLANNER_LINKS = {
+  plink_1TWRU3Br8nMXOo8t0HFRldlV: 7,  // Pro monthly, 7-day free trial
+  plink_1TWRbmBr8nMXOo8tQiPvzLsI: 14, // Pro yearly, 14-day free trial
+};
+const PLANNER_PRODUCTS = new Set(["prod_USPtK8Gz0UkLuE", "prod_UVSUALsRwiiehH"]); // Pro monthly, Pro yearly
+const PLANNER_HOST = "the-living-planner.vercel.app";
+const PLANNER_URL = "https://pxvgolgwrlqzjykvzzzy.supabase.co";
+// Public (anon) key: it can only call stripe_sync_subscription, which also requires the secret below.
+const PLANNER_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4dmdvbGd3cmxxemp5a3Z6enp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMjQxODIsImV4cCI6MjA5MjcwMDE4Mn0.MtT8fz4P_V1yZG-T1t1pO-FZeQk4Ua8J404Mvi65ZYI";
+
+let plannerSecret = null;
+async function getPlannerSecret() {
+  if (plannerSecret) return plannerSecret;
+  if (process.env.PLANNER_SYNC_SECRET) return (plannerSecret = process.env.PLANNER_SYNC_SECRET);
+  // Kept server-only in the shared database's app_secrets (no browser access).
+  const { data, error } = await supabase.from("app_secrets").select("value").eq("name", "planner_sync_secret").maybeSingle();
+  if (error || !data) throw new Error("planner_sync_secret is missing");
+  return (plannerSecret = data.value);
+}
+
+async function plannerSync(payload) {
+  const secret = await getPlannerSecret();
+  const r = await fetch(`${PLANNER_URL}/rest/v1/rpc/stripe_sync_subscription`, {
+    method: "POST",
+    headers: {
+      apikey: PLANNER_ANON_KEY,
+      Authorization: `Bearer ${PLANNER_ANON_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ p_secret: secret, p: payload }),
+  });
+  const text = await r.text();
+  if (!r.ok) throw new Error(`Planner sync failed (${r.status}): ${text}`);
+  return text ? JSON.parse(text) : null;
+}
+
+const iso = (sec) => (sec ? new Date(sec * 1000).toISOString() : null);
+const idOf = (v) => (v && typeof v === "object" ? v.id : v) || null;
+
+function isPlannerCheckout(session) {
+  if (session.payment_link && PLANNER_LINKS[session.payment_link] !== undefined) return true;
+  if (session.metadata && session.metadata.app === "tlp") return true;
+  try { return session.mode === "subscription" && new URL(session.success_url).host === PLANNER_HOST; } catch (e) { return false; }
+}
+
+function isPlannerSubscription(sub) {
+  const items = (sub.items && sub.items.data) || [];
+  return items.some((i) => PLANNER_PRODUCTS.has(idOf(i.price && i.price.product) || idOf(i.plan && i.plan.product)));
+}
+
+async function syncPlannerSubscription(sub, event) {
+  const item = (sub.items && sub.items.data && sub.items.data[0]) || {};
+  const price = item.price || item.plan || {};
+  let email = null;
+  try {
+    const customer = await stripe.customers.retrieve(idOf(sub.customer));
+    email = customer && !customer.deleted ? customer.email : null;
+  } catch (e) { /* the email only helps link a subscription that has no account yet */ }
+  return plannerSync({
+    source: "subscription",
+    subscription_id: sub.id,
+    customer_id: idOf(sub.customer),
+    email,
+    status: sub.status,
+    price_id: price.id || null,
+    interval: (price.recurring && price.recurring.interval) || price.interval || null,
+    trial_end: iso(sub.trial_end),
+    current_period_end: iso(sub.current_period_end || item.current_period_end),
+    cancel_at_period_end: !!(sub.cancel_at_period_end || sub.cancel_at),
+    event_created: iso(event.created),
+  });
+}
+
+async function syncPlannerCheckout(session, event) {
+  if (!session.subscription) return null;
+  const trialDays = PLANNER_LINKS[session.payment_link] || 0;
+  const email = session.customer_details?.email || session.customer_email || null;
+  return plannerSync({
+    source: "checkout",
+    subscription_id: idOf(session.subscription),
+    customer_id: idOf(session.customer),
+    checkout_session_id: session.id,
+    client_reference_id: session.client_reference_id || null,
+    email,
+    status: trialDays ? "trialing" : "active",
+    trial_end: trialDays ? iso(session.created + trialDays * 86400) : null,
+    event_created: iso(event.created),
+  });
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -97,10 +190,23 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: "Webhook signature failed" });
   }
 
-  // Year 1 subscriptions: cancellations and resumes
+  // Subscription changes: trial ending, renewals, failed payments, cancellations.
   if (event.type === "customer.subscription.deleted" ||
-      event.type === "customer.subscription.updated") {
+      event.type === "customer.subscription.updated" ||
+      event.type === "customer.subscription.created") {
     const sub = event.data.object;
+    if (isPlannerSubscription(sub)) {
+      try {
+        const result = await syncPlannerSubscription(sub, event);
+        console.log(`Living Planner subscription ${sub.id} is ${sub.status}:`, JSON.stringify(result));
+        return res.status(200).json({ received: true });
+      } catch (err) {
+        console.error(err.message);
+        return res.status(500).json({ error: "Planner sync failed" }); // Stripe retries
+      }
+    }
+    if (event.type === "customer.subscription.created") return res.status(200).json({ received: true });
+    // Year 1 subscriptions (legacy): cancellations and resumes
     if (sub.status === "canceled" || sub.cancel_at_period_end) {
       const customer = await stripe.customers.retrieve(sub.customer);
       const email = customer.email;
@@ -132,6 +238,17 @@ module.exports = async function handler(req, res) {
   const session = event.data.object;
   if (session.payment_status && session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
     return res.status(200).json({ received: true, skipped: "not paid" });
+  }
+
+  if (isPlannerCheckout(session)) {
+    try {
+      const result = await syncPlannerCheckout(session, event);
+      console.log(`Living Planner checkout ${session.id}:`, JSON.stringify(result));
+      return res.status(200).json({ received: true });
+    } catch (err) {
+      console.error(err.message);
+      return res.status(500).json({ error: "Planner sync failed" });
+    }
   }
 
   const app = appForSession(session);
