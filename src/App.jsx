@@ -856,8 +856,8 @@ export default function AnchoredSteps() {
     <div style={{minHeight:"100vh",background:"linear-gradient(155deg,#0F1A24 0%,#1A2A38 55%,#0F1A24 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px",fontFamily:"EB Garamond,Georgia,serif",textAlign:"center"}}>
       <img src="/icon.png" alt="" style={{width:64,height:64,borderRadius:14,marginBottom:16,opacity:.6}}/>
       <div style={{fontFamily:"Cinzel,serif",fontSize:20,color:"#F5F1E8",marginBottom:8}}>Access Ended</div>
-      <p style={{fontSize:16,color:"#A8B3BC",lineHeight:1.7,marginBottom:28,maxWidth:340}}>Your access has been revoked. Visit the pricing page to restore access.</p>
-      <a href="https://eloraradiance.com/anchored-steps-app" style={{display:"block",background:"linear-gradient(135deg,rgba(176,138,78,0.35),rgba(176,138,78,0.15))",border:"1px solid rgba(176,138,78,0.45)",color:"#B08A4E",padding:"14px 32px",borderRadius:12,textDecoration:"none",fontFamily:"Cinzel,serif",fontSize:14,letterSpacing:"0.1em",marginBottom:12}}>View Plans &#8594;</a>
+      <p style={{fontSize:16,color:"#A8B3BC",lineHeight:1.7,marginBottom:28,maxWidth:340}}>Your Anchored Steps subscription has ended. Get lifetime access for a one-time $39 to keep your journal going.</p>
+      <a href="https://eloraradiance.com/anchored-steps.html" style={{display:"block",background:"linear-gradient(135deg,rgba(176,138,78,0.35),rgba(176,138,78,0.15))",border:"1px solid rgba(176,138,78,0.45)",color:"#B08A4E",padding:"14px 32px",borderRadius:12,textDecoration:"none",fontFamily:"Cinzel,serif",fontSize:14,letterSpacing:"0.1em",marginBottom:12}}>Get Lifetime Access &#8594;</a>
       <button onClick={signOut} style={{background:"transparent",border:"none",color:"#6C7A86",cursor:"pointer",fontSize:13,fontFamily:"EB Garamond,Georgia,serif"}}>Sign out</button>
     </div>
   );
@@ -1406,10 +1406,10 @@ export default function AnchoredSteps() {
             {profile?.plan === "weekly" && (
               <div style={{background:"linear-gradient(145deg,rgba(176,138,78,0.12),rgba(176,138,78,0.04))",border:"1px solid rgba(176,138,78,0.35)",borderRadius:14,padding:"20px",marginBottom:14}}>
                 <div style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:12}}>Upgrade Your Plan</div>
-                <p style={{fontSize:14,color:T.text,lineHeight:1.7,marginBottom:14}}>Switch to Full Year Access for $39 — just $3.25/month for the complete year.</p>
+                <p style={{fontSize:14,color:T.text,lineHeight:1.7,marginBottom:14}}>Switch to Lifetime Access for a one-time $39 — no more monthly charges, and every week stays yours.</p>
                 <a href="https://buy.stripe.com/6oUbJ0fDS0Lc2ijarV57W09" target="_blank" rel="noreferrer"
                   style={{display:"block",background:"linear-gradient(135deg,rgba(176,138,78,0.35),rgba(176,138,78,0.15))",border:"1px solid rgba(176,138,78,0.5)",color:G.gold,padding:"13px",borderRadius:10,textAlign:"center",textDecoration:"none",fontFamily:"Cinzel,serif",fontSize:13,letterSpacing:"0.08em"}}>
-                  Upgrade to Full Year Access — $39 &#8594;
+                  Get Lifetime Access — $39 &#8594;
                 </a>
               </div>
             )}

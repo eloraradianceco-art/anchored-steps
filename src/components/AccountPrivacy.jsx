@@ -1,14 +1,20 @@
 import { useState } from 'react'
 
-// "Privacy & Account" section for Settings: privacy policy link and account deletion.
+// "Privacy & Account" section for Settings: policy links, help, and account deletion.
 // Same file in every Elora Radiance app; each app passes its own colors through `theme`.
-//   theme: { text, muted, card, border, danger, dangerF, dangerB, dark }
+//   theme:   { text, muted, card, border, danger, dangerF, dangerB, dark, body?, heading? }
+//   deletes: what deleting removes (defaults to the shared Elora Radiance account)
 
-const PRIVACY_URL = 'https://eloraradiance.com/privacy.html'
-const body = "'EB Garamond',Georgia,serif"
-const heading = "'Cinzel',Georgia,serif"
+const LINKS = [
+  { icon: '🔒', label: 'Privacy Policy', href: 'https://eloraradiance.com/privacy.html', action: 'Read' },
+  { icon: '📄', label: 'Terms of Service', href: 'https://eloraradiance.com/terms.html', action: 'Read' },
+  { icon: '💬', label: 'Help & Support', href: 'https://eloraradiance.com/support.html', action: 'Open' },
+]
+const SHARED_ACCOUNT = 'This permanently deletes your Elora Radiance account and everything saved in it, in every app: Anchored Steps Year 1 and Year 2, Armed & Anchored, and The Red Letters. That includes your journals, progress, saved verses, reminders and reviews. It can\'t be undone.'
 
-export default function AccountPrivacy({ supabase, theme: t, label = 'Privacy & Account' }) {
+export default function AccountPrivacy({ supabase, theme: t, label = 'Privacy & Account', deletes = SHARED_ACCOUNT }) {
+  const body = t.body || "'EB Garamond',Georgia,serif"
+  const heading = t.heading || "'Cinzel',Georgia,serif"
   const [open, setOpen] = useState(false)
   const [typed, setTyped] = useState('')
   const [busy, setBusy] = useState(false)
@@ -19,7 +25,12 @@ export default function AccountPrivacy({ supabase, theme: t, label = 'Privacy & 
   const remove = async () => {
     if (!ready || busy) return
     setBusy(true); setError('')
-    const { error: rpcError } = await supabase.rpc('delete_my_account')
+    const { data, error: rpcError } = await supabase.rpc('delete_my_account')
+    if (data === 'active_subscription') {
+      setError('You still have an active subscription. Cancel it first (email support@eloraradiance.com), then delete your account.')
+      setBusy(false)
+      return
+    }
     if (rpcError) {
       setError("We couldn't delete your account. Please try again, or email support@eloraradiance.com and we'll do it for you.")
       setBusy(false)
@@ -41,11 +52,13 @@ export default function AccountPrivacy({ supabase, theme: t, label = 'Privacy & 
         <div style={{ fontSize: 9, color: t.muted, letterSpacing: '0.14em', textTransform: 'uppercase', fontFamily: heading, marginBottom: 4 }}>{label}</div>
       </div>
       <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 14, padding: '0 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', borderBottom: `1px solid ${t.border}` }}>
-          <span style={{ fontSize: 18, width: 26, textAlign: 'center' }} aria-hidden="true">🔒</span>
-          <span style={{ flex: 1, fontSize: 16, color: t.text, fontFamily: body }}>Privacy Policy</span>
-          <a href={PRIVACY_URL} target="_blank" rel="noopener noreferrer" style={rowButton}>Read</a>
-        </div>
+        {LINKS.map((l) => (
+          <div key={l.href} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', borderBottom: `1px solid ${t.border}` }}>
+            <span style={{ fontSize: 18, width: 26, textAlign: 'center' }} aria-hidden="true">{l.icon}</span>
+            <span style={{ flex: 1, fontSize: 16, color: t.text, fontFamily: body }}>{l.label}</span>
+            <a href={l.href} target="_blank" rel="noopener noreferrer" style={rowButton} aria-label={`${l.action} ${l.label}`}>{l.action}</a>
+          </div>
+        ))}
 
         <div style={{ padding: '14px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -60,11 +73,7 @@ export default function AccountPrivacy({ supabase, theme: t, label = 'Privacy & 
 
           {open && (
             <div style={{ marginTop: 12, paddingLeft: 38 }}>
-              <p style={{ fontSize: 15, lineHeight: 1.6, color: t.text, fontFamily: body, margin: '0 0 10px' }}>
-                This permanently deletes your Elora Radiance account and everything saved in it, in every app:
-                Anchored Steps Year 1 and Year 2, Armed &amp; Anchored, and The Red Letters. That includes your
-                journals, progress, saved verses, reminders and reviews. It can't be undone.
-              </p>
+              <p style={{ fontSize: 15, lineHeight: 1.6, color: t.text, fontFamily: body, margin: '0 0 10px' }}>{deletes}</p>
               <p style={{ fontSize: 14, lineHeight: 1.6, color: t.muted, fontFamily: body, fontStyle: 'italic', margin: '0 0 12px' }}>
                 Purchases are not refunded. A record of each purchase is kept for tax purposes.
               </p>

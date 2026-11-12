@@ -248,9 +248,9 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
           <div style={{ background:G.bgCard, border:`1px solid ${G.border}`, borderRadius:14, padding:'12px 16px' }}>
             <p style={{ fontSize:13, color:G.muted, fontStyle:'italic', lineHeight:1.7, marginBottom:14 }}>The rest of the Elora Radiance ecosystem — Scripture-based tools for the whole Christian life.</p>
             {[
-              { label:'Armed & Anchored', desc:'Spiritual warfare training — 23 weapons', url:'https://armedandanchored.vercel.app/', icon:'⚔️' },
-              { label:'Anchored Steps · Year 2', desc:'Daily devotional — deeper study', url:'https://anchored-steps-year2.vercel.app/', icon:'⚓' },
-              { label:'The Red Letters', desc:'Complete words of Jesus by theme — free', url:'https://redletters.vercel.app/', icon:'✦' },
+              { label:'Armed & Anchored', desc:'Spiritual warfare training — 26 weapons', url:'https://armedandanchored.vercel.app/', icon:'⚔️' },
+              { label:'Anchored Steps · Year 2', desc:'52 weeks of deeper study', url:'https://anchored-steps-year2.vercel.app/', icon:'⚓' },
+              { label:'The Red Letters', desc:'The words of Jesus by theme — free', url:'https://redletters.vercel.app/', icon:'✦' },
               { label:'Anchored Verse', desc:'Scripture for every emotion — free', url:'https://anchoredverse.vercel.app/', icon:'📖' },
               { label:'The Living Planner', desc:'Faith-centered life planner', url:'https://the-living-planner.vercel.app/', icon:'📓' },
             ].map(app => (
