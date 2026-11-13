@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import Onboarding from "./Onboarding.jsx";
 import Settings from "./components/Settings_AS1.jsx";
 import DailySteps from "./components/DailySteps.jsx";
+import { Welcome, AuthCard, HomeScreenTip } from "./components/EntryScreens.jsx";
+import { BRAND } from "./entryBrand.js";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://cvtukqamaqrhjtdvmslb.supabase.co";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2dHVrcWFtYXFyaGp0ZHZtc2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NDU1MjQsImV4cCI6MjA5MTQyMTUyNH0.gSksF5jV-UpuaUL7x7vhHHOB6Z7Qq0iehtbc2PoSAxw";
@@ -259,25 +261,13 @@ function NoAccessScreen({ email, userId, onUnlocked, onSignOut }) {
     if (ok) onUnlocked()
     else setMsg("We don't see a Year 1 purchase for " + (email || "this account") + " yet. If you just paid, give it a minute and check again.")
   }
-  return (
-    <div style={{ minHeight:"100vh", background:"linear-gradient(155deg,#0F1A24 0%,#1A2A38 55%,#0F1A24 100%)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"32px 20px", textAlign:"center", fontFamily:"'EB Garamond',Georgia,serif" }}>
-      <img src="/icon.png" alt="" style={{ width:64, height:64, borderRadius:14, marginBottom:16 }}/>
-      <div style={{ fontFamily:"Cinzel,serif", fontSize:20, color:"#F5F1E8", marginBottom:8 }}>Unlock Anchored Steps</div>
-      <p style={{ fontSize:16, color:"#A8B3BC", lineHeight:1.7, margin:"0 0 22px", maxWidth:360 }}>You're signed in as {email}, but Year 1 isn't on this account yet. Already bought it? It unlocks for the email you used at checkout.</p>
-      <div style={{ width:"100%", maxWidth:340 }}>
-        <a href={buyLink(email, userId)} target="_blank" rel="noreferrer" style={{ display:"block", borderRadius:12, padding:"15px", background:"linear-gradient(135deg,rgba(176,138,78,0.4),rgba(176,138,78,0.2))", color:"#F5F1E8", textDecoration:"none", fontFamily:"'Cinzel',Georgia,serif", fontSize:14, letterSpacing:"0.09em", marginBottom:10 }}>Get Lifetime Access · $39</a>
-        <button onClick={check} disabled={busy} style={{ width:"100%", padding:"13px", borderRadius:12, border:"1px solid rgba(176,138,78,0.45)", background:"transparent", color:"#B08A4E", fontFamily:"'Cinzel',Georgia,serif", fontSize:13, letterSpacing:"0.08em", marginBottom:10, cursor:busy?"default":"pointer" }}>{busy ? "Checking..." : "I've Paid · Check Again"}</button>
-        {msg && <div style={{ fontSize:14, color:"#A8B3BC", lineHeight:1.6, marginBottom:10 }}>{msg}</div>}
-        <p style={{ fontSize:13, color:"#6C7A86", lineHeight:1.6, margin:"0 0 18px" }}>Paid with a different email? Sign out and sign in with that one.</p>
-        <button onClick={onSignOut} style={{ background:"transparent", border:"none", color:"#6C7A86", cursor:"pointer", fontSize:13, fontFamily:"EB Garamond,Georgia,serif" }}>Sign out</button>
-      </div>
-    </div>
-  )
+  return <Welcome brand={BRAND} session={{ user: { email } }} buyHref={buyLink(email, userId)}
+    onCheckAgain={check} checking={busy} checkMessage={msg} onSignOut={onSignOut} />
 }
 
 // Auth is now in ./components/Auth_AS1.jsx — but keep inline version for single-file deploy
 // This updated AuthScreen matches AA's design pattern
-function AuthScreen({onAuth}) {
+function AuthScreen({onAuth, onBack}) {
   const paid = justPaid()
   const [mode, setMode] = useState(paid ? "signup" : "signin")
   const [email, setEmail] = useState("")
@@ -323,105 +313,17 @@ function AuthScreen({onAuth}) {
     setResetSent(true); setLoading(false)
   }
 
-  const INP_S = { width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid "+G.goldB, borderRadius:10, color:G.cream, fontSize:16, padding:"14px 16px", fontFamily:"'EB Garamond',Georgia,serif", outline:"none", boxSizing:"border-box", marginBottom:12 }
-  const BTN_S = (a) => ({ width:"100%", padding:"16px", borderRadius:12, cursor:a?"pointer":"default", fontSize:14, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.09em", transition:"all .25s", touchAction:"manipulation", border:"none", background:a?"linear-gradient(135deg,rgba(176,138,78,0.4),rgba(176,138,78,0.2))":"rgba(176,138,78,0.08)", color:a?G.cream:G.muted })
-  const LBL_S = { fontSize:10, color:G.muted, letterSpacing:"0.14em", textTransform:"uppercase", fontFamily:"'Cinzel',Georgia,serif", marginBottom:6, display:"block" }
-
+  const submit = mode === "signin" ? handleSignIn : mode === "forgot" ? handleForgot : handleSignUp
   return (
-    <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"flex-start", background:"radial-gradient(ellipse at 50% 0%, rgba(176,138,78,0.1) 0%, transparent 55%), "+G.bg, fontFamily:"'EB Garamond',Georgia,serif", overflowY:"auto", padding:"0 16px 40px" }}>
-      <div style={{ background:"rgba(13,26,42,0.98)", borderRadius:20, border:"1px solid "+G.goldB, padding:"32px 28px 36px", width:"100%", maxWidth:420, marginTop:"8vh", marginBottom:40, boxShadow:"0 12px 40px rgba(0,0,0,0.4)" }}>
-        <div style={{ textAlign:"center", marginBottom:28 }}>
-          <img src="/icon.png" alt="" style={{ width:56, height:56, borderRadius:14, display:"block", margin:"0 auto 12px", boxShadow:"0 4px 16px rgba(0,0,0,0.3)" }}/>
-          <div style={{ fontSize:9, color:G.gold, letterSpacing:"0.2em", textTransform:"uppercase", fontFamily:"'Cinzel',Georgia,serif", marginBottom:6 }}>Elora Radiance Co.</div>
-          <div style={{ fontSize:20, fontWeight:700, color:G.cream, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.05em", marginBottom:6 }}>Anchored Steps</div>
-          <div style={{ fontSize:13, color:G.muted, fontStyle:"italic" }}>{mode==="signin"?"Welcome back" : mode==="forgot"?"Reset your password" : "Create your account"}</div>
-          {mode==="signup" && <div style={{ fontSize:13, color:G.muted, lineHeight:1.6, marginTop:10 }}>Use the email you paid with. Already use Armed &amp; Anchored or Year 2? Use that same email and password.</div>}
-        </div>
-
-        {error && <div style={{ background:"rgba(201,72,72,0.1)", border:"1px solid rgba(201,72,72,0.3)", borderRadius:10, padding:"10px 14px", marginBottom:14, fontSize:14, color:"#C94848", lineHeight:1.6 }}>{error}</div>}
-        {msg && <div style={{ background:"rgba(124,146,132,0.12)", border:"1px solid rgba(124,146,132,0.35)", borderRadius:10, padding:"10px 14px", marginBottom:14, fontSize:14, color:G.green, lineHeight:1.6 }}>{msg}</div>}
-        {resetSent && <div style={{ background:"rgba(124,146,132,0.12)", border:"1px solid rgba(124,146,132,0.35)", borderRadius:12, padding:"16px", textAlign:"center", marginBottom:14 }}><div style={{ fontSize:14, color:G.green }}>✓ Check your email for a reset link.</div><button onClick={()=>{setResetSent(false);setMode("signin")}} style={{ marginTop:10, background:"transparent", border:"none", color:G.gold, cursor:"pointer", fontSize:13, fontFamily:"'Cinzel',Georgia,serif" }}>Back to Sign In</button></div>}
-
-        {!resetSent && (<>
-          <label style={LBL_S}>Email</label>
-          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com" onKeyDown={e=>e.key==="Enter"&&(mode==="signin"?handleSignIn():mode==="forgot"?handleForgot():null)} style={INP_S} autoCapitalize="none"/>
-          {mode!=="forgot" && (<>
-            <label style={LBL_S}>Password</label>
-            <div style={{position:"relative",marginBottom:20}}>
-              <input type={showPw?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)} placeholder={mode==="signup"?"At least 6 characters":"Your password"} onKeyDown={e=>e.key==="Enter"&&(mode==="signin"?handleSignIn():handleSignUp())} style={{ ...INP_S, marginBottom:0, paddingRight:64 }}/>
-              <button type="button" onClick={()=>setShowPw(s=>!s)} aria-label={showPw?"Hide password":"Show password"} style={{ position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", background:"transparent", border:"none", color:G.gold, fontSize:10, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.1em", textTransform:"uppercase", cursor:"pointer", padding:"8px 10px", touchAction:"manipulation" }}>{showPw?"Hide":"Show"}</button>
-            </div>
-          </>)}
-          <button onClick={mode==="signin"?handleSignIn:mode==="forgot"?handleForgot:handleSignUp} disabled={loading} style={{ ...BTN_S(!loading), marginBottom:12 }}>
-            {loading?"Please wait..." : mode==="signup"?"Create Account" : mode==="forgot"?"Send Reset Link" : "Sign In"}
-          </button>
-        </>)}
-
-        <div style={{ display:"flex", justifyContent:"center", gap:16, flexWrap:"wrap" }}>
-          {mode==="signin"&&<><button onClick={()=>{setMode("signup");setError("");setMsg("")}} style={{ background:"transparent", border:"none", color:G.muted, cursor:"pointer", fontSize:13, fontFamily:"'EB Garamond',Georgia,serif" }}>Create account</button><button onClick={()=>{setMode("forgot");setError("");setMsg("")}} style={{ background:"transparent", border:"none", color:G.muted, cursor:"pointer", fontSize:13, fontFamily:"'EB Garamond',Georgia,serif" }}>Forgot password?</button><button onClick={()=>setMode("plans")} style={{ background:"transparent", border:"none", color:G.gold, cursor:"pointer", fontSize:13, fontFamily:"'EB Garamond',Georgia,serif" }}>View plans →</button></>}
-          {mode!=="signin"&&<button onClick={()=>{setMode("signin");setError("");setMsg("")}} style={{ background:"transparent", border:"none", color:G.muted, cursor:"pointer", fontSize:13, fontFamily:"'EB Garamond',Georgia,serif" }}>← Back to sign in</button>}
-        </div>
-
-        {mode==="plans"&&(
-          <div style={{ marginTop:20, paddingTop:20, borderTop:"1px solid "+G.border }}>
-            <div style={{ fontSize:10, color:G.muted, letterSpacing:"0.14em", textTransform:"uppercase", fontFamily:"'Cinzel',Georgia,serif", marginBottom:14, textAlign:"center" }}>One Payment. Lifetime Access.</div>
-            <a href="https://buy.stripe.com/6oUbJ0fDS0Lc2ijarV57W09" target="_blank" rel="noreferrer" style={{ textDecoration:"none", display:"block", background:"linear-gradient(135deg,rgba(176,138,78,0.22),rgba(176,138,78,0.06))", border:"2px solid "+G.gold, borderRadius:14, padding:"22px 18px", textAlign:"center", position:"relative", marginBottom:14 }}>
-              <div style={{ position:"absolute", top:-11, left:"50%", transform:"translateX(-50%)", background:G.gold, color:G.bg, fontSize:9, fontFamily:"'Cinzel',Georgia,serif", padding:"3px 12px", borderRadius:10, fontWeight:700, letterSpacing:"0.12em" }}>LIFETIME ACCESS</div>
-              <div style={{ fontSize:11, color:G.gold, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.12em", marginBottom:8, textTransform:"uppercase" }}>Year 1 — Complete</div>
-              <div style={{ fontSize:34, fontWeight:700, color:G.cream, fontFamily:"'Cinzel',Georgia,serif", marginBottom:4, lineHeight:1 }}>$39</div>
-              <div style={{ fontSize:11, color:G.muted, marginBottom:14, letterSpacing:"0.04em" }}>one-time · no subscription</div>
-              <div style={{ background:"rgba(176,138,78,0.18)", border:"1px solid "+G.goldB, borderRadius:9, padding:"10px 14px", fontSize:12, color:G.gold, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:"0.06em" }}>⚓ Unlock All 52 Weeks →</div>
-            </a>
-            <p style={{ fontSize:12, color:G.muted, lineHeight:1.7, textAlign:"center" }}>After purchase, create your account above with the same email you used at checkout.</p>
-          </div>
-        )}
-
-        {/* Add to Home Screen — shown after new account created */}
-        {justSignedUp && (
-          <div style={{ marginTop:28, background:'rgba(176,138,78,0.07)',
-            border:'1px solid rgba(176,138,78,0.22)', borderRadius:14, padding:'18px 18px 14px' }}>
-            <div style={{ fontSize:13, color:G.green, fontFamily:"'Cinzel',Georgia,serif",
-              letterSpacing:'0.06em', marginBottom:8 }}>✓ Account Created</div>
-            <div style={{ fontSize:14, color:G.text, lineHeight:1.6, marginBottom:16 }}>
-              You're in. Taking you to Anchored Steps now.
-            </div>
-            <div style={{ fontSize:10, color:G.gold, letterSpacing:'0.16em',
-              textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:8 }}>
-              📱 Add to Your Home Screen
-            </div>
-            <p style={{ fontSize:13, color:G.text, lineHeight:1.65, marginBottom:14 }}>
-              Anchored Steps works like a native app — add it to your home screen for instant one-tap access.
-            </p>
-            {[
-              { os:'🍎 iPhone / iPad (Safari)', steps:['Tap the Share button ⎋ at the bottom of Safari','Scroll and tap "Add to Home Screen"','Tap "Add" — done ✓'] },
-              { os:'🤖 Android (Chrome)', steps:['Tap the three-dot menu ⋮ at the top right','Tap "Add to Home Screen" or "Install App"','Tap "Add" — done ✓'] },
-            ].map(p => (
-              <div key={p.os} style={{ marginBottom:12 }}>
-                <div style={{ fontSize:11, color:G.gold, fontFamily:"'Cinzel',Georgia,serif",
-                  letterSpacing:'0.06em', marginBottom:6 }}>{p.os}</div>
-                {p.steps.map((step,i) => (
-                  <div key={i} style={{ display:'flex', gap:8, marginBottom:4 }}>
-                    <span style={{ fontSize:11, color:G.goldL, flexShrink:0, minWidth:14,
-                      fontFamily:"'Cinzel',Georgia,serif" }}>{i+1}.</span>
-                    <span style={{ fontSize:13, color:G.muted, lineHeight:1.5 }}>{step}</span>
-                  </div>
-                ))}
-              </div>
-            ))}
-            <button onClick={()=>{ setJustSignedUp(false); onAuth(true) }}
-              style={{ width:'100%', padding:'14px', borderRadius:10, cursor:'pointer',
-                background:'rgba(176,138,78,0.18)', border:'1px solid rgba(176,138,78,0.4)',
-                color:G.cream, fontSize:13, fontFamily:"'Cinzel',Georgia,serif",
-                letterSpacing:'0.06em', marginTop:6 }}>
-              ⚓ Enter Anchored Steps →
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+    <AuthCard brand={BRAND} mode={mode} onMode={(m) => { setMode(m); setError(""); setMsg("") }}
+      email={email} onEmail={setEmail} password={password} onPassword={setPassword}
+      onSubmit={submit} loading={loading} error={error} message={msg}
+      resetSent={resetSent} onResetDone={() => { setResetSent(false); setMode("signin") }}
+      onBack={justSignedUp ? undefined : onBack} hideForm={justSignedUp}>
+      {justSignedUp && <HomeScreenTip brand={BRAND} onContinue={() => { setJustSignedUp(false); onAuth(true) }} />}
+    </AuthCard>
   )
 }
-
 
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
 
@@ -436,6 +338,8 @@ export default function AnchoredSteps() {
   const shareCardRef = useRef(null);
   const [subExpired, setSubExpired] = useState(false);
   const [noAccess, setNoAccess] = useState(false);
+  // Signed out: the welcome page first, the sign-in card after "Sign in" (straight there after checkout)
+  const [entry, setEntry] = useState(() => justPaid() ? "auth" : "welcome");
   const [view, setView] = useState("steps");
   const [wk, setWk] = useState(() => { try { return parseInt(localStorage.getItem('as1_current_week') || '1') } catch { return 1 } });
   const [showWeekJump, setShowWeekJump] = useState(false);
@@ -818,7 +722,9 @@ export default function AnchoredSteps() {
   );
 
   // ── Not logged in
-  if (!session) return <AuthScreen onAuth={() => window.location.reload()} />;
+  if (!session) return entry === "welcome"
+    ? <Welcome brand={BRAND} buyHref={BUY_LINK} onSignIn={() => setEntry("auth")} />
+    : <AuthScreen onAuth={() => window.location.reload()} onBack={() => setEntry("welcome")} />;
 
   // ── Signed in, but Year 1 not unlocked on this account
   if (noAccess) return <NoAccessScreen email={session.user?.email} userId={session.user?.id} onUnlocked={() => loadUserData(session.user.id)} onSignOut={signOut} />;
