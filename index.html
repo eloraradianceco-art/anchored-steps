@@ -28,6 +28,9 @@
       ::-webkit-scrollbar{width:4px}
       ::-webkit-scrollbar-thumb{background:rgba(176,138,78,0.25);border-radius:3px}
       textarea,input{resize:vertical;font-family:"EB Garamond",Georgia,serif}
+          /* The page always fills the screen. When Settings is open the page behind it is empty, and on iPhone a
+         short page let the bottom tab bar ride up; Armed & Anchored already had this rule. 2026-11-13 */
+      html,body,#root{height:100%;min-height:100vh}
     </style>
     <meta name="description" content="52 Weeks of Faith in Action — a Christ-centered digital journal by Elora Radiance." />
       <!-- iPad Home Screen app: iPadOS 26 blurs a band below the status bar (solid with Reduce
