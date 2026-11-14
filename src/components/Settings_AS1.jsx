@@ -133,7 +133,7 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
   return (
     <div style={{ position:'fixed', inset:0, zIndex:400, background: darkMode ? '#0F1A24' : '#F5F1E8', fontFamily:"'EB Garamond',Georgia,serif", overflowY:'auto' }}>
       {showReviews && <Reviews app="as1" appName="Anchored Steps" eyebrow="Anchored Steps" userEmail={profile?.email} C={{ ...G, red: G.gold, redL: G.gold }} lightMode={!darkMode} onClose={() => setShowReviews(false)} />}
-      <div style={{ maxWidth:560, margin:'0 auto', padding:'0 0 80px' }}>
+      <div style={{ maxWidth:560, margin:'0 auto', padding:'0 0 calc(100px + env(safe-area-inset-bottom, 0px))' /* clears the bottom tab bar */ }}>
 
         {/* Sticky header */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'calc(16px + var(--safe-top, env(safe-area-inset-top, 0px))) 20px 16px', borderBottom:`1px solid ${G.border}`, position:'sticky', top:0, zIndex:10, background: darkMode ? '#0F1A24' : '#F5F1E8', backdropFilter:'blur(12px)' }}>

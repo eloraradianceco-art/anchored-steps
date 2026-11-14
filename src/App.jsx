@@ -35,6 +35,9 @@ const G_DARK = {
   cream:"#F5F1E8",text:"#E6DED0",muted:"#C0CDD8",dim:"#9AAAB8",border:"rgba(255,255,255,0.06)",
 };
 const G = G_DARK;
+// Bottom tab bar height; the phone's home-indicator inset is added where it's used
+const TAB_BAR_H = 60;
+const BELOW_BAR = `calc(${TAB_BAR_H}px + env(safe-area-inset-bottom, 0px))`;
 // Light palette: same keys, colors chosen to stay readable (4.5:1 or better) on the cream
 // background and on tinted cards.
 const G_LIGHT = {
@@ -729,8 +732,43 @@ export default function AnchoredSteps() {
   // ── Signed in, but Year 1 not unlocked on this account
   if (noAccess) return <NoAccessScreen email={session.user?.email} userId={session.user?.id} onUnlocked={() => loadUserData(session.user.id)} onSignOut={signOut} />;
 
+  // ── Bottom tab bar ─────────────────────────────────────────────
+  // Steps, Contents, Search, Progress and Settings sit at the bottom where a thumb reaches them
+  // (they were a row of small links under the header). Same pattern as The Living Planner. 2026-11-13
+  const activeTab = showSettings ? "settings" : view === "journal" ? "steps" : view;
+  const goTab = (id) => {
+    if (id === activeTab && !(id === "steps" && view === "journal")) { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+    if (id === "settings") { setShowSettings(true); return; }
+    setShowSettings(false); setView(id); window.scrollTo(0, 0);
+  };
+  const tabBar = () => (
+    <nav aria-label="Main" style={{
+      position:"fixed",left:0,right:0,bottom:0,zIndex:450,
+      background:darkMode?"rgba(15,26,36,0.97)":"rgba(242,237,227,0.97)",
+      backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",
+      borderTop:"1px solid rgba(176,138,78,0.22)",boxShadow:"0 -8px 28px rgba(0,0,0,"+(darkMode?"0.28":"0.08")+")",
+      paddingBottom:"env(safe-area-inset-bottom, 0px)",
+    }}>
+      <div style={{display:"flex",maxWidth:560,margin:"0 auto"}}>
+        {[["steps","\uD83D\uDC63","Steps"],["contents","\uD83D\uDCD6","Contents"],["search","\uD83D\uDD0D","Search"],["progress","\uD83D\uDCCA","Progress"],["settings","\u2699\uFE0F","Settings"]].map(([id,icon,label]) => {
+          const on = activeTab === id;
+          return (
+            <button key={id} onClick={() => goTab(id)} aria-current={on ? "page" : undefined}
+              style={{flex:1,minHeight:TAB_BAR_H,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,
+                background:"transparent",border:"none",cursor:"pointer",touchAction:"manipulation",padding:"8px 2px 6px",position:"relative"}}>
+              {on && <span style={{position:"absolute",top:0,left:"28%",right:"28%",height:2,borderRadius:2,background:G.gold}}/>}
+              <span style={{fontSize:21,lineHeight:1,filter:on?"none":"saturate(0.55)",opacity:on?1:0.78}}>{icon}</span>
+              <span style={{fontSize:9.5,letterSpacing:"0.08em",textTransform:"uppercase",fontFamily:"Cinzel,serif",fontWeight:on?700:500,color:on?G.gold:(darkMode?G.muted:"#7A6248")}}>{label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+
 // ── Onboarding
   if (showSettings) return (
+    <>
     <Settings
       profile={profile}
       userId={session?.user?.id}
@@ -745,6 +783,8 @@ export default function AnchoredSteps() {
       onOpenSaved={() => { setShowSettings(false); doSearch(""); setView("search"); window.scrollTo(0, 0); }}
       onClose={() => setShowSettings(false)}
     />
+    {tabBar()}
+    </>
   )
 
   if (showOnboarding) return (
@@ -828,14 +868,9 @@ export default function AnchoredSteps() {
             </div>
           </div>
         </div>
-        <div style={{display:"flex",justifyContent:"center",gap:2,padding:"5px 8px",flexWrap:"nowrap",overflowX:"auto"}}>
-          {[["steps","Steps"],["contents","Contents"],["search","Search"],["progress","Progress"],["settings","Settings"]].map(([v,l]) => { const on = view===v || (v==="steps" && view==="journal"); return (
-            <button key={v} onClick={() => { if(v==="settings") setShowSettings(true); else { setView(v); window.scrollTo(0, 0); } }} style={{background:on?"linear-gradient(135deg,rgba(176,138,78,0.18),rgba(176,138,78,0.07))":"transparent",border:"1px solid "+(on?"rgba(176,138,78,0.4)":"transparent"),color:on?G.gold:G.muted,padding:"6px 9px",borderRadius:7,cursor:"pointer",fontSize:11.5,fontFamily:"Cinzel,serif",letterSpacing:"0.04em",transition:"all .2s",whiteSpace:"nowrap"}}>{l}</button>
-          ); })}
-        </div>
       </header>
 
-      <main style={{maxWidth:860,margin:"0 auto",padding:"26px 18px 80px"}}>
+      <main style={{maxWidth:860,margin:"0 auto",padding:`26px 18px calc(40px + ${BELOW_BAR})`}}>
 
         {view === "steps" && week && (
           <DailySteps
@@ -1564,7 +1599,7 @@ export default function AnchoredSteps() {
             if (next) { setSec(next.id); setAnimK(a => a+1); setLexWord(null); }
           }}
           style={{
-            position:"fixed",bottom:28,right:20,
+            position:"fixed",bottom:`calc(14px + ${BELOW_BAR})`,right:20,
             backgroundColor:G.bg,backgroundImage:"linear-gradient(135deg,rgba(176,138,78,0.4),rgba(176,138,78,0.2))",
             border:"1px solid rgba(176,138,78,0.5)",
             color:darkMode?G.goldL:G.gold,padding:"10px 20px",borderRadius:50,
@@ -1578,6 +1613,7 @@ export default function AnchoredSteps() {
           {SECTIONS[SECTIONS.findIndex(s => s.id === sec)+1]?.label} &#8250;
         </button>
       )}
+      {tabBar()}
     </div>
   );
 }
