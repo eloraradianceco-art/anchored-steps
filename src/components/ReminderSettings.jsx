@@ -80,14 +80,14 @@ export default function ReminderSettings({ supabase, app, theme: t, label = 'Dai
   return (
     <div>
       <div style={{ marginTop: 24, marginBottom: 8 }}>
-        <div style={{ fontSize: 9, color: t.muted, letterSpacing: '0.14em', textTransform: 'uppercase', fontFamily: heading, marginBottom: 4 }}>{label}</div>
+        <div style={{ fontSize: 11, color: t.muted, letterSpacing: '0.14em', textTransform: 'uppercase', fontFamily: heading, marginBottom: 4 }}>{label}</div>
       </div>
       <div style={{ background: t.card, border: `1px solid ${t.border}`, borderRadius: 14, padding: '14px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontSize: 18, width: 26, textAlign: 'center' }} aria-hidden="true">🔔</span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 16, color: t.text, fontFamily: body }}>Remind me every day</div>
-            <div style={{ fontSize: 13, color: t.muted, fontFamily: body, fontStyle: 'italic' }}>Even when the app is closed.</div>
+            <div style={{ fontSize: 16, color: t.muted, fontFamily: body, fontStyle: 'italic' }}>Even when the app is closed.</div>
           </div>
           <button
             type="button" role="switch" aria-checked={state.enabled} aria-label="Daily reminder"
@@ -105,7 +105,7 @@ export default function ReminderSettings({ supabase, app, theme: t, label = 'Dai
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12, paddingLeft: 38, flexWrap: 'wrap' }}>
-          <label style={{ fontSize: 14, color: t.muted, fontFamily: body }}>
+          <label style={{ fontSize: 16, color: t.muted, fontFamily: body }}>
             Time{' '}
             <input
               type="time" value={state.time} disabled={blocked}
@@ -126,7 +126,7 @@ export default function ReminderSettings({ supabase, app, theme: t, label = 'Dai
         </div>
 
         {note && (
-          <div role="status" style={{ marginTop: 12, paddingLeft: 38, fontSize: 14, lineHeight: 1.5, color: t.muted, fontFamily: body, fontStyle: 'italic' }}>
+          <div role="status" style={{ marginTop: 12, paddingLeft: 38, fontSize: 16, lineHeight: 1.5, color: t.muted, fontFamily: body, fontStyle: 'italic' }}>
             {note}
           </div>
         )}

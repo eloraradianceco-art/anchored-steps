@@ -85,7 +85,7 @@ export default function Reviews({ app, appName, eyebrow, userEmail, C, lightMode
   const card = { background: C.bgCard, border: '1px solid ' + C.border, borderRadius: 14 }
   const cin = "'Cinzel',Georgia,serif"
   const gar = "'EB Garamond',Georgia,serif"
-  const inputStyle = { width: '100%', padding: '12px 14px', borderRadius: 9, border: '1px solid ' + C.border, background: lightMode ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.04)', color: C.cream, fontFamily: gar, fontSize: 15, outline: 'none', marginBottom: 10 }
+  const inputStyle = { width: '100%', padding: '12px 14px', borderRadius: 9, border: '1px solid ' + C.border, background: lightMode ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.04)', color: C.cream, fontFamily: gar, fontSize: 16, outline: 'none', marginBottom: 10 }
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: (C.bg || (lightMode ? '#F2EDE3' : '#070E17')), fontFamily: gar, overflowY: 'auto', animation: 'fadeIn 0.25s ease' }}>
@@ -94,7 +94,7 @@ export default function Reviews({ app, appName, eyebrow, userEmail, C, lightMode
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'calc(16px + var(--safe-top, env(safe-area-inset-top, 0px))) 20px 16px', borderBottom: '1px solid ' + C.border, position: 'sticky', top: 0, zIndex: 10, background: (C.bg || (lightMode ? '#F2EDE3' : '#070E17')), backdropFilter: 'blur(12px)' }}>
           <div>
-            <div style={{ fontSize: 9, color: C.redL, letterSpacing: '0.16em', textTransform: 'uppercase', fontFamily: cin }}>{eyebrow || appName}</div>
+            <div style={{ fontSize: 11, color: C.redL, letterSpacing: '0.16em', textTransform: 'uppercase', fontFamily: cin }}>{eyebrow || appName}</div>
             <div style={{ fontSize: 18, fontWeight: 700, color: C.cream, fontFamily: cin }}>Ratings &amp; Reviews</div>
           </div>
           <button onClick={onClose} style={{ background: C.bgCard, border: '1px solid ' + C.border, color: C.muted, width: 36, height: 36, borderRadius: 9, cursor: 'pointer', fontSize: 18 }}>&larr;</button>
@@ -108,10 +108,10 @@ export default function Reviews({ app, appName, eyebrow, userEmail, C, lightMode
               <>
                 <div style={{ fontSize: 40, fontWeight: 700, color: C.cream, fontFamily: cin, lineHeight: 1 }}>{avg.toFixed(1)}</div>
                 <div style={{ margin: '8px 0 4px' }}><StarRow value={Math.round(avg)} size={18} C={C} /></div>
-                <div style={{ fontSize: 13, color: C.muted }}>{count} review{count === 1 ? '' : 's'}</div>
+                <div style={{ fontSize: 16, color: C.muted }}>{count} review{count === 1 ? '' : 's'}</div>
               </>
             ) : (
-              <div style={{ fontSize: 15, color: C.muted, fontStyle: 'italic' }}>No reviews yet &mdash; be the first to share yours.</div>
+              <div style={{ fontSize: 16, color: C.muted, fontStyle: 'italic' }}>No reviews yet &mdash; be the first to share yours.</div>
             )}
           </div>
 
@@ -119,12 +119,12 @@ export default function Reviews({ app, appName, eyebrow, userEmail, C, lightMode
           {mine && !mineLive ? (
             <div style={{ ...card, padding: '16px 18px', marginBottom: 18, borderColor: C.goldB }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <span style={{ fontSize: 10, color: C.gold, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: cin }}>Your Review</span>
-                <span style={{ fontSize: 10, color: C.muted, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: cin }}>Pending approval \u23f3</span>
+                <span style={{ fontSize: 11, color: C.gold, letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: cin }}>Your Review</span>
+                <span style={{ fontSize: 11, color: C.muted, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: cin }}>Pending approval \u23f3</span>
               </div>
               <StarRow value={mine.rating} size={15} C={C} />
               {mine.title && <div style={{ fontSize: 16, color: C.cream, fontFamily: cin, marginTop: 8 }}>{mine.title}</div>}
-              <div style={{ fontSize: 15, color: C.text, marginTop: 6, lineHeight: 1.6 }}>{mine.body}</div>
+              <div style={{ fontSize: 16, color: C.text, marginTop: 6, lineHeight: 1.6 }}>{mine.body}</div>
             </div>
           ) : mine && mineLive ? (
             <div style={{ ...card, padding: '14px 18px', marginBottom: 18, borderColor: C.goldB }}>
@@ -142,9 +142,9 @@ export default function Reviews({ app, appName, eyebrow, userEmail, C, lightMode
               <input value={title} onChange={e => setTitle(e.target.value)} maxLength={120} placeholder="Title (optional)" style={inputStyle} />
               <textarea value={body} onChange={e => setBody(e.target.value)} maxLength={2000} placeholder="What stood out to you?" rows={4} style={{ ...inputStyle, resize: 'vertical' }} />
               <input value={name} onChange={e => setName(e.target.value)} maxLength={80} placeholder="Display name" style={{ ...inputStyle, marginBottom: 4 }} />
-              <div style={{ fontSize: 11, color: C.dim, marginBottom: 14 }}>Shown publicly with your review. Your email is never shown.</div>
+              <div style={{ fontSize: 14, color: C.dim, marginBottom: 14 }}>Shown publicly with your review. Your email is never shown.</div>
 
-              {error && <div style={{ fontSize: 13, color: C.redL, marginBottom: 12 }}>{error}</div>}
+              {error && <div style={{ fontSize: 16, color: C.redL, marginBottom: 12 }}>{error}</div>}
 
               <div style={{ display: 'flex', gap: 10 }}>
                 <button onClick={() => { setShowForm(false); setError('') }} style={{ flex: '0 0 auto', background: C.bgCard, border: '1px solid ' + C.border, color: C.muted, padding: '13px 20px', borderRadius: 11, fontSize: 12, fontFamily: cin, letterSpacing: '0.08em', cursor: 'pointer' }}>Cancel</button>
@@ -152,28 +152,28 @@ export default function Reviews({ app, appName, eyebrow, userEmail, C, lightMode
                   {submitting ? 'Sending\u2026' : 'Submit Review'}
                 </button>
               </div>
-              <div style={{ fontSize: 11, color: C.dim, marginTop: 12, textAlign: 'center' }}>Reviews appear after a quick approval.</div>
+              <div style={{ fontSize: 14, color: C.dim, marginTop: 12, textAlign: 'center' }}>Reviews appear after a quick approval.</div>
             </div>
           )}
 
           {/* Community reviews */}
           {count > 0 && (
             <>
-              <div style={{ fontSize: 9, color: C.muted, letterSpacing: '0.14em', textTransform: 'uppercase', fontFamily: cin, margin: '4px 0 10px' }}>Community</div>
+              <div style={{ fontSize: 11, color: C.muted, letterSpacing: '0.14em', textTransform: 'uppercase', fontFamily: cin, margin: '4px 0 10px' }}>Community</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {reviews.map(r => (
                   <div key={r.id} style={{ ...card, padding: '16px 18px' }}>
                     <StarRow value={r.rating} size={14} C={C} />
                     {r.title && <div style={{ fontSize: 16, color: C.cream, fontFamily: cin, marginTop: 8 }}>{r.title}</div>}
-                    <div style={{ fontSize: 15, color: C.text, marginTop: 6, lineHeight: 1.6 }}>{r.body}</div>
-                    <div style={{ fontSize: 12, color: C.muted, marginTop: 10 }}>{r.author_name || 'Anonymous'} &middot; {fmtDate(r.created_at)}</div>
+                    <div style={{ fontSize: 16, color: C.text, marginTop: 6, lineHeight: 1.6 }}>{r.body}</div>
+                    <div style={{ fontSize: 15, color: C.muted, marginTop: 10 }}>{r.author_name || 'Anonymous'} &middot; {fmtDate(r.created_at)}</div>
                   </div>
                 ))}
               </div>
             </>
           )}
 
-          {loading && <div style={{ textAlign: 'center', color: C.muted, fontSize: 14, padding: '20px' }}>Loading reviews\u2026</div>}
+          {loading && <div style={{ textAlign: 'center', color: C.muted, fontSize: 16, padding: '20px' }}>Loading reviews\u2026</div>}
         </div>
       </div>
     </div>

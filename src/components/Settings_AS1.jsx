@@ -138,7 +138,7 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
         {/* Sticky header */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'calc(16px + var(--safe-top, env(safe-area-inset-top, 0px))) 20px 16px', borderBottom:`1px solid ${G.border}`, position:'sticky', top:0, zIndex:10, background: darkMode ? '#0F1A24' : '#F5F1E8', backdropFilter:'blur(12px)' }}>
           <div>
-            <div style={{ fontSize:9, color:G.gold, letterSpacing:'0.16em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif" }}>Anchored Steps · Year 1</div>
+            <div style={{ fontSize:11, color:G.gold, letterSpacing:'0.16em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif" }}>Anchored Steps · Year 1</div>
             <div style={{ fontSize:18, fontWeight:700, color:G.cream, fontFamily:"'Cinzel',Georgia,serif" }}>Settings</div>
           </div>
           <button onClick={onClose} style={{ background:G.bgCard, border:`1px solid ${G.border}`, color:G.muted, width:36, height:36, borderRadius:9, cursor:'pointer', fontSize:18 }}>←</button>
@@ -148,21 +148,21 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
 
           {/* Progress */}
           <div style={{ marginTop:24, marginBottom:8 }}>
-            <div style={{ fontSize:9, color:G.muted, letterSpacing:'0.14em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>Your Progress</div>
+            <div style={{ fontSize:11, color:G.muted, letterSpacing:'0.14em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>Your Progress</div>
           </div>
           <div style={{ background:G.bgCard, border:`1px solid ${G.border}`, borderRadius:14, padding:'16px' }}>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:14 }}>
               {[[weeksJournaled,'Weeks','📖'],[versesMemorized,'Memorized','✦'],[bookmarks,'Saved','☆']].map(([v,l,icon]) => (
                 <div key={l} style={{ background:G.goldF, border:`1px solid ${G.goldB}`, borderRadius:12, padding:'14px 8px', textAlign:'center' }}>
                   <div style={{ fontSize:26, fontWeight:700, color:G.gold, fontFamily:"'Cinzel',Georgia,serif", lineHeight:1 }}>{v}</div>
-                  <div style={{ fontSize:10, color:G.muted, marginTop:4 }}>{l}</div>
+                  <div style={{ fontSize:14, color:G.muted, marginTop:4 }}>{l}</div>
                 </div>
               ))}
             </div>
             <div style={{ height:5, background:G.bgCard, borderRadius:3, overflow:'hidden', border:`1px solid ${G.border}` }}>
               <div style={{ height:'100%', background:`linear-gradient(90deg,${G.gold},#C9A96E)`, width:`${Math.round((weeksJournaled/52)*100)}%`, transition:'width .4s ease' }}/>
             </div>
-            <div style={{ fontSize:12, color:G.muted, textAlign:'center', marginTop:8, marginBottom:14 }}>Week {wk} of 52 · {Math.round((wk/52)*100)}% through the year</div>
+            <div style={{ fontSize:15, color:G.muted, textAlign:'center', marginTop:8, marginBottom:14 }}>Week {wk} of 52 · {Math.round((wk/52)*100)}% through the year</div>
             <button onClick={() => { if(window.confirm("Reset to Week 1? Journal entries will be kept.")) { onResetWeek(); setResetDone(true) } }}
               style={{ width:'100%', background:'transparent', border:`1px solid ${G.border}`, color:G.muted, padding:'10px', borderRadius:10, cursor:'pointer', fontSize:12, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:'0.06em' }}>
               {resetDone ? '✓ Reset to Week 1' : '↺ Reset to Week 1'}
@@ -187,7 +187,7 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
 
           {/* Account */}
           <div style={{ marginTop:24, marginBottom:8 }}>
-            <div style={{ fontSize:9, color:G.muted, letterSpacing:'0.14em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>Account</div>
+            <div style={{ fontSize:11, color:G.muted, letterSpacing:'0.14em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>Account</div>
           </div>
           <div style={{ background:G.bgCard, border:`1px solid ${G.border}`, borderRadius:14, padding:'0 16px' }}>
             <Row icon="✉️" label={profile?.email || 'Your account'}>
@@ -217,7 +217,7 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
 
           {/* Appearance */}
           <div style={{ marginTop:24, marginBottom:8 }}>
-            <div style={{ fontSize:9, color:G.muted, letterSpacing:'0.14em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>Appearance</div>
+            <div style={{ fontSize:11, color:G.muted, letterSpacing:'0.14em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>Appearance</div>
           </div>
           <div style={{ background:G.bgCard, border:`1px solid ${G.border}`, borderRadius:14, padding:'0 16px' }}>
             <Row icon={darkMode ? '🌙' : '☀️'} label={darkMode ? 'Dark Mode' : 'Light Mode'} border={false}>
@@ -229,11 +229,11 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
 
           {/* Share */}
           <div style={{ marginTop:24, marginBottom:8 }}>
-            <div style={{ fontSize:9, color:G.muted, letterSpacing:'0.14em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>Share & Referral</div>
+            <div style={{ fontSize:11, color:G.muted, letterSpacing:'0.14em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>Share & Referral</div>
           </div>
           <div style={{ background:G.bgCard, border:`1px solid ${G.border}`, borderRadius:14, padding:'16px' }}>
-            <p style={{ fontSize:15, color:G.text, lineHeight:1.75, marginBottom:14 }}>Know someone ready to walk steadily with God this year? Share Anchored Steps with them.</p>
-            <div style={{ background: darkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)', border:`1px solid ${G.border}`, borderRadius:10, padding:'12px 14px', marginBottom:12, fontSize:13, color:G.muted, fontStyle:'italic', lineHeight:1.7 }}>
+            <p style={{ fontSize:16, color:G.text, lineHeight:1.75, marginBottom:14 }}>Know someone ready to walk steadily with God this year? Share Anchored Steps with them.</p>
+            <div style={{ background: darkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)', border:`1px solid ${G.border}`, borderRadius:10, padding:'12px 14px', marginBottom:12, fontSize:16, color:G.muted, fontStyle:'italic', lineHeight:1.7 }}>
               "{shareText.split('\n')[0]}"
             </div>
             <button onClick={handleShare} style={{ width:'100%', background: copiedShare ? G.greenF : G.goldF, border:`1px solid ${copiedShare ? G.greenB : G.goldB}`, color: copiedShare ? G.green : G.gold, padding:'13px', borderRadius:12, cursor:'pointer', fontSize:13, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:'0.08em', transition:'all .25s' }}>
@@ -243,10 +243,10 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
 
           {/* More from Elora Radiance */}
           <div style={{ marginTop:24, marginBottom:8 }}>
-            <div style={{ fontSize:9, color:G.muted, letterSpacing:'0.14em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>More from Elora Radiance Co.</div>
+            <div style={{ fontSize:11, color:G.muted, letterSpacing:'0.14em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>More from Elora Radiance Co.</div>
           </div>
           <div style={{ background:G.bgCard, border:`1px solid ${G.border}`, borderRadius:14, padding:'12px 16px' }}>
-            <p style={{ fontSize:13, color:G.muted, fontStyle:'italic', lineHeight:1.7, marginBottom:14 }}>The rest of the Elora Radiance ecosystem — Scripture-based tools for the whole Christian life.</p>
+            <p style={{ fontSize:16, color:G.muted, fontStyle:'italic', lineHeight:1.7, marginBottom:14 }}>The rest of the Elora Radiance ecosystem — Scripture-based tools for the whole Christian life.</p>
             {[
               { label:'Armed & Anchored', desc:'Spiritual warfare training — 26 weapons', url:'https://armed.eloraradiance.com/', icon:'⚔️' },
               { label:'Anchored Steps · Year 2', desc:'52 weeks of deeper study', url:'https://steps2.eloraradiance.com/', icon:'⚓' },
@@ -258,34 +258,34 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
                 <span style={{ fontSize:22, flexShrink:0 }}>{app.icon}</span>
                 <span style={{ flex:1 }}>
                   <span style={{ display:'block', fontSize:13, color:G.cream, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:'0.05em', marginBottom:2 }}>{app.label}</span>
-                  <span style={{ display:'block', fontSize:12, color:G.muted, fontStyle:'italic' }}>{app.desc}</span>
+                  <span style={{ display:'block', fontSize:15, color:G.muted, fontStyle:'italic' }}>{app.desc}</span>
                 </span>
-                <span style={{ fontSize:13, color:G.gold }}>↗</span>
+                <span style={{ fontSize:16, color:G.gold }}>↗</span>
               </a>
             ))}
           </div>
 
           {/* About */}
           <div style={{ marginTop:24, marginBottom:8 }}>
-            <div style={{ fontSize:9, color:G.muted, letterSpacing:'0.14em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>About</div>
+            <div style={{ fontSize:11, color:G.muted, letterSpacing:'0.14em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>About</div>
           </div>
           <div style={{ background:G.bgCard, border:`1px solid ${G.border}`, borderRadius:14, padding:'0 16px' }}>
             <Row icon="⚓" label="Anchored Steps · Year 1">
-              <span style={{ fontSize:11, color:G.dim }}>v1.0</span>
+              <span style={{ fontSize:14, color:G.dim }}>v1.0</span>
             </Row>
             <a href="https://eloraradiance.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
             <Row icon="🌿" label="Elora Radiance Co." border={false}>
-              <span style={{ fontSize:11, color:G.gold }}>eloraradiance.com &rarr;</span>
+              <span style={{ fontSize:14, color:G.gold }}>eloraradiance.com &rarr;</span>
             </Row>
             </a>
           </div>
 
           {/* Export */}
           <div style={{ marginTop:24, marginBottom:8 }}>
-            <div style={{ fontSize:9, color:G.muted, letterSpacing:'0.14em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>Your Data</div>
+            <div style={{ fontSize:11, color:G.muted, letterSpacing:'0.14em', textTransform:'uppercase', fontFamily:"'Cinzel',Georgia,serif", marginBottom:4 }}>Your Data</div>
           </div>
           <div style={{ background:G.bgCard, border:`1px solid ${G.border}`, borderRadius:14, padding:'16px' }}>
-            <p style={{ fontSize:14, color:G.text, lineHeight:1.7, marginBottom:14 }}>Download all your journal entries as a text file, or print as a formatted PDF.</p>
+            <p style={{ fontSize:16, color:G.text, lineHeight:1.7, marginBottom:14 }}>Download all your journal entries as a text file, or print as a formatted PDF.</p>
             <button onClick={handleExportTxt} disabled={exporting} style={{ width:'100%', background: exporting ? 'transparent' : G.goldF, border:`1px solid ${exporting ? G.border : G.goldB}`, color: exporting ? G.muted : G.gold, padding:'13px', borderRadius:12, cursor: exporting ? 'default' : 'pointer', fontSize:13, fontFamily:"'Cinzel',Georgia,serif", letterSpacing:'0.08em', transition:'all .25s', marginBottom:8 }}>
               {exporting ? 'Preparing Export…' : '📥 Export Journal'}
             </button>
