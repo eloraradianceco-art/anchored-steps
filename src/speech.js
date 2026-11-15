@@ -78,10 +78,12 @@ export function chunks(text, max = 220) {
 }
 
 // A local English voice where one exists (Chrome's online voices stop mid-read and need a connection).
-// On iPhone the system already picks the person's own English voice from `lang`, and naming one that isn't
-// downloaded reads nothing, so none is named there.
+// On Apple devices (iPhone, iPad, Mac) the system already picks the person's own English voice from `lang`, and
+// naming one can pick a voice that isn't downloaded (reads nothing) or a novelty voice such as "Albert", so none
+// is named there.
+const isApple = () => { try { return isAppleTouch() || /Macintosh|Mac OS X/.test(navigator.userAgent || '') } catch (e) { return false } }
 function pickVoice(s, lang) {
-  if (isAppleTouch()) return null
+  if (isApple()) return null
   try {
     const all = s.getVoices() || []
     const base = lang.split('-')[0]
