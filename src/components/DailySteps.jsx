@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
+import { speak as readAloud, stopSpeaking, silentSwitchMayMute } from "../speech.js";
 
 /* ─────────────────────────────────────────────────────────────
    ANCHORED STEPS — DAILY STEPS
@@ -114,14 +115,15 @@ function makeHl(week) {
   return t => String(t || "").split(re).map((part, i) => (i % 2 ? <mark key={i}>{part}</mark> : part));
 }
 
-function speakText(text) {
-  try {
-    const s = window.speechSynthesis;
-    if (!s || !window.SpeechSynthesisUtterance) return false;
-    s.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = 0.9; s.speak(u); return true;
-  } catch (e) { return false; }
+// Read-aloud lives in speech.js (iPhone Silent switch, Safari's dropped reads, long passages).
+const speakText = (text, onError) => readAloud(text, { rate: 0.9, onError });
+const hush = stopSpeaking;
+// Older iPhones (no audio-session control) still mute read-aloud with the Silent switch: say so once.
+function silentTip() {
+  if (!silentSwitchMayMute()) return "";
+  try { if (localStorage.getItem("listen_tip")) return ""; localStorage.setItem("listen_tip", "1"); } catch (e) { return ""; }
+  return "No sound? Turn off Silent Mode with the switch on the side of your iPhone, and turn the volume up.";
 }
-const hush = () => { try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {} };
 
 /* ---------- icons ---------- */
 const Anchor = () => (<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="24" cy="8.5" r="4" /><path d="M24 12.5V41" /><path d="M16 19h16" /><path d="M8 28c0 8 7 13 16 13s16-5 16-13" /><path d="M5 31l3-3 3 3M37 31l3-3 3 3" /></svg>);
@@ -544,7 +546,10 @@ export default function DailySteps({ week, wk, totalWeeks = 52, entries = [], ge
 
   const ctx = () => ({
     week, u, setU, val, put, get, set, hl,
-    speak: t => { if (!speakText(t)) setToast("Listening isn\u2019t supported in this browser."); },
+    speak: t => {
+      if (!speakText(t, () => setToast("Couldn\u2019t play the audio. Check that your volume is up, then tap Listen again."))) setToast("Listening isn\u2019t supported in this browser.");
+      else { const tip = silentTip(); if (tip) setToast(tip); }
+    },
   });
 
   const st = session ? steps[session.step - 1] : null;
