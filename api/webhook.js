@@ -5,6 +5,7 @@ const { createClient } = require("@supabase/supabase-js");
 // Armed & Anchored share one database and one sign-in, so this endpoint records each
 // purchase for the right app. There are no access codes and no emails: the app unlocks
 // when the buyer signs in with the email they paid with (or comes back from checkout).
+// The Anchored Library ($79) is one purchase row (app "bundle") that opens all three apps.
 // The Living Planner Pro subscription lives in its own database: checkouts, renewals and
 // cancellations are passed to it (plannerSync), and that is the only way Pro turns on or off.
 // Sales of other products are ignored here.
@@ -25,6 +26,7 @@ const LINK_APP = {
   plink_1TekLGBr8nMXOo8twn1VcZkz: "as2", // Year 2 lifetime ($39)
   plink_1TemdMBr8nMXOo8tEK01T1gs: "aa",  // Armed & Anchored, current link
   plink_1TYoaFBr8nMXOo8tyad1GVaT: "aa",  // Armed & Anchored, earlier link
+  plink_1UcXpsBr8nMXOo8tR6UwEncI: "bundle", // Anchored Library ($79): Year 1 + Year 2 + Armed & Anchored
 };
 // Fallback for checkouts without a known link: where the buyer is sent afterwards.
 const HOST_APP = {
@@ -37,14 +39,15 @@ const HOST_APP = {
   "armedandanchored.vercel.app": "aa",
 };
 
-const APPS = ["as1", "as2", "aa"];
+const APPS = ["as1", "as2", "aa", "bundle"];
 
 function appForSession(session) {
   if (session.metadata && APPS.includes(session.metadata.app)) return session.metadata.app;
   if (session.payment_link && LINK_APP[session.payment_link]) return LINK_APP[session.payment_link];
   try {
-    const host = new URL(session.success_url).host;
-    if (HOST_APP[host]) return HOST_APP[host];
+    const url = new URL(session.success_url);
+    if (HOST_APP[url.host]) return HOST_APP[url.host];
+    if (url.host === "eloraradiance.com" && url.pathname.startsWith("/library-welcome")) return "bundle";
   } catch (e) { /* no success url */ }
   return null;
 }
@@ -286,6 +289,16 @@ module.exports = async function handler(req, res) {
   if (app === "aa") {
     const unlocked = await unlockArmedAndAnchored(purchase.id, session, customerEmail);
     console.log(`Armed & Anchored purchase ${session.id}: ${unlocked ? "unlocked" : "waiting for sign-in"}`);
+    return res.status(200).json({ received: true });
+  }
+
+  // Anchored Library: one purchase opens Year 1, Year 2 and Armed & Anchored. Applied now when the
+  // buyer's account is known (signed in at checkout, or an account with the email they paid with);
+  // otherwise the first of the three apps they sign in to applies it (claim_purchase / aa_load_profile).
+  if (app === "bundle") {
+    const { data: unlocked, error } = await supabase.rpc("unlock_bundle_purchase", { p_purchase: purchase.id });
+    if (error) console.error("Library unlock failed (it will apply at sign-in):", error);
+    console.log(`Anchored Library purchase ${session.id}: ${unlocked ? "unlocked all three apps" : "waiting for sign-in"}`);
     return res.status(200).json({ received: true });
   }
 

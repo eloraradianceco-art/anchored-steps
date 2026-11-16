@@ -68,9 +68,10 @@ function Note({ c, tone = 'ok', children }) {
 
 // ── Welcome / Locked ────────────────────────────────────────────────────
 // buyHref: where the main button goes (paid apps). onPrimary: what it does (free apps).
+// bundleHref (web only, never in an App Store build): the Anchored Library offer under the main button.
 // purchasable=false (App Store app before in-app purchase): no buy button, unavailableNote instead.
 export function Welcome({
-  brand: b, session, buyHref, onPrimary, onSignIn, onSignOut, purchasable = true, unavailableNote,
+  brand: b, session, buyHref, bundleHref, onPrimary, onSignIn, onSignOut, purchasable = true, unavailableNote,
   onCheckAgain, checking = false, checkMessage, notice,
 }) {
   const c = b.colors
@@ -103,6 +104,12 @@ export function Welcome({
             ? <a href={buyHref} style={primaryBtn(c)}>{b.cta}</a>
             : <button type="button" onClick={onPrimary} style={primaryBtn(c)}>{b.cta}</button>}
           <p style={{ fontSize: 14, color: c.muted, lineHeight: 1.6, margin: '12px 0 0' }}>{b.fine}</p>
+          {bundleHref && (
+            <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${c.divider}` }}>
+              <a href={bundleHref} style={{ ...primaryBtn(c), background: 'transparent', border: `1px solid ${c.cardBorder}`, color: c.accent, fontSize: 14, padding: '13px 20px' }}>Get All 3 Apps · $79</a>
+              <p style={{ fontSize: 13, color: c.muted, lineHeight: 1.6, margin: '10px 0 0' }}>The Anchored Library: Year 1, Year 2 and Armed &amp; Anchored on one account, lifetime access. Save $38.</p>
+            </div>
+          )}
         </>
       ) : (
         <>

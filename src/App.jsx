@@ -215,6 +215,9 @@ function ContextModal({ ae, onClose, G }) {
 }
 
 const BUY_LINK = "https://buy.stripe.com/6oUbJ0fDS0Lc2ijarV57W09";
+// Anchored Library ($79): Year 1 + Year 2 + Armed & Anchored in one purchase. Checkout returns to
+// eloraradiance.com/library-welcome, which opens each app with the checkout id.
+const LIBRARY_LINK = "https://buy.stripe.com/28EfZg0IYalM6yzeIb57W0b";
 const CHECKOUT_KEY = "as1_checkout_session";
 const JUST_PAID_KEY = "as1_just_paid";
 
@@ -247,12 +250,12 @@ async function claimPurchase() {
   return !!data;
 }
 
-function buyLink(email, userId) {
+function buyLink(email, userId, link = BUY_LINK) {
   const q = new URLSearchParams();
   if (email) q.set("prefilled_email", email);
   if (userId) q.set("client_reference_id", userId);
   const qs = q.toString();
-  return BUY_LINK + (qs ? "?" + qs : "");
+  return link + (qs ? "?" + qs : "");
 }
 
 // Signed in, but no Year 1 purchase is linked to this account yet (e.g. they came from Armed & Anchored).
@@ -264,9 +267,10 @@ function NoAccessScreen({ email, userId, onUnlocked, onSignOut }) {
     const ok = await claimPurchase()
     setBusy(false)
     if (ok) onUnlocked()
-    else setMsg("We don't see a Year 1 purchase for " + (email || "this account") + " yet. If you just paid, give it a minute and check again.")
+    else setMsg("We don't see a Year 1 or Anchored Library purchase for " + (email || "this account") + " yet. If you just paid, give it a minute and check again.")
   }
   return <Welcome brand={BRAND} session={{ user: { email } }} buyHref={buyLink(email, userId)}
+    bundleHref={buyLink(email, userId, LIBRARY_LINK)}
     onCheckAgain={check} checking={busy} checkMessage={msg} onSignOut={onSignOut} />
 }
 
@@ -683,7 +687,7 @@ export default function AnchoredSteps() {
 
   // ── Not logged in
   if (!session) return entry === "welcome"
-    ? <Welcome brand={BRAND} buyHref={BUY_LINK} onSignIn={() => setEntry("auth")} />
+    ? <Welcome brand={BRAND} buyHref={BUY_LINK} bundleHref={LIBRARY_LINK} onSignIn={() => setEntry("auth")} />
     : <AuthScreen onAuth={() => window.location.reload()} onBack={() => setEntry("welcome")} />;
 
   // ── Signed in, but Year 1 not unlocked on this account
