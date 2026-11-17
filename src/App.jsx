@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { speak as readAloud } from "./speech.js";
 import Onboarding from "./Onboarding.jsx";
@@ -6,6 +6,7 @@ import Settings from "./components/Settings_AS1.jsx";
 import DailySteps from "./components/DailySteps.jsx";
 import { Welcome, AuthCard, HomeScreenTip } from "./components/EntryScreens.jsx";
 import { BRAND } from "./entryBrand.js";
+import { yourWeek } from "./yourWeek.js";
 import { ShareComposer, FormatPicker, captionExcerpt } from "./shareKit.jsx";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://cvtukqamaqrhjtdvmslb.supabase.co";
@@ -349,7 +350,16 @@ export default function AnchoredSteps() {
   // Signed out: the welcome page first, the sign-in card after "Sign in" (straight there after checkout)
   const [entry, setEntry] = useState(() => justPaid() ? "auth" : "welcome");
   const [view, setView] = useState("steps");
-  const [wk, setWk] = useState(() => { try { return parseInt(localStorage.getItem('as1_current_week') || '1') } catch { return 1 } });
+  // The app opens on YOUR week: the one you're working through on the Steps page (see yourWeek.js), not the last
+  // week you happened to browse (2026-11-17). Until any step is done it opens where you left off, as before.
+  const [wk, setWk] = useState(() => { try { return parseInt(localStorage.getItem('as1_my_week') || localStorage.getItem('as1_current_week') || '1') || 1 } catch { return 1 } });
+  const wkRef = useRef(wk); wkRef.current = wk;
+  const viewRef = useRef(view); viewRef.current = view;
+  const myWeekRef = useRef((() => { try { return parseInt(localStorage.getItem('as1_my_week') || '0') || 0 } catch { return 0 } })());
+  const weekMovedRef = useRef(false);   // the reader changed weeks since the app opened
+  const openedForRef = useRef(null);    // the account whose opening week has been chosen
+  const stepsBusyRef = useRef(false);   // a step is open on the Steps page
+  const [stepsLoaded, setStepsLoaded] = useState(false);
   const [showWeekJump, setShowWeekJump] = useState(false);
   const [sec, setSec] = useState("scripture");
   const [day, setDay] = useState(-1);
@@ -412,7 +422,7 @@ export default function AnchoredSteps() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setSession(session);
       if (session) loadUserData(session.user.id);
-      else { setLoading(false); setProfile(null); setEntries([]); setNoAccess(false); }
+      else { setLoading(false); setProfile(null); setEntries([]); setNoAccess(false); setStepsLoaded(false); openedForRef.current = null; weekMovedRef.current = false; }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -457,12 +467,49 @@ export default function AnchoredSteps() {
         }
       }
       if (ents) setEntries(ents);
+      if (ents && prof) {
+        setStepsLoaded(true);
+        // Opening the app (once per sign-in; this also runs when the session refreshes, which must not move you)
+        if (openedForRef.current !== userId) {
+          openedForRef.current = userId;
+          const mine = yourWeek(ents.filter(e => e.user_id === userId), ALL_WEEKS.length || 52);
+          if (mine && !weekMovedRef.current) setWk(mine);
+        }
+      }
     } catch (e) {
       console.error('loadUserData error:', e);
     } finally {
       setLoading(false);
     }
   };
+
+  // Your week, from step progress (0 until entries have loaded, or if no step is done yet). Remembered on this
+  // device so the next opening starts there straight away.
+  const myUserId = session?.user?.id || null;
+  const myWeek = useMemo(() => (stepsLoaded && myUserId ? yourWeek(entries.filter(e => e.user_id === myUserId), ALL_WEEKS.length || 52) : 0), [entries, stepsLoaded, myUserId]);
+  useEffect(() => {
+    if (!stepsLoaded) return;
+    myWeekRef.current = myWeek;
+    try { if (myWeek) localStorage.setItem('as1_my_week', String(myWeek)); else localStorage.removeItem('as1_my_week'); } catch {}
+  }, [myWeek, stepsLoaded]);
+
+  // Coming back to the app counts as opening it: from the Home Screen icon the app usually resumes where it was,
+  // so if you were only browsing other weeks on the Steps page, it returns to your week. Never while a step is open
+  // or you are in the journal. In a browser tab this waits 5 minutes away, so flipping between tabs doesn't move you.
+  useEffect(() => {
+    let hiddenAt = 0;
+    const standalone = () => { try { return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; } catch { return false; } };
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return; }
+      if (!hiddenAt) return;
+      const away = Date.now() - hiddenAt; hiddenAt = 0;
+      if (away < (standalone() ? 1500 : 5 * 60 * 1000)) return;
+      if (viewRef.current !== 'steps' || stepsBusyRef.current || !myWeekRef.current || wkRef.current === myWeekRef.current) return;
+      setWk(myWeekRef.current); setDay(-1); window.scrollTo(0, 0);
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, []);
 
   // ── Entry helpers
   const kk = (t) => "w" + wk + "_" + t;
@@ -511,6 +558,7 @@ export default function AnchoredSteps() {
   const save = () => { setFlash(true); setTimeout(() => setFlash(false), 1800); };
 
   const goWk = async (n) => {
+    weekMovedRef.current = true;
     setWk(n); setSec("scripture"); setDay(-1);
     localStorage.setItem('as1_current_week', String(n));
     setAnimK(a => a+1); setLexWord(null);
@@ -845,6 +893,8 @@ export default function AnchoredSteps() {
             darkMode={darkMode}
             onOpenWeek={() => { setSec("scripture"); setView("journal"); window.scrollTo(0, 0); }}
             onGoWeek={n => { if (n >= 1 && n <= (ALL_WEEKS.length || 52)) { goWk(n); window.scrollTo(0, 0); } }}
+            yourWeek={myWeek}
+            onBusy={b => { stepsBusyRef.current = b; }}
           />
         )}
 

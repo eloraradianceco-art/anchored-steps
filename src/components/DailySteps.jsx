@@ -458,7 +458,7 @@ function shortMeaning(m) {
 /* ─────────────────────────────────────────────────────────────
    COMPONENT
    ───────────────────────────────────────────────────────────── */
-export default function DailySteps({ week, wk, totalWeeks = 52, entries = [], get, set, streak = 0, darkMode = true, onOpenWeek, onGoWeek }) {
+export default function DailySteps({ week, wk, totalWeeks = 52, entries = [], get, set, streak = 0, darkMode = true, onOpenWeek, onGoWeek, yourWeek = 0, onBusy }) {
   const steps = useMemo(() => buildSteps(week), [week]);
   const hl = useMemo(() => makeHl(week), [week]);
   const [session, setSession] = useState(null);   // { step, card }
@@ -581,6 +581,8 @@ export default function DailySteps({ week, wk, totalWeeks = 52, entries = [], ge
     return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", onKey); };
   }, [overlayOpen]);
   useEffect(() => () => hush(), []);
+  // Lets the app know a step is open, so it doesn't change weeks underneath it
+  useEffect(() => { if (onBusy) onBusy(overlayOpen); return () => { if (onBusy) onBusy(false); }; }, [overlayOpen]);
 
   /* ---- ring animation on the step-complete screen ---- */
   useEffect(() => {
@@ -673,6 +675,10 @@ export default function DailySteps({ week, wk, totalWeeks = 52, entries = [], ge
           <span className="ds-wk">Week {wk} of {totalWeeks}</span>
           <button className="ds-arrow" onClick={() => onGoWeek && onGoWeek(wk + 1)} disabled={wk >= totalWeeks} aria-label="Next week">{"\u203A"}</button>
         </div>
+        {/* Browsing another week: one tap back to the week you're working through */}
+        {yourWeek > 0 && yourWeek !== wk && !(anchored && yourWeek === wk + 1) && (
+          <button className="ds-yourweek" onClick={() => onGoWeek && onGoWeek(yourWeek)}>{yourWeek < wk ? "\u2039 " : ""}Back to your week (Week {yourWeek}){yourWeek > wk ? " \u203A" : ""}</button>
+        )}
         <h1 className="ds-title">{week.title}</h1>
         {week.subtitle && <p className="ds-sub">{week.subtitle}</p>}
         {yearStrip}
@@ -730,6 +736,7 @@ const CSS = `
 .ds-weeknav{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .ds-arrow{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--line);background:transparent;color:var(--gold)!important;font-size:24px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0 0 3px}
 .ds-arrow:disabled{opacity:.3;cursor:default}
+.ds-yourweek{display:block;margin:0 auto 10px;padding:8px 16px;border-radius:999px;border:1.5px solid var(--gold);background:transparent;color:var(--gold)!important;font-family:inherit;font-size:16px;font-weight:600;cursor:pointer}
 .ds-wk{font-size:18px;color:var(--muted);font-style:italic}
 .ds-title{font-family:Cinzel,Georgia,serif;font-size:clamp(27px,8vw,36px)!important;line-height:1.12;font-weight:600;color:var(--ink);margin:14px 0 10px!important}
 .ds-sub{color:var(--muted);font-size:19px;font-style:italic;margin-bottom:24px!important}
