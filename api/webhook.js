@@ -8,6 +8,8 @@ const { createClient } = require("@supabase/supabase-js");
 // The Anchored Library ($79) is one purchase row (app "bundle") that opens all three apps.
 // The Living Planner Pro subscription lives in its own database: checkouts, renewals and
 // cancellations are passed to it (plannerSync), and that is the only way Pro turns on or off.
+// Anchored All-Access is one yearly subscription recorded in both databases: memberships here
+// (opens Year 1, Year 2 and Armed & Anchored while active) and the planner database (Planner Pro).
 // Sales of other products are ignored here.
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -105,7 +107,8 @@ function isPlannerSubscription(sub) {
   return items.some((i) => PLANNER_PRODUCTS.has(idOf(i.price && i.price.product) || idOf(i.plan && i.plan.product)));
 }
 
-async function syncPlannerSubscription(sub, event) {
+// What both databases store about a subscription event.
+async function subscriptionPayload(sub, event) {
   const item = (sub.items && sub.items.data && sub.items.data[0]) || {};
   const price = item.price || item.plan || {};
   let email = null;
@@ -113,7 +116,7 @@ async function syncPlannerSubscription(sub, event) {
     const customer = await stripe.customers.retrieve(idOf(sub.customer));
     email = customer && !customer.deleted ? customer.email : null;
   } catch (e) { /* the email only helps link a subscription that has no account yet */ }
-  return plannerSync({
+  return {
     source: "subscription",
     subscription_id: sub.id,
     customer_id: idOf(sub.customer),
@@ -125,14 +128,16 @@ async function syncPlannerSubscription(sub, event) {
     current_period_end: iso(sub.current_period_end || item.current_period_end),
     cancel_at_period_end: !!(sub.cancel_at_period_end || sub.cancel_at),
     event_created: iso(event.created),
-  });
+  };
 }
 
-async function syncPlannerCheckout(session, event) {
-  if (!session.subscription) return null;
-  const trialDays = PLANNER_LINKS[session.payment_link] || 0;
+async function syncPlannerSubscription(sub, event) {
+  return plannerSync(await subscriptionPayload(sub, event));
+}
+
+function checkoutPayload(session, event, trialDays = 0) {
   const email = session.customer_details?.email || session.customer_email || null;
-  return plannerSync({
+  return {
     source: "checkout",
     subscription_id: idOf(session.subscription),
     customer_id: idOf(session.customer),
@@ -142,7 +147,35 @@ async function syncPlannerCheckout(session, event) {
     status: trialDays ? "trialing" : "active",
     trial_end: trialDays ? iso(session.created + trialDays * 86400) : null,
     event_created: iso(event.created),
-  });
+  };
+}
+
+async function syncPlannerCheckout(session, event) {
+  if (!session.subscription) return null;
+  return plannerSync(checkoutPayload(session, event, PLANNER_LINKS[session.payment_link] || 0));
+}
+
+// ── Anchored All-Access ($89.99 a year; not on sale until its payment link exists) ─────────
+// The payment link must carry metadata app = "all_access". Both databases link the membership to
+// the account that started checkout if it is one of theirs, otherwise to the account with the
+// email paid with (now, or when that person next signs in).
+const ALL_ACCESS_PRODUCTS = new Set(["prod_VeXfguJFoh7Xpy"]);
+
+function isAllAccessCheckout(session) {
+  return session.mode === "subscription" && !!session.metadata && session.metadata.app === "all_access";
+}
+
+function isAllAccessSubscription(sub) {
+  const items = (sub.items && sub.items.data) || [];
+  return items.some((i) => ALL_ACCESS_PRODUCTS.has(idOf(i.price && i.price.product) || idOf(i.plan && i.plan.product)));
+}
+
+// Both writes are safe to repeat, so a failure in either returns 500 and Stripe sends the event again.
+async function syncAllAccess(payload) {
+  const { data, error } = await supabase.rpc("membership_sync", { p: payload });
+  if (error) throw new Error(`Membership sync failed: ${error.message}`);
+  const planner = await plannerSync(payload);
+  return { anchored: data, planner };
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -203,6 +236,16 @@ module.exports = async function handler(req, res) {
       event.type === "customer.subscription.updated" ||
       event.type === "customer.subscription.created") {
     const sub = event.data.object;
+    if (isAllAccessSubscription(sub)) {
+      try {
+        const result = await syncAllAccess(await subscriptionPayload(sub, event));
+        console.log(`All-Access subscription ${sub.id} is ${sub.status}:`, JSON.stringify(result));
+        return res.status(200).json({ received: true });
+      } catch (err) {
+        console.error(err.message);
+        return res.status(500).json({ error: "Membership sync failed" }); // Stripe retries
+      }
+    }
     if (isPlannerSubscription(sub)) {
       try {
         const result = await syncPlannerSubscription(sub, event);
@@ -246,6 +289,18 @@ module.exports = async function handler(req, res) {
   const session = event.data.object;
   if (session.payment_status && session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
     return res.status(200).json({ received: true, skipped: "not paid" });
+  }
+
+  if (isAllAccessCheckout(session)) {
+    if (!session.subscription) return res.status(200).json({ received: true, skipped: "no subscription" });
+    try {
+      const result = await syncAllAccess(checkoutPayload(session, event));
+      console.log(`All-Access checkout ${session.id}:`, JSON.stringify(result));
+      return res.status(200).json({ received: true });
+    } catch (err) {
+      console.error(err.message);
+      return res.status(500).json({ error: "Membership sync failed" });
+    }
   }
 
   if (isPlannerCheckout(session)) {
