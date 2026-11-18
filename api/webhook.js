@@ -53,11 +53,13 @@ function appForSession(session) {
 }
 
 // ── The Living Planner ───────────────────────────────────────────────────
+// Value = free-trial days. There are no trials (removed 2026-11-14), so every link charges at checkout.
 const PLANNER_LINKS = {
-  plink_1TWRU3Br8nMXOo8t0HFRldlV: 7,  // Pro monthly, 7-day free trial
-  plink_1TWRbmBr8nMXOo8tQiPvzLsI: 14, // Pro yearly, 14-day free trial
+  plink_1UdD5iBr8nMXOo8tlAKMGtUL: 0, // Pro yearly $49.99, the only plan sold since 2026-11-18
+  plink_1TWRU3Br8nMXOo8t0HFRldlV: 0, // Pro monthly $7.99, retired 2026-11-18
+  plink_1TWRbmBr8nMXOo8tQiPvzLsI: 0, // Pro yearly $59.99, retired 2026-11-18
 };
-const PLANNER_PRODUCTS = new Set(["prod_USPtK8Gz0UkLuE", "prod_UVSUALsRwiiehH"]); // Pro monthly, Pro yearly
+const PLANNER_PRODUCTS = new Set(["prod_USPtK8Gz0UkLuE", "prod_UVSUALsRwiiehH"]); // Pro monthly (retired), Pro yearly
 const PLANNER_HOSTS = new Set(["planner.eloraradiance.com", "the-living-planner.vercel.app"]);
 const PLANNER_URL = "https://pxvgolgwrlqzjykvzzzy.supabase.co";
 // Public (anon) key: it can only call stripe_sync_subscription, which also requires the secret below.
