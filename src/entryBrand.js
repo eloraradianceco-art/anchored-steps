@@ -17,6 +17,8 @@ export const BRAND = {
   ],
   cta: '⚓ Get Lifetime Access',
   fine: 'One-time $39 · No subscription · All 52 weeks, yours forever',
+  // Giving line on the purchase page (components/EntryScreens.jsx, GivingLine). The running total comes from eloraradiance.com/giving.json.
+  giving: "10% of this app's net sales each month is given to Children's Cup.",
   signInPrompt: 'Already have access?',
   colors: {
     bg: '#0F1A24',

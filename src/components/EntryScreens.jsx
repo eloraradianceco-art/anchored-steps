@@ -4,10 +4,34 @@
 //                   signed in without access: the same page with "I've Paid · Check Again" and Sign out
 //   <AuthCard>      sign in / create account / reset password (the app keeps its own sign-in logic)
 //   <HomeScreenTip> "Add to your Home Screen" after a new account
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const DISPLAY = "'Cinzel',Georgia,serif"
 const BODY = "'EB Garamond',Georgia,serif"
+
+// Giving line (2026-11-19): shown on a purchase page when the brand has `giving`. The sentence is fixed; the
+// running total is read from one small file on eloraradiance.com that is updated once a month. If the file
+// can't be read (offline), the sentence shows on its own.
+const GIVING_URL = 'https://eloraradiance.com/giving.json'
+function GivingLine({ b }) {
+  const c = b.colors
+  const [g, setG] = useState(null)
+  useEffect(() => {
+    let on = true
+    fetch(GIVING_URL).then((r) => (r.ok ? r.json() : null)).then((d) => { if (on && d) setG(d) }).catch(() => {})
+    return () => { on = false }
+  }, [])
+  const total = g && Number(g.total_cents) > 0 ? '$' + Math.round(g.total_cents / 100).toLocaleString('en-US') : null
+  return (
+    <div style={{ border: `1px dashed ${c.cardBorder}`, borderRadius: 14, padding: '12px 14px', margin: '14px 0', textAlign: 'center' }}>
+      <p style={{ fontSize: 15.5, color: c.text, lineHeight: 1.55, margin: 0 }}>
+        <span aria-hidden="true">🤲 </span>
+        <strong style={{ color: c.accent, fontWeight: 600 }}>{b.giving}</strong>
+      </p>
+      {total && <p style={{ fontSize: 14, color: c.muted, lineHeight: 1.5, margin: '4px 0 0' }}>Given so far: {total}{g.through ? `, through ${g.through}` : ''}.</p>}
+    </div>
+  )
+}
 
 function Page({ b, children, top = false }) {
   const c = b.colors
@@ -97,6 +121,8 @@ export function Welcome({
           ))}
         </ul>
       </div>
+
+      {b.giving && <GivingLine b={b} />}
 
       {purchasable ? (
         <>
