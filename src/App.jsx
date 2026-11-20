@@ -964,7 +964,6 @@ export default function AnchoredSteps() {
                                 <button onClick={()=>toggleBookmark(s,wk,"scripture")} style={{background:isBookmarked(s.ref,wk)?"rgba(176,138,78,0.2)":"transparent",border:"1px solid "+(isBookmarked(s.ref,wk)?"rgba(176,138,78,0.4)":G.border),color:isBookmarked(s.ref,wk)?G.gold:T.muted,padding:"2px 10px",borderRadius:12,cursor:"pointer",fontSize:16}}>
                                   {isBookmarked(s.ref,wk)?"★":"☆"}
                                 </button>
-                                <button onClick={()=>setShareVerse(s)} aria-label="Share as an image" style={{background:"transparent",border:"1px solid "+G.border,color:T.muted,padding:"2px 8px",borderRadius:12,cursor:"pointer",fontSize:14}}>&#8599;</button>
                               </div>
                             </div>
                           </div>
@@ -1028,7 +1027,6 @@ export default function AnchoredSteps() {
                                 <button onClick={() => toggleBookmark(s, wk, "scripture")} style={{background:isBookmarked(s.ref,wk)?"rgba(176,138,78,0.2)":"transparent",border:"1px solid "+(isBookmarked(s.ref,wk)?"rgba(176,138,78,0.4)":G.border),color:isBookmarked(s.ref,wk)?G.gold:T.muted,padding:"2px 10px",borderRadius:12,cursor:"pointer",fontSize:16}}>
                                   {isBookmarked(s.ref,wk) ? "★" : "☆"}
                                 </button>
-                                <button onClick={() => setShareVerse(s)} aria-label="Share as an image" style={{background:"transparent",border:"1px solid "+G.border,color:T.muted,padding:"2px 8px",borderRadius:12,cursor:"pointer",fontSize:14}}>&#8599;</button>
                               </div>
                             </div>
 
@@ -1577,6 +1575,14 @@ export default function AnchoredSteps() {
                   </button>
                 ))}
               </div>
+              {/* More than one passage this week: choose which one goes on the card */}
+              {ct.id==='scripture' && (week?.scriptures||[]).length>1 && (
+                <div role="group" aria-label="Which passage" style={{display:'flex',gap:6,marginBottom:10,flexWrap:'wrap'}}>
+                  {week.scriptures.map((sc,i)=>(
+                    <button key={sc.ref+i} onClick={()=>setShareVerse(sc)} aria-pressed={shareVerse?.ref===sc.ref} style={{...pill(shareVerse?.ref===sc.ref),flex:'1 1 auto'}}>{sc.ref.replace(/\s*\([A-Z]+\)\s*$/,'')}</button>
+                  ))}
+                </div>
+              )}
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:14}}>
                 <div style={{display:'flex',gap:6}}>
                   {[['☀ Light',true],['🌙 Dark',false]].map(([label,val])=>(
@@ -1629,28 +1635,44 @@ export default function AnchoredSteps() {
         )
       })()}
 
-      {/* Next Step floating button */}
-      {view === "journal" && week && sec !== "weekEnd" && (
-        <button
-          onClick={() => {
-            const idx = SECTIONS.findIndex(s => s.id === sec);
-            const next = SECTIONS[idx + 1];
-            if (next) { setSec(next.id); setAnimK(a => a+1); setLexWord(null); }
-          }}
-          style={{
-            position:"fixed",bottom:`calc(14px + ${BELOW_BAR})`,right:20,
-            backgroundColor:G.bg,backgroundImage:"linear-gradient(135deg,rgba(176,138,78,0.4),rgba(176,138,78,0.2))",
-            border:"1px solid rgba(176,138,78,0.5)",
-            color:darkMode?G.goldL:G.gold,padding:"10px 20px",borderRadius:50,
-            cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif",
-            letterSpacing:"0.07em",boxShadow:"0 4px 20px rgba(0,0,0,0.35)",
-            backdropFilter:"blur(10px)",zIndex:200,
-            display:"flex",alignItems:"center",gap:8,
-            transition:"all .2s"
-          }}
-        >
-          {SECTIONS[SECTIONS.findIndex(s => s.id === sec)+1]?.label} &#8250;
-        </button>
+      {/* Floating share button, with the Next Step button under it (2026-11-19). One share button for the whole week:
+          it opens the share sheet on the section you are reading; the sheet lets you pick the passage. */}
+      {view === "journal" && week && (
+        <div style={{position:"fixed",bottom:`calc(14px + ${BELOW_BAR})`,right:16,zIndex:200,display:"flex",flexDirection:"column",alignItems:"center",gap:12}}>
+          <button
+            onClick={() => { setShareCardType(({study:"study",reflect:"reflect",apply:"apply",prayer:"prayer"})[sec] || "scripture"); setShareVerse(week.scriptures[0]) }}
+            aria-label="Share"
+            style={{
+              width:48, height:48, borderRadius:'50%',
+              background:'linear-gradient(135deg, #B08A4E, #7A5A28)',
+              border:'none', color:'#fff', fontSize:20, cursor:'pointer',
+              boxShadow:'0 6px 18px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.3)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              touchAction:'manipulation', flexShrink:0,
+            }}
+          >↗</button>
+          {sec !== "weekEnd" && (
+            <button
+              onClick={() => {
+                const idx = SECTIONS.findIndex(s => s.id === sec);
+                const next = SECTIONS[idx + 1];
+                if (next) { setSec(next.id); setAnimK(a => a+1); setLexWord(null); }
+              }}
+              style={{
+                backgroundColor:G.bg,backgroundImage:"linear-gradient(135deg,rgba(176,138,78,0.4),rgba(176,138,78,0.2))",
+                border:"1px solid rgba(176,138,78,0.5)",
+                color:darkMode?G.goldL:G.gold,padding:"10px 20px",borderRadius:50,
+                cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif",
+                letterSpacing:"0.07em",boxShadow:"0 4px 20px rgba(0,0,0,0.35)",
+                backdropFilter:"blur(10px)",zIndex:200,
+                display:"flex",alignItems:"center",gap:8,
+                transition:"all .2s"
+              }}
+            >
+              {SECTIONS[SECTIONS.findIndex(s => s.id === sec)+1]?.label} &#8250;
+            </button>
+          )}
+        </div>
       )}
       {tabBar()}
     </div>

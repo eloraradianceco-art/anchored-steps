@@ -164,11 +164,12 @@ export function speak(text, { rate = 0.9, lang = 'en-US', onStart, onEnd, onErro
     })
     held.forEach((u) => s.speak(u))
     // If no event arrives, look at the engine itself: reading → started; quiet again → finished.
+    // Checked five times a second so a one-word read (a Word Study pronunciation) isn't over before the first look.
     timers.push(setInterval(() => {
       if (id !== session) return
       if (s.speaking && !s.paused) started()
       else if (begun && !s.pending) settle('end')
-    }, 500))
+    }, 200))
     // Nothing at all after 6 seconds: tell the caller so the button resets and a hint can show.
     timers.push(setTimeout(() => {
       if (id !== session || begun) return
