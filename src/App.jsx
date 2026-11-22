@@ -918,7 +918,8 @@ export default function AnchoredSteps() {
                       return (
                         <button key={w.week} onClick={()=>{goWk(w.week);setShowWeekJump(false)}} style={{background:isCur?"linear-gradient(145deg,rgba(176,138,78,0.18),rgba(176,138,78,0.07))":"transparent",border:"1px solid "+(isCur?"rgba(176,138,78,0.4)":G.border),color:isCur?G.gold:G.muted,borderRadius:8,padding:"2px 2px",cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif",textAlign:"center",lineHeight:1.3,touchAction:"manipulation",minWidth:0,minHeight:0,overflow:"hidden",display:"flex",flexDirection:"column",alignItems:"stretch",justifyContent:"center"}}>
                           <div style={{fontSize:13,fontWeight:600,lineHeight:1.15}}>{w.week}</div>
-                          <div style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:10.5,lineHeight:1.2}}>{w.title.split(" ")[0]}</div>
+                          {/* Up to two lines of the week's title (it used to be the first word only: "The", "A", three "Spiritual"s) */}
+                          <div style={{overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",fontSize:10,lineHeight:1.15,overflowWrap:"anywhere"}}>{w.title}</div>
                         </button>
                       )
                     })}
