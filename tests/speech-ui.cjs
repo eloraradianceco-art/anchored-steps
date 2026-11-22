@@ -9,7 +9,7 @@ const clickText = async (p, t) => { await p.getByText(t, { exact: false }).first
 async function flowListen(p, name, open, verseSel) {
   await open(); await wait(p, 500)
   const verse = norm(await p.locator(verseSel).first().innerText())
-  await reset(p, 'normal', 300)
+  await reset(p, 'normal', 1500) // slow enough that a one-sentence verse is still being read when Stop is tapped
   await p.getByRole('button', { name: 'Listen' }).first().click(); await wait(p, 250)
   let t = await tts(p)
   check(`${name}: Listen reads the passage on the card`, norm(t.text) === verse && verse.length > 20, `asked "${t.text.slice(0, 60)}…" vs card "${verse.slice(0, 60)}…"`)
