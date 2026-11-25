@@ -219,7 +219,9 @@ function ContextModal({ ae, onClose, G }) {
   );
 }
 
-const BUY_LINK = "https://buy.stripe.com/6oUbJ0fDS0Lc2ijarV57W09";
+const BUY_LINK = "https://buy.stripe.com/6oU8wOgHWeC20abcA357W0d";   // Year 1 lifetime, $39.99 (since 2026-11-25)
+// Both years ($59.99): Year 1 + Year 2 in one purchase. Checkout returns here; claim_purchase opens both.
+const BOTH_LINK = "https://buy.stripe.com/5kQ6oG4Ze8dE7CDgQj57W0g";
 // Anchored Library ($79): Year 1 + Year 2 + Armed & Anchored in one purchase. Checkout returns to
 // eloraradiance.com/library-welcome, which opens each app with the checkout id.
 const LIBRARY_LINK = "https://buy.stripe.com/28EfZg0IYalM6yzeIb57W0b";
@@ -272,10 +274,10 @@ function NoAccessScreen({ email, userId, onUnlocked, onSignOut }) {
     const ok = await claimPurchase()
     setBusy(false)
     if (ok) onUnlocked()
-    else setMsg("We don't see a Year 1 or Anchored Library purchase for " + (email || "this account") + " yet. If you just paid, give it a minute and check again.")
+    else setMsg("We don't see a Year 1, Both Years or Anchored Library purchase for " + (email || "this account") + " yet. If you just paid, give it a minute and check again.")
   }
   return <Welcome brand={BRAND} session={{ user: { email } }} buyHref={buyLink(email, userId)}
-    bundleHref={buyLink(email, userId, LIBRARY_LINK)}
+    bothHref={buyLink(email, userId, BOTH_LINK)} bundleHref={buyLink(email, userId, LIBRARY_LINK)}
     onCheckAgain={check} checking={busy} checkMessage={msg} onSignOut={onSignOut} />
 }
 
@@ -745,7 +747,7 @@ export default function AnchoredSteps() {
 
   // ── Not logged in
   if (!session) return entry === "welcome"
-    ? <Welcome brand={BRAND} buyHref={BUY_LINK} bundleHref={LIBRARY_LINK} onSignIn={() => setEntry("auth")} />
+    ? <Welcome brand={BRAND} buyHref={BUY_LINK} bothHref={BOTH_LINK} bundleHref={LIBRARY_LINK} onSignIn={() => setEntry("auth")} />
     : <AuthScreen onAuth={() => window.location.reload()} onBack={() => setEntry("welcome")} />;
 
   // ── Signed in, but Year 1 not unlocked on this account
@@ -821,7 +823,7 @@ export default function AnchoredSteps() {
     <div style={{minHeight:"100vh",background:"linear-gradient(155deg,#0F1A24 0%,#1A2A38 55%,#0F1A24 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px",fontFamily:"EB Garamond,Georgia,serif",textAlign:"center"}}>
       <img src={ASSET+"icon.png"} alt="" style={{width:64,height:64,borderRadius:14,marginBottom:16,opacity:.6}}/>
       <div style={{fontFamily:"Cinzel,serif",fontSize:20,color:"#F5F1E8",marginBottom:8}}>Access Ended</div>
-      <p style={{fontSize:16,color:"#A8B3BC",lineHeight:1.7,marginBottom:28,maxWidth:340}}>Your Anchored Steps subscription has ended. Get lifetime access for a one-time $39 to keep your journal going.</p>
+      <p style={{fontSize:16,color:"#A8B3BC",lineHeight:1.7,marginBottom:28,maxWidth:340}}>Your Anchored Steps subscription has ended. Get lifetime access for a one-time $39.99 to keep your journal going.</p>
       <a href="https://eloraradiance.com/anchored-steps.html" style={{display:"block",background:"linear-gradient(135deg,rgba(176,138,78,0.35),rgba(176,138,78,0.15))",border:"1px solid rgba(176,138,78,0.45)",color:"#B08A4E",padding:"14px 32px",borderRadius:12,textDecoration:"none",fontFamily:"Cinzel,serif",fontSize:14,letterSpacing:"0.1em",marginBottom:12}}>Get Lifetime Access &#8594;</a>
       <button onClick={signOut} style={{background:"transparent",border:"none",color:"#6C7A86",cursor:"pointer",fontSize:16,fontFamily:"EB Garamond,Georgia,serif"}}>Sign out</button>
     </div>
@@ -1369,13 +1371,13 @@ export default function AnchoredSteps() {
             </div>
 
             {/* Upgrade */}
-            {profile?.plan === "weekly" && (
+            {profile?.plan === "weekly" && !APP && (   /* never inside the phone app: this is a website checkout link */
               <div style={{background:"linear-gradient(145deg,rgba(176,138,78,0.12),rgba(176,138,78,0.04))",border:"1px solid rgba(176,138,78,0.35)",borderRadius:14,padding:"20px",marginBottom:14}}>
                 <div style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:12}}>Upgrade Your Plan</div>
-                <p style={{fontSize:16,color:T.text,lineHeight:1.7,marginBottom:14}}>Switch to Lifetime Access for a one-time $39 — no more monthly charges, and every week stays yours.</p>
-                <a href="https://buy.stripe.com/6oUbJ0fDS0Lc2ijarV57W09" target="_blank" rel="noreferrer"
+                <p style={{fontSize:16,color:T.text,lineHeight:1.7,marginBottom:14}}>Switch to Lifetime Access for a one-time $39.99 — no more monthly charges, and every week stays yours.</p>
+                <a href={BUY_LINK} target="_blank" rel="noreferrer"
                   style={{display:"block",background:"linear-gradient(135deg,rgba(176,138,78,0.35),rgba(176,138,78,0.15))",border:"1px solid rgba(176,138,78,0.5)",color:G.gold,padding:"13px",borderRadius:10,textAlign:"center",textDecoration:"none",fontFamily:"Cinzel,serif",fontSize:13,letterSpacing:"0.08em"}}>
-                  Get Lifetime Access — $39 &#8594;
+                  Get Lifetime Access — $39.99 &#8594;
                 </a>
               </div>
             )}
