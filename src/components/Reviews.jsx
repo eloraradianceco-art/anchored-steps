@@ -89,7 +89,7 @@ export default function Reviews({ app, appName, eyebrow, userEmail, C, lightMode
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: (C.bg || (lightMode ? '#F2EDE3' : '#070E17')), fontFamily: gar, overflowY: 'auto', animation: 'fadeIn 0.25s ease' }}>
-      <div style={{ maxWidth: 560, margin: '0 auto', padding: '0 0 80px' }}>
+      <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 0 80px' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'calc(16px + var(--safe-top, env(safe-area-inset-top, 0px))) 20px 16px', borderBottom: '1px solid ' + C.border, position: 'sticky', top: 0, zIndex: 10, background: (C.bg || (lightMode ? '#F2EDE3' : '#070E17')), backdropFilter: 'blur(12px)' }}>
