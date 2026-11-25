@@ -68,10 +68,10 @@ function Y2NoAccess({ email, userId, buyLink, onUnlocked, onSignOut }) {
     const ok = await claimY2Purchase();
     setBusy(false);
     if (ok) onUnlocked();
-    else setMsg("We don't see a Year 2 or Anchored Library purchase for " + (email || "this account") + " yet. If you just paid, give it a minute and check again.");
+    else setMsg("We don't see a Year 2, Both Years or Anchored Library purchase for " + (email || "this account") + " yet. If you just paid, give it a minute and check again.");
   };
   return <Welcome brand={BRAND} session={{ user: { email } }} buyHref={y2BuyLink(buyLink, email, userId)}
-    bundleHref={y2BuyLink(LIBRARY_LINK, email, userId)}
+    bothHref={y2BuyLink(BOTH_LINK, email, userId)} bundleHref={y2BuyLink(LIBRARY_LINK, email, userId)}
     onCheckAgain={check} checking={busy} checkMessage={msg} onSignOut={onSignOut} />;
 }
 
@@ -90,7 +90,9 @@ function paintChrome(color) {
 }
 
 // ───────── Stripe Payment Links ─────────
-const STRIPE_LINK = "https://buy.stripe.com/9B69AS77mgKa6yzcA357W08";
+const STRIPE_LINK = "https://buy.stripe.com/6oUfZg0IYgKa5uv43x57W0e";   // Year 2 lifetime, $39.99 (since 2026-11-25)
+// Both years ($59.99): Year 1 + Year 2 in one purchase. Checkout returns to Year 1; claim_purchase opens both.
+const BOTH_LINK = "https://buy.stripe.com/5kQ6oG4Ze8dE7CDgQj57W0g";
 // Anchored Library ($79): Year 1 + Year 2 + Armed & Anchored in one purchase. Checkout returns to
 // eloraradiance.com/library-welcome, which opens each app with the checkout id.
 const LIBRARY_LINK = "https://buy.stripe.com/28EfZg0IYalM6yzeIb57W0b";
@@ -763,7 +765,7 @@ function AnchoredStepsY2Inner(){
         <HomeScreenTip brand={BRAND} onContinue={()=>setJustSignedUp(false)} continueLabel="⚓ Open Year 2 →" />
       </AuthCard>
     );
-    if(entry==='welcome') return <Welcome brand={BRAND} buyHref={STRIPE_LINK} bundleHref={LIBRARY_LINK} onSignIn={()=>setEntry('auth')} />;
+    if(entry==='welcome') return <Welcome brand={BRAND} buyHref={STRIPE_LINK} bothHref={BOTH_LINK} bundleHref={LIBRARY_LINK} onSignIn={()=>setEntry('auth')} />;
     const mode = resetMode ? 'forgot' : authMode==='signup' ? 'signup' : 'signin';
     const submitAuth = async () => {
       setAuthErr('');

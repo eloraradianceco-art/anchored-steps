@@ -16,7 +16,7 @@ export const BRAND = {
     { icon: '📝', text: 'Your journal and weekly tracker, saved to your account' },
   ],
   cta: '⚓ Get Lifetime Access',
-  fine: 'One-time $39 · No subscription · All 52 weeks, yours forever',
+  fine: 'One-time $39.99 · No subscription · All 52 weeks, yours forever',
   // Giving line on the purchase page (EntryScreens.jsx, GivingLine). This is the plain sentence; the running total, and
   // whether the main recipient is named, come from eloraradiance.com/giving.json.
   giving: '10% of net sales is given to ministry.',
