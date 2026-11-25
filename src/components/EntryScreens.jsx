@@ -9,10 +9,18 @@ import { useState, useEffect } from 'react'
 const DISPLAY = "'Cinzel',Georgia,serif"
 const BODY = "'EB Garamond',Georgia,serif"
 
-// Giving line (2026-11-19): shown on a purchase page when the brand has `giving`. The sentence is fixed; the
-// running total is read from one small file on eloraradiance.com that is updated once a month. If the file
-// can't be read (offline), the sentence shows on its own.
+// Giving line (2026-11-24): shown on a purchase page when the brand has `giving` (the plain sentence).
+// 10% of net sales is a ministry pool, sent out quarterly; the public total is updated monthly. Both the
+// wording and the running total come from one small file on eloraradiance.com, so nothing here needs an app
+// release: the main recipient is named only once that file marks it `named_publicly`. If the file can't be
+// read (offline), the plain sentence shows on its own.
 const GIVING_URL = 'https://eloraradiance.com/giving.json'
+function givingSentence(plain, g) {
+  const list = g && Array.isArray(g.recipients) ? g.recipients : []
+  const main = list.find((r) => r && r.primary === true)
+  const name = main && main.named_publicly === true && typeof main.name === 'string' ? main.name.trim() : ''
+  return name ? `${plain.replace(/\.\s*$/, '')}, with the largest share going to ${name}.` : plain
+}
 function GivingLine({ b }) {
   const c = b.colors
   const [g, setG] = useState(null)
@@ -26,9 +34,9 @@ function GivingLine({ b }) {
     <div style={{ border: `1px dashed ${c.cardBorder}`, borderRadius: 14, padding: '12px 14px', margin: '14px 0', textAlign: 'center' }}>
       <p style={{ fontSize: 15.5, color: c.text, lineHeight: 1.55, margin: 0 }}>
         <span aria-hidden="true">🤲 </span>
-        <strong style={{ color: c.accent, fontWeight: 600 }}>{b.giving}</strong>
+        <strong style={{ color: c.accent, fontWeight: 600 }}>{givingSentence(b.giving, g)}</strong>
       </p>
-      {total && <p style={{ fontSize: 14, color: c.muted, lineHeight: 1.5, margin: '4px 0 0' }}>Given so far: {total}{g.through ? `, through ${g.through}` : ''}.</p>}
+      {total && <p style={{ fontSize: 14, color: c.muted, lineHeight: 1.5, margin: '4px 0 0' }}>Given so far: {total}{g.through ? `, through ${g.through}` : ''}</p>}
     </div>
   )
 }
