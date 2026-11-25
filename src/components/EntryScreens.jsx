@@ -21,7 +21,7 @@ function givingSentence(plain, g) {
   const name = main && main.named_publicly === true && typeof main.name === 'string' ? main.name.trim() : ''
   return name ? `${plain.replace(/\.\s*$/, '')}, with the largest share going to ${name}.` : plain
 }
-function GivingLine({ b }) {
+export function GivingLine({ b }) {   // exported for the phone app's front page
   const c = b.colors
   const [g, setG] = useState(null)
   useEffect(() => {

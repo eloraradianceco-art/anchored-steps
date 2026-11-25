@@ -4,6 +4,9 @@ import ReminderSettings from './ReminderSettings'
 import AccountPrivacy from './AccountPrivacy'
 import ScriptureCredits from './ScriptureCredits'
 
+// Set only inside the combined Anchored Steps phone app (see App.jsx)
+const APP = typeof window !== 'undefined' ? window.ERApp || null : null
+
 // A row that opens on tap: emoji, title, one line of detail. Defined outside Settings so a row stays open when the
 // page re-renders (a component defined inside would be rebuilt each time and snap shut).
 function FoldRow({ C, id, emoji, title, sub, first = false, children }) {
@@ -85,10 +88,12 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
         }
       }
       lines.push(''); lines.push('='.repeat(50)); lines.push('Walk steadily. Stay anchored.')
+      const fileName = `anchored-steps-y1-${new Date().toISOString().split('T')[0]}.txt`
+      if (APP) { await APP.shareFile(lines.join('\n'), fileName, 'My Anchored Steps Journal'); setExporting(false); return }
       const blob = new Blob([lines.join('\n')], { type: 'text/plain' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
-      a.href = url; a.download = `anchored-steps-y1-${new Date().toISOString().split('T')[0]}.txt`; a.click()
+      a.href = url; a.download = fileName; a.click()
       URL.revokeObjectURL(url)
     } catch(e) { console.error(e) }
     setExporting(false)
@@ -119,6 +124,8 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
       }
     }
     html += `<hr/><p style="text-align:center;font-size:12px;color:#999">Walk steadily. Stay anchored. — steps.eloraradiance.com</p></body></html>`
+    // Phone app: printing isn't available inside the app, so hand the journal to the share sheet (Print, Save to Files, Mail…)
+    if (APP) { await APP.shareFile(html, 'anchored-steps-year-1-journal.html', 'My Anchored Steps Journal'); return }
     // Print via a hidden iframe so we never navigate away or trap the user (critical in standalone PWA mode)
     const frame = document.createElement('iframe')
     frame.setAttribute('aria-hidden', 'true')
@@ -257,7 +264,7 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
           }} />
               </div>
             </FoldRow>
-            <FoldRow C={G} id="set-more" emoji="🌿" title="More from Elora Radiance Co." sub="The other apps in the family">
+            {!APP && <FoldRow C={G} id="set-more" emoji="🌿" title="More from Elora Radiance Co." sub="The other apps in the family">
           <div style={{ background:G.bgCard, border:`1px solid ${G.border}`, borderRadius:14, padding:'12px 16px' }}>
             <p style={{ fontSize:16, color:G.muted, fontStyle:'italic', lineHeight:1.7, marginBottom:14 }}>The rest of the Elora Radiance ecosystem — Scripture-based tools for the whole Christian life.</p>
             {[
@@ -277,7 +284,7 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
               </a>
             ))}
           </div>
-            </FoldRow>
+            </FoldRow>}
             <FoldRow C={G} id="set-credits" emoji="📖" title="Scripture Credits" sub="Translations used in this app">
               <div style={{ marginTop: -22 }}>
           <ScriptureCredits notices={['ESV', 'NIV', 'NKJV', 'NLT', 'KJV']} theme={{ text: G.text, muted: G.muted, card: G.bgCard, border: G.border }} />

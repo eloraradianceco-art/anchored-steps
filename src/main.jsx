@@ -2,6 +2,10 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import AnchoredSteps from './App.jsx'
 import ResetPassword from './ResetPassword.jsx'
+import { setNativeSpeaker } from './speech.js'
+
+// Phone app: read aloud with the phone's own voice (heard with the Silent switch on). No-op on the website.
+if (window.ERApp?.speaker) setNativeSpeaker(window.ERApp.speaker)
 
 // Error boundary so runtime crashes show a message instead of blank screen
 class ErrorBoundary extends React.Component {
@@ -12,7 +16,7 @@ class ErrorBoundary extends React.Component {
     if (this.state.error) {
       return (
         <div style={{minHeight:'100vh',background:'#0F1A24',color:'#E6DED0',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',padding:'24px',fontFamily:'Georgia,serif',gap:16,textAlign:'center'}}>
-          <img src="/icon.png" alt="⚓" style={{width:56,height:56,borderRadius:12,opacity:0.85}}/>
+          <img src={import.meta.env.BASE_URL + "icon.png"} alt="⚓" style={{width:56,height:56,borderRadius:12,opacity:0.85}}/>
           <h2 style={{fontFamily:"'Cinzel',serif",color:'#F5F1E8',fontSize:18,letterSpacing:'0.04em',margin:0}}>Something went wrong</h2>
           <p style={{color:'#A8B3BC',fontSize:14,maxWidth:340,lineHeight:1.6,margin:0}}>{String(this.state.error?.message || this.state.error)}</p>
           <button onClick={() => { try { localStorage.clear() } catch {} ; window.location.reload() }}

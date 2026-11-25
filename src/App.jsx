@@ -11,7 +11,11 @@ import { ShareComposer, FormatPicker, captionExcerpt } from "./shareKit.jsx";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://cvtukqamaqrhjtdvmslb.supabase.co";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2dHVrcWFtYXFyaGp0ZHZtc2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NDU1MjQsImV4cCI6MjA5MTQyMTUyNH0.gSksF5jV-UpuaUL7x7vhHHOB6Z7Qq0iehtbc2PoSAxw";
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Inside the combined Anchored Steps phone app the app shell sets window.ERApp before this file runs (app/src/bridge.js
+// on the `capacitor` branch). The website never has it, so every `APP` check below is false there.
+const APP = typeof window !== "undefined" ? window.ERApp || null : null;
+const ASSET = import.meta.env.BASE_URL;   // "/" on the website; "/year1/" inside the phone app
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, APP ? { auth: { storage: APP.authStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } } : undefined);
 
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const SECTIONS = [
@@ -139,7 +143,7 @@ function YearReview({ weeksComplete, versesMemorized, prayersWritten, totalDays,
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:"calc(24px + var(--safe-top, env(safe-area-inset-top, 0px))) 24px calc(24px + env(safe-area-inset-bottom, 0px))",overflowY:"auto"}} onClick={onClose}>
       <div style={{background:"linear-gradient(145deg,#0F1A24,#1A2A38)",border:"1px solid rgba(176,138,78,0.4)",borderRadius:20,padding:32,maxWidth:420,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.6)",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
         <div style={{textAlign:"center",marginBottom:24}}>
-          <img src="/icon.png" alt="" style={{width:56,height:56,borderRadius:14,marginBottom:12}}/>
+          <img src={ASSET+"icon.png"} alt="" style={{width:56,height:56,borderRadius:14,marginBottom:12}}/>
           <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:G.gold,letterSpacing:"0.16em",textTransform:"uppercase",marginBottom:6}}>Your Year in Review</div>
           <h2 style={{fontFamily:"Cinzel,serif",fontSize:22,color:G.cream,fontWeight:500,margin:0}}>52 Weeks of Faith</h2>
         </div>
@@ -382,6 +386,7 @@ export default function AnchoredSteps() {
   // Sign-in, unlock, onboarding and loading screens are dark; the app follows the theme.
   const chromeColor = (!session || loading || noAccess || subExpired || showOnboarding || darkMode) ? "#0F1A24" : "#F2EDE3";
   useEffect(() => { paintChrome(chromeColor); }, [chromeColor]);
+  useEffect(() => { if (APP?.statusBar) APP.statusBar(!darkMode); }, [darkMode]);
 
   // Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -426,6 +431,9 @@ export default function AnchoredSteps() {
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // Phone app: signing in and buying happen on the app's front page, so a signed-out or locked year goes back there.
+  useEffect(() => { if (APP && !loading && (!session || noAccess)) APP.home("as1"); }, [loading, session, noAccess]);
 
   const loadUserData = async (userId) => {
     setLoading(true);
@@ -708,6 +716,7 @@ export default function AnchoredSteps() {
       const prayE = wEntries.find(e => e.field_key === "prayer");
       if (prayE?.field_value) out += "PRAYER:\n" + prayE.field_value + "\n\n";
     });
+    if (APP) { APP.shareFile(out, "anchored-steps.txt", "My Anchored Steps Journal"); return; }   // phone app: share sheet (Save to Files, Mail…)
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([out], {type:"text/plain"}));
     a.download = "anchored-steps.txt"; a.click();
@@ -725,10 +734,10 @@ export default function AnchoredSteps() {
   const communityNotes = () => { try { return JSON.parse(localStorage.getItem("community_w"+wk)||"[]"); } catch { return []; } };
 
 
-  // ── Loading
-  if (loading) return (
+  // ── Loading (in the phone app, also while it returns to the front page)
+  if (loading || (APP && (!session || noAccess))) return (
     <div style={{position:"fixed",inset:0,zIndex:50,background:G.bg,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",textAlign:"center"}}>
-      <img src="/icon-192.png" alt="" width="72" height="72" style={{width:72,height:72,borderRadius:16,boxShadow:"0 6px 22px rgba(0,0,0,0.45)",objectFit:"cover",display:"block",marginBottom:18}}/>
+      <img src={ASSET+"icon-192.png"} alt="" width="72" height="72" style={{width:72,height:72,borderRadius:16,boxShadow:"0 6px 22px rgba(0,0,0,0.45)",objectFit:"cover",display:"block",marginBottom:18}}/>
       <div style={{fontFamily:"Cinzel,Georgia,serif",color:G.gold,fontSize:12,fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",marginBottom:8}}>Anchored Steps · Year 1</div>
       <div style={{color:G.muted,fontSize:14}}>Loading your journal…</div>
     </div>
@@ -810,7 +819,7 @@ export default function AnchoredSteps() {
   // ── Subscription expired
   if (subExpired) return (
     <div style={{minHeight:"100vh",background:"linear-gradient(155deg,#0F1A24 0%,#1A2A38 55%,#0F1A24 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px",fontFamily:"EB Garamond,Georgia,serif",textAlign:"center"}}>
-      <img src="/icon.png" alt="" style={{width:64,height:64,borderRadius:14,marginBottom:16,opacity:.6}}/>
+      <img src={ASSET+"icon.png"} alt="" style={{width:64,height:64,borderRadius:14,marginBottom:16,opacity:.6}}/>
       <div style={{fontFamily:"Cinzel,serif",fontSize:20,color:"#F5F1E8",marginBottom:8}}>Access Ended</div>
       <p style={{fontSize:16,color:"#A8B3BC",lineHeight:1.7,marginBottom:28,maxWidth:340}}>Your Anchored Steps subscription has ended. Get lifetime access for a one-time $39 to keep your journal going.</p>
       <a href="https://eloraradiance.com/anchored-steps.html" style={{display:"block",background:"linear-gradient(135deg,rgba(176,138,78,0.35),rgba(176,138,78,0.15))",border:"1px solid rgba(176,138,78,0.45)",color:"#B08A4E",padding:"14px 32px",borderRadius:12,textDecoration:"none",fontFamily:"Cinzel,serif",fontSize:14,letterSpacing:"0.1em",marginBottom:12}}>Get Lifetime Access &#8594;</a>
@@ -867,9 +876,12 @@ export default function AnchoredSteps() {
       <header style={{position:"sticky",top:0,zIndex:100,paddingTop:"var(--safe-top, env(safe-area-inset-top, 0px))",marginTop:"calc(-1 * env(safe-area-inset-top, 0px))",background:T.headerBg || "#0F1A24",borderBottom:"1px solid rgba(176,138,78,0.14)"}}>
         <div style={{borderBottom:"1px solid rgba(180,140,60,0.12)",padding:"10px 18px"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <span style={{fontSize:16,color:G.gold}}><img src="/icon.png" alt="⚓" style={{width:26,height:26,borderRadius:6,verticalAlign:"middle"}}/></span>
+            {/* Phone app: the icon and title go back to the front page (Year 1, Year 2). On the website they do nothing. */}
+            <div {...(APP ? {role:"button",tabIndex:0,"aria-label":"All studies",onClick:()=>APP.home()} : {})} style={{display:"flex",alignItems:"center",gap:8,cursor:APP?"pointer":"default"}}>
+              {APP && <span aria-hidden="true" style={{fontSize:24,lineHeight:1,color:G.gold,marginRight:-2,marginTop:-3}}>‹</span>}
+              <span style={{fontSize:16,color:G.gold}}><img src={ASSET+"icon.png"} alt="⚓" style={{width:26,height:26,borderRadius:6,verticalAlign:"middle"}}/></span>
               <span style={{fontFamily:"Cinzel,serif",fontSize:14,fontWeight:600,color:darkMode?G.cream:"#2C2416"}}>Anchored Steps</span>
+              {APP && <span style={{background:"rgba(180,140,60,0.15)",border:"1px solid "+G.goldB,borderRadius:12,padding:"1px 8px",fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.08em"}}>Year 1</span>}
               {streak > 0 && <span style={{background:"rgba(180,140,60,0.15)",border:"1px solid "+G.goldB,borderRadius:12,padding:"1px 8px",fontSize:11,color:G.gold,fontFamily:"Cinzel,serif"}}>🔥 {streak}</span>}
             </div>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -1174,7 +1186,7 @@ export default function AnchoredSteps() {
                   )}
                   {wk === 52 && (
                     <div style={{textAlign:"center",padding:"32px 24px",background:"linear-gradient(145deg,rgba(176,138,78,0.14),rgba(176,138,78,0.05))",border:"1px solid rgba(176,138,78,0.3)",borderRadius:16,marginTop:16,boxShadow:"0 8px 32px rgba(0,0,0,0.15)"}}>
-                      <div style={{fontSize:22,marginBottom:7}}><img src="/icon.png" alt="⚓" style={{width:48,height:48,borderRadius:12,boxShadow:"0 4px 16px rgba(0,0,0,0.2)"}}/></div>
+                      <div style={{fontSize:22,marginBottom:7}}><img src={ASSET+"icon.png"} alt="⚓" style={{width:48,height:48,borderRadius:12,boxShadow:"0 4px 16px rgba(0,0,0,0.2)"}}/></div>
                       <div style={{fontFamily:"Cinzel,serif",fontSize:18,color:T.cream,marginBottom:8,letterSpacing:"0.04em"}}>You Have Finished Well</div>
                       <div style={{fontSize:16,color:T.muted,fontStyle:"italic",marginBottom:20,lineHeight:1.7}}>Walk steadily. Stay anchored. Trust God with every step.</div>
                       <button onClick={() => setShowYearReview(true)}
@@ -1555,7 +1567,7 @@ export default function AnchoredSteps() {
           : {bg:'linear-gradient(155deg,#0F1A24 0%,#1A2A38 100%)', canvas:'#0F1A24', frame:'rgba(176,138,78,0.35)', divider:'rgba(176,138,78,0.28)', text:'#F5F1E8', gold:'#CFA968', muted:'#AEBBC6', glow:'radial-gradient(ellipse at 85% 0%, rgba(176,138,78,0.16) 0%, transparent 55%)'}
         const cardHeader = (
           <div style={{display:'flex',alignItems:'center',gap:30}}>
-            <img src="/icon.png" alt="" style={{width:112,height:112,borderRadius:24,flexShrink:0}}/>
+            <img src={ASSET+"icon.png"} alt="" style={{width:112,height:112,borderRadius:24,flexShrink:0}}/>
             <div style={{minWidth:0}}>
               <div style={{fontSize:46,color:cc.gold,fontFamily:'Cinzel,serif',letterSpacing:'0.05em',lineHeight:1.2}}>Anchored Steps</div>
               <div style={{fontSize:36,color:cc.muted,lineHeight:1.3,marginTop:4,fontFamily:'EB Garamond,Georgia,serif'}}>Week {wk} · {week?.title}</div>
