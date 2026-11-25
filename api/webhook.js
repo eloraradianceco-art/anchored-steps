@@ -6,6 +6,7 @@ const { createClient } = require("@supabase/supabase-js");
 // purchase for the right app. There are no access codes and no emails: the app unlocks
 // when the buyer signs in with the email they paid with (or comes back from checkout).
 // The Anchored Library ($79) is one purchase row (app "bundle") that opens all three apps.
+// Both years ($59.99) is one purchase row (app "both") that opens Year 1 and Year 2.
 // The Living Planner Pro subscription lives in its own database: checkouts, renewals and
 // cancellations are passed to it (plannerSync), and that is the only way Pro turns on or off.
 // Anchored All-Access is one yearly subscription recorded in both databases: memberships here
@@ -20,15 +21,19 @@ const supabase = createClient(
 
 // Which app each Stripe payment link unlocks.
 const LINK_APP = {
-  plink_1TekXdBr8nMXOo8tIeA9z5Gh: "as1", // Year 1 lifetime ($39), current link
+  plink_1UfpxsBr8nMXOo8t6fyzRtHX: "as1", // Year 1 lifetime ($39.99), current link since 2026-11-25
+  plink_1TekXdBr8nMXOo8tIeA9z5Gh: "as1", // Year 1 lifetime ($39), retired 2026-11-25
   plink_1TKlBkBr8nMXOo8ttPMa9yuR: "as1", // Year 1, earlier one-time link
   plink_1TLS4FBr8nMXOo8tDyze6tOc: "as1", // Year 1 subscription link
   plink_1TLBVbBr8nMXOo8tbuChBM0a: "as1", // Year 1, retired
   plink_1TKlJABr8nMXOo8t7frz1jG6: "as1", // Year 1 weekly, retired
-  plink_1TekLGBr8nMXOo8twn1VcZkz: "as2", // Year 2 lifetime ($39)
-  plink_1TemdMBr8nMXOo8tEK01T1gs: "aa",  // Armed & Anchored, current link
+  plink_1UfpxtBr8nMXOo8ty4uLNZMS: "as2", // Year 2 lifetime ($39.99), current link since 2026-11-25
+  plink_1TekLGBr8nMXOo8twn1VcZkz: "as2", // Year 2 lifetime ($39), retired 2026-11-25
+  plink_1UfpxvBr8nMXOo8tYNuqNN05: "aa",  // Armed & Anchored lifetime ($39.99), current link since 2026-11-25
+  plink_1TemdMBr8nMXOo8tEK01T1gs: "aa",  // Armed & Anchored ($39), retired 2026-11-25
   plink_1TYoaFBr8nMXOo8tyad1GVaT: "aa",  // Armed & Anchored, earlier link
   plink_1UcXpsBr8nMXOo8tR6UwEncI: "bundle", // Anchored Library ($79): Year 1 + Year 2 + Armed & Anchored
+  plink_1UfpxxBr8nMXOo8tAeo9VukE: "both",   // Both years ($59.99): Year 1 + Year 2
 };
 // Fallback for checkouts without a known link: where the buyer is sent afterwards.
 const HOST_APP = {
@@ -41,7 +46,7 @@ const HOST_APP = {
   "armedandanchored.vercel.app": "aa",
 };
 
-const APPS = ["as1", "as2", "aa", "bundle"];
+const APPS = ["as1", "as2", "aa", "bundle", "both"];
 
 function appForSession(session) {
   if (session.metadata && APPS.includes(session.metadata.app)) return session.metadata.app;
@@ -359,7 +364,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ received: true });
   }
 
-  // Year 1 or Year 2: the app applies the purchase when the buyer signs in (claim_purchase).
+  // Year 1, Year 2 or both years: the app applies the purchase when the buyer signs in (claim_purchase).
   console.log(`${app} purchase ${session.id} recorded${row.user_id ? " for a signed-in account" : ""}`);
   return res.status(200).json({ received: true });
 };
