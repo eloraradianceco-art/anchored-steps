@@ -1,0 +1,16 @@
+{
+  "appId": "com.eloraradiance.anchoredsteps",
+  "appName": "Anchored Steps",
+  "webDir": "dist",
+  "backgroundColor": "#0F1A24",
+  "ios": {
+    "backgroundColor": "#0F1A24"
+  },
+  "plugins": {
+    "StatusBar": {
+      "style": "DARK",
+      "overlaysWebView": true,
+      "backgroundColor": "#00000000"
+    }
+  }
+}

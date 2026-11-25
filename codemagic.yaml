@@ -1,0 +1,56 @@
+# Cloud build for the Anchored Steps iPhone/iPad app (codemagic.io): Year 1 and Year 2 in one App Store app.
+# This file lives on the `capacitor` branch only. The websites on Vercel are not affected by anything in it.
+# Everything for the phone app is in app/ (see app/README.md). The build: install → build the front page and both
+# years into app/dist → copy that into the iOS project → compile → upload to App Store Connect.
+# The app connects to the shared Elora Radiance database, so no database settings are needed here.
+#
+# Before the first build, in this order:
+#  1. Apple Developer → Identifiers: App ID com.eloraradiance.anchoredsteps (capabilities: none needed beyond the
+#     defaults; In-App Purchase is on by default).
+#  2. App Store Connect → Apps → +: create "Anchored Steps" with that bundle ID (SKU anchoredsteps).
+#  3. Apple Developer → Profiles → +: an "App Store Connect" profile for this App ID, using the existing
+#     distribution certificate (elora_distribution). Name it anchored_steps_appstore.
+#  4. Codemagic → Code signing identities → iOS provisioning profiles: "Fetch profiles" and tick the new one.
+#  5. Codemagic → Add application → the anchored-steps repository → start the "iOS to TestFlight" workflow on the
+#     `capacitor` branch.
+# The App Store Connect API key ("Elora Radiance") and the certificate are already in Codemagic from the other apps.
+# Without steps 3 and 4 the build stops at once with "No matching profiles found for bundle identifier …".
+
+workflows:
+  ios-testflight:
+    name: iOS to TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: Elora Radiance
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.eloraradiance.anchoredsteps
+      node: 22
+      xcode: latest
+    scripts:
+      - name: Build the front page and both years
+        script: |
+          cd app
+          npm ci
+          npm run build
+      - name: Copy into the iOS project
+        script: |
+          cd app
+          npx cap sync ios
+      - name: Set up code signing
+        script: xcode-project use-profiles
+      - name: Give this build a new build number
+        script: |
+          sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $BUILD_NUMBER;/g" app/ios/App/App.xcodeproj/project.pbxproj
+      - name: Build the iPhone app
+        script: xcode-project build-ipa --project "app/ios/App/App.xcodeproj" --scheme "App"
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        # Upload only: internal testers get the build once Apple has processed it. Turn this on only when outside
+        # testers are wanted and TestFlight → Test Information is filled in; otherwise this step ends red.
+        submit_to_testflight: false
