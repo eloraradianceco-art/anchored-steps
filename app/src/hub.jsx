@@ -64,10 +64,12 @@ const primaryBtn = { display: 'block', width: '100%', background: C.ctaBg, borde
 const ghostBtn = { ...primaryBtn, background: 'transparent', border: `1px solid ${C.cardBorder}`, color: C.accent }
 const linkBtn = { background: 'none', border: 'none', color: C.link, fontFamily: BODY, fontSize: 15.5, textDecoration: 'underline', textUnderlineOffset: 3, padding: '10px 6px', minHeight: 44 }
 
-function Frame({ children }) {
+// `center` sets the content in the middle of the screen when there is room to spare (iPad, tall phones); when the
+// content is longer than the screen it starts at the top and scrolls as usual.
+function Frame({ children, center = false }) {
   return (
-    <div style={{ minHeight: '100vh', background: `${C.glow}, ${C.bg}`, color: C.text, fontFamily: BODY, padding: 'calc(env(safe-area-inset-top, 0px) + 18px) 18px calc(env(safe-area-inset-bottom, 0px) + 28px)' }}>
-      <div style={{ maxWidth: 520, margin: '0 auto' }}>{children}</div>
+    <div style={{ minHeight: '100vh', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', background: `${C.glow}, ${C.bg}`, color: C.text, fontFamily: BODY, padding: 'calc(env(safe-area-inset-top, 0px) + 18px) 18px calc(env(safe-area-inset-bottom, 0px) + 28px)' }}>
+      <div style={{ width: '100%', maxWidth: 520, margin: center ? 'auto' : '0 auto' }}>{children}</div>
     </div>
   )
 }
@@ -228,7 +230,7 @@ function Home({ session, onSignOut }) {
   const anyOwned = YEARS.some((y) => years[y.app].owned !== false)
 
   return (
-    <Frame>
+    <Frame center>
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, margin: '0 0 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <img src={BRAND.icon} alt="" width="32" height="32" style={{ width: 32, height: 32, borderRadius: 8 }} />
@@ -301,8 +303,8 @@ function Account({ session, onBack, onSignOut, onRestore, busy, note }) {
 // Signed out: what the app is, then sign in or create an account.
 function Front({ onSignIn, onSignUp }) {
   return (
-    <Frame>
-      <div style={{ textAlign: 'center', padding: '4vh 0 0' }}>
+    <Frame center>
+      <div style={{ textAlign: 'center' }}>
         <img src={BRAND.icon} alt="" width="76" height="76" style={{ width: 76, height: 76, borderRadius: 18, boxShadow: '0 6px 22px rgba(0,0,0,0.45)' }} />
         <div style={{ fontFamily: DISPLAY, fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: C.eyebrow, margin: '16px 0 8px' }}>Elora Radiance Co.</div>
         <h1 style={{ margin: 0, fontFamily: DISPLAY, fontSize: 30, fontWeight: 700, letterSpacing: '0.04em', lineHeight: 1.15, color: C.title }}>Anchored Steps</h1>
