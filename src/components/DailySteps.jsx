@@ -740,7 +740,7 @@ const CSS = `
 .ds-home{max-width:460px;margin:0 auto;padding:0 2px 24px}
 /* iPad and wider: the week's steps, each step's own screen and the finished screen use the same page column as
    Search, Contents and Progress (860px with 18px side padding) */
-@media (min-width:700px){.ds-home{max-width:none}.ds-session{max-width:860px;padding-left:18px;padding-right:18px}.ds-done{max-width:860px;padding-left:18px;padding-right:18px}}
+@media (min-width:700px){.ds-home{max-width:none}}
 .ds-weeknav{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .ds-arrow{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--line);background:transparent;color:var(--gold)!important;font-size:24px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0 0 3px}
 .ds-arrow:disabled{opacity:.3;cursor:default}
@@ -893,6 +893,8 @@ const CSS = `
 .ds-done .ds-year-meta{margin-bottom:22px}
 .ds-done .ds-link{margin-top:6px}
 
+/* iPad and wider, continued: placed after .ds-session and .ds-done so it wins over their 460px */
+@media (min-width:700px){.ds-session,.ds-done{max-width:860px;padding-left:18px;padding-right:18px}}
 .ds-toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-size:17px;max-width:88vw;width:max-content;z-index:1100;text-align:center;animation:ds-in .2s ease;font-family:"EB Garamond",Garamond,Georgia,serif}
 
 @keyframes ds-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
