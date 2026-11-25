@@ -961,7 +961,7 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
 
   return (
     <div style={{ position:'fixed', inset:0, zIndex:400, background: darkMode ? '#0D1820' : '#F2EDE3', fontFamily:"'EB Garamond',Georgia,serif", overflowY:'auto' }}>
-      <div style={{ maxWidth:560, margin:'0 auto', padding:'0 0 calc(100px + env(safe-area-inset-bottom, 0px))' /* clears the bottom tab bar */ }}>
+      <div style={{ maxWidth:860 /* the same page column as Steps, Search, Contents and Progress */, margin:'0 auto', padding:'0 0 calc(100px + env(safe-area-inset-bottom, 0px))' /* clears the bottom tab bar */ }}>
       {showReviews && <Reviews app="as2" appName="Anchored Steps · Year 2" eyebrow="Anchored Steps · Year 2" userEmail={session?.user?.email || profile?.email} C={{ ...T, red: T.gold, redL: T.gold }} lightMode={!darkMode} onClose={() => setShowReviews(false)} />}
 
         {/* Sticky header */}

@@ -756,8 +756,9 @@ const CSS = `
 .ds-root mark{background:none;color:var(--goldL);box-shadow:inset 0 -.14em 0 var(--goldSoft);padding:0;font-style:inherit}
 
 .ds-home{max-width:460px;margin:0 auto;padding:0 2px 24px}
-/* iPad and wider: the week's steps use the full page column, the same width as Search, Contents and Progress */
-@media (min-width:700px){.ds-home{max-width:none}}
+/* iPad and wider: the week's steps, each step's own screen and the finished screen use the same page column as
+   Search, Contents and Progress (860px with 18px side padding) */
+@media (min-width:700px){.ds-home{max-width:none}.ds-session{max-width:860px;padding-left:18px;padding-right:18px}.ds-done{max-width:860px;padding-left:18px;padding-right:18px}}
 .ds-weeknav{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .ds-arrow{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--line);background:transparent;color:var(--gold)!important;font-size:24px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0 0 3px}
 .ds-arrow:disabled{opacity:.3;cursor:default}
