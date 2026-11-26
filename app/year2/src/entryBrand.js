@@ -5,8 +5,8 @@ export const BRAND = {
   icon: '/icon2.png',
   tagline: '52 Deeper Weeks of Scripture Study',
   verse: {
-    text: 'Not that I have already obtained this or am already perfect, but I press on to make it my own, because Christ Jesus has made me his own.',
-    ref: 'Philippians 3:12 · ESV',
+    text: 'Not that I have already obtained all this, or have already been made perfect, but I press on to take hold of that for which Christ Jesus took hold of me.',
+    ref: 'Philippians 3:12 · BSB',
   },
   features: [
     { icon: '📖', text: '52 deeper weeks, with longer passages and their context' },

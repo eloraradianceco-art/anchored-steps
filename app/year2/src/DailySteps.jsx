@@ -329,7 +329,7 @@ function buildSteps(week) {
         <div className="ds-rc" key={title}><h3>{title}</h3>{body ? <p>{body}</p> : <p className="is-empty">Not done yet. It{"’"}s part of day {day}.</p>}</div>
       );
       const rq = c.val("ds_rq");
-      const match = c.get("ds_match"), mem = c.get("ds_mem"), memorized = c.get("mem_" + ref) === "1";
+      const match = c.get("ds_match"), mem = c.get("ds_mem"), memorized = c.get("mem_" + (week.verseKey || ref)) === "1";
       const study = excerpt(c.val("study")), refl = rq !== "" ? excerpt(c.val("rq" + rq)) : "";
       const plan = excerpt(c.val("apply")), prayer = excerpt(c.val("prayer")), thanks = excerpt(c.val("gratitude"));
       return (<>
@@ -384,7 +384,7 @@ function buildSteps(week) {
       matchCard,
     ] },
     { id: 3, name: "Memorize", blurb: "Rebuild " + ref, min: 5, cards: memCards,
-      onComplete: c => c.set("mem_" + ref, "1") },
+      onComplete: c => c.set("mem_" + (week.verseKey || ref), "1") },
     { id: 4, name: "Reflect", blurb: "One question, answered honestly", min: 6, cards: [
       { top: true,
         ready: c => c.val("ds_rq") !== "",

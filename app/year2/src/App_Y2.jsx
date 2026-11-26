@@ -711,7 +711,7 @@ function AnchoredStepsY2Inner(){
   },[]);
 
   const toggleBookmark=(verse,weekNum,secId)=>{
-    const key=`${verse.verseRef||verse.ref}_${weekNum}`;
+    const key=`${verse.verseKey||verse.verseRef||verse.ref}_${weekNum}`;
     const exists=bookmarks.find(b=>b.key===key);
     const updated=exists?bookmarks.filter(b=>b.key!==key):[...bookmarks,{key,ref:verse.verseRef||verse.ref,text:verse.verseText||verse.text,week:weekNum,section:secId}];
     setBookmarks(updated);
@@ -1079,7 +1079,7 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
             </FoldRow>}
             <FoldRow C={T} id="set-credits" emoji="📖" title="Scripture Credits" sub="Translations used in this app">
               <div style={{ marginTop: -22 }}>
-          <ScriptureCredits notices={['NIV_ALL', 'KJV']} theme={{ text: T.text, muted: T.muted, card: T.bgCard, border: T.border }} />
+          <ScriptureCredits notices={['BSB']} theme={{ text: T.text, muted: T.muted, card: T.bgCard, border: T.border }} />
               </div>
             </FoldRow>
             <FoldRow C={T} id="set-about" emoji="ℹ️" title="About" sub="Anchored Steps · Year 2 v1.0">
@@ -1185,9 +1185,11 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
   }
 
   // Saved verses (shown on the Search screen before you type)
+  // A saved verse shows the verse as it reads now, found by its saved-data name (the reference it was saved under).
+  const freshBookmark = bm => { const w = ALL_WEEKS.find(x => x.week === bm.week && `${x.verseKey||x.verseRef}_${x.week}` === bm.key); return w ? { ...bm, ref: w.verseRef, text: w.verseText } : bm; };
   const savedCards = (
     <>
-      {bookmarks.map((bm,i)=>(
+      {bookmarks.map(freshBookmark).map((bm,i)=>(
         <div key={i} style={{background:T.bgCard,border:"1px solid "+T.border,borderRadius:12,padding:"16px 18px",marginBottom:10}}>
           <p style={{fontSize:16,color:T.text,fontStyle:"italic",lineHeight:1.75,marginBottom:8}}>&#8220;{bm.text}&#8221;</p>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -1319,11 +1321,11 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
                         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
                           <span style={{fontSize:11,color:T.gold,fontFamily:"Cinzel,serif",fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase"}}>{week.verseRef || ''}{week.verseTranslation ? ' (' + week.verseTranslation + ')' : ''}</span>
                           <div style={{display:"flex",gap:6}}>
-                            <button onClick={()=>setQuizVerse({text:week.verseText,ref:week.verseRef})} style={{background:get("mem_"+week.verseRef)?T.greenF:T.purpleF,border:"1px solid "+(get("mem_"+week.verseRef)?T.greenB:T.purpleB),color:get("mem_"+week.verseRef)?T.green:T.purple,padding:"3px 11px",borderRadius:12,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif"}}>
-                              {get("mem_"+week.verseRef)?"✓ Memorized":"✦ Memorize"}
+                            <button onClick={()=>setQuizVerse({text:week.verseText,ref:week.verseRef,key:week.verseKey||week.verseRef})} style={{background:get("mem_"+(week.verseKey||week.verseRef))?T.greenF:T.purpleF,border:"1px solid "+(get("mem_"+(week.verseKey||week.verseRef))?T.greenB:T.purpleB),color:get("mem_"+(week.verseKey||week.verseRef))?T.green:T.purple,padding:"3px 11px",borderRadius:12,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif"}}>
+                              {get("mem_"+(week.verseKey||week.verseRef))?"✓ Memorized":"✦ Memorize"}
                             </button>
-                            <button onClick={()=>toggleBookmark({verseRef:week.verseRef,verseText:week.verseText},wk,"passage")} style={{background:isBookmarked(week.verseRef,wk)?T.goldF:"transparent",border:"1px solid "+(isBookmarked(week.verseRef,wk)?T.goldB:T.border),color:isBookmarked(week.verseRef,wk)?T.gold:T.muted,padding:"3px 10px",borderRadius:12,cursor:"pointer",fontSize:16}}>
-                              {isBookmarked(week.verseRef,wk)?"★":"☆"}
+                            <button onClick={()=>toggleBookmark({verseRef:week.verseRef,verseKey:week.verseKey,verseText:week.verseText},wk,"passage")} style={{background:isBookmarked(week.verseKey||week.verseRef,wk)?T.goldF:"transparent",border:"1px solid "+(isBookmarked(week.verseKey||week.verseRef,wk)?T.goldB:T.border),color:isBookmarked(week.verseKey||week.verseRef,wk)?T.gold:T.muted,padding:"3px 10px",borderRadius:12,cursor:"pointer",fontSize:16}}>
+                              {isBookmarked(week.verseKey||week.verseRef,wk)?"★":"☆"}
                             </button>
                           </div>
                         </div>
@@ -1746,7 +1748,7 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
 
       {/* Quiz Modal */}
       {quizVerse && (
-        <MemorizeModal verse={quizVerse} onClose={()=>setQuizVerse(null)} onPass={()=>set("mem_"+quizVerse.ref,"1")} T={T}/>
+        <MemorizeModal verse={quizVerse} onClose={()=>setQuizVerse(null)} onPass={()=>set("mem_"+(quizVerse.key||quizVerse.ref),"1")} T={T}/>
       )}
 
 
