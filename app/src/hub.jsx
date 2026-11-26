@@ -69,6 +69,8 @@ const linkBtn = { background: 'none', border: 'none', color: C.link, fontFamily:
 function Frame({ children, center = false }) {
   return (
     <div style={{ minHeight: '100vh', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', background: `${C.glow}, ${C.bg}`, color: C.text, fontFamily: BODY, padding: 'calc(env(safe-area-inset-top, 0px) + 18px) 18px calc(env(safe-area-inset-bottom, 0px) + 28px)' }}>
+      {/* The page scrolls under the phone's clock and battery; this band keeps them readable when it does. */}
+      <div aria-hidden="true" style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 'env(safe-area-inset-top, 0px)', background: C.bg, zIndex: 50 }} />
       <div style={{ width: '100%', maxWidth: 520, margin: center ? 'auto' : '0 auto' }}>{children}</div>
     </div>
   )
