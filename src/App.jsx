@@ -18,6 +18,9 @@ const ASSET = import.meta.env.BASE_URL;   // "/" on the website; "/year1/" insid
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, APP ? { auth: { storage: APP.authStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } } : undefined);
 
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+// A verse's saved-data name. Verses that were first shown in another translation keep that older name in `key`,
+// so "memorized" marks and saved verses made before the move to the BSB still belong to the same verse.
+const vkey = v => (v && (v.key || v.ref)) || "";
 const SECTIONS = [
   {id:"scripture",label:"📖 Scripture"},
   {id:"verseMap",label:"🗺 Verse Map"},
@@ -608,7 +611,7 @@ export default function AnchoredSteps() {
 
   // Bookmarks
   const toggleBookmark = (verse, weekNum, sectionId) => {
-    const key = verse.ref + "_" + weekNum;
+    const key = vkey(verse) + "_" + weekNum;
     const exists = bookmarks.find(b => b.key === key);
     let updated;
     if (exists) {
@@ -616,6 +619,10 @@ export default function AnchoredSteps() {
     } else {
       updated = [...bookmarks, { key, ref: verse.ref, text: verse.text, week: weekNum, section: sectionId, date: new Date().toLocaleDateString() }];
     }
+    saveBookmarks(updated);
+  };
+  const removeBookmark = key => saveBookmarks(bookmarks.filter(b => b.key !== key));
+  const saveBookmarks = updated => {
     setBookmarks(updated);
     try { localStorage.setItem("as_bookmarks", JSON.stringify(updated)) } catch {}
     // Sync to Supabase (cross-device)
@@ -625,6 +632,12 @@ export default function AnchoredSteps() {
     }
   };
   const isBookmarked = (ref, weekNum) => bookmarks.some(b => b.key === ref + "_" + weekNum);
+  // A saved verse shows the verse as it reads now (reference and wording), found by its saved-data name.
+  const freshBookmark = b => {
+    const wkItems = [...((ALL_WEEKS.find(w => w.week === b.week) || {}).scriptures || []), ...(CROSS_REFS[String(b.week)] || CROSS_REFS[b.week] || [])];
+    const v = wkItems.find(x => vkey(x) + "_" + b.week === b.key);
+    return v ? { ...b, ref: v.ref, text: v.text } : b;
+  };
 
   // Search
   const doSearch = (q) => {
@@ -851,14 +864,14 @@ export default function AnchoredSteps() {
   // Saved verses (shown on the Search screen before you type)
   const savedCards = (
     <>
-      {bookmarks.map((b,i) => (
+      {bookmarks.map(freshBookmark).map((b,i) => (
         <div key={i} style={{background:T.cardBg,border:"1px solid rgba(176,138,78,0.25)",borderRadius:14,padding:"18px 20px",marginBottom:12}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
             <span style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",textTransform:"uppercase"}}>{b.ref}</span>
             <div style={{display:"flex",gap:8}}>
               <button onClick={() => { goWk(b.week); setSec("scripture"); setView("journal"); }}
                 style={{background:"transparent",border:"1px solid rgba(176,138,78,0.25)",color:G.gold,padding:"2px 10px",borderRadius:10,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif"}}>Go →</button>
-              <button onClick={() => toggleBookmark(b, b.week, b.section)}
+              <button onClick={() => removeBookmark(b.key)}
                 style={{background:"transparent",border:"none",color:G.red,cursor:"pointer",fontSize:16,padding:"2px 6px"}}>×</button>
             </div>
           </div>
@@ -975,11 +988,11 @@ export default function AnchoredSteps() {
                                 {ae && (
                                   <button onClick={()=>setOpenAuthor(ae)} style={{background:"rgba(176,138,78,0.12)",border:"1px solid rgba(176,138,78,0.3)",color:G.gold,padding:"2px 10px",borderRadius:12,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif"}}>&#9660; Context</button>
                                 )}
-                                <button onClick={()=>startQuiz(s)} style={{background:entries.find(e=>e.field_key==="mem_"+s.ref)?"rgba(120,184,120,0.15)":G.purpleF,border:"1px solid "+(entries.find(e=>e.field_key==="mem_"+s.ref)?G.greenB:G.purpleB),color:entries.find(e=>e.field_key==="mem_"+s.ref)?G.green:G.purple,padding:"2px 10px",borderRadius:12,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif"}}>
-                                  {entries.find(e=>e.field_key==="mem_"+s.ref)?"✓ Memorized":"✦ Memorize"}
+                                <button onClick={()=>startQuiz(s)} style={{background:entries.find(e=>e.field_key==="mem_"+vkey(s))?"rgba(120,184,120,0.15)":G.purpleF,border:"1px solid "+(entries.find(e=>e.field_key==="mem_"+vkey(s))?G.greenB:G.purpleB),color:entries.find(e=>e.field_key==="mem_"+vkey(s))?G.green:G.purple,padding:"2px 10px",borderRadius:12,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif"}}>
+                                  {entries.find(e=>e.field_key==="mem_"+vkey(s))?"✓ Memorized":"✦ Memorize"}
                                 </button>
-                                <button onClick={()=>toggleBookmark(s,wk,"scripture")} style={{background:isBookmarked(s.ref,wk)?"rgba(176,138,78,0.2)":"transparent",border:"1px solid "+(isBookmarked(s.ref,wk)?"rgba(176,138,78,0.4)":G.border),color:isBookmarked(s.ref,wk)?G.gold:T.muted,padding:"2px 10px",borderRadius:12,cursor:"pointer",fontSize:16}}>
-                                  {isBookmarked(s.ref,wk)?"★":"☆"}
+                                <button onClick={()=>toggleBookmark(s,wk,"scripture")} style={{background:isBookmarked(vkey(s),wk)?"rgba(176,138,78,0.2)":"transparent",border:"1px solid "+(isBookmarked(vkey(s),wk)?"rgba(176,138,78,0.4)":G.border),color:isBookmarked(vkey(s),wk)?G.gold:T.muted,padding:"2px 10px",borderRadius:12,cursor:"pointer",fontSize:16}}>
+                                  {isBookmarked(vkey(s),wk)?"★":"☆"}
                                 </button>
                               </div>
                             </div>
@@ -1038,11 +1051,11 @@ export default function AnchoredSteps() {
                               <span style={{fontSize:11,color:G.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",textTransform:"uppercase"}}>{s.ref}</span>
                               <div style={{display:"flex",gap:6}}>
                                 {(s.author || s.context) && <button onClick={()=>setOpenAuthor(s)} style={{background:"rgba(176,138,78,0.1)",border:"1px solid rgba(176,138,78,0.25)",color:G.gold,padding:"2px 10px",borderRadius:12,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif"}}>&#9660; Context</button>}
-                                <button onClick={() => startQuiz(s)} style={{background:entries.find(e=>e.field_key==="mem_"+s.ref)?"rgba(124,146,132,0.15)":G.purpleF,border:"1px solid "+(entries.find(e=>e.field_key==="mem_"+s.ref)?G.greenB:G.purpleB),color:entries.find(e=>e.field_key==="mem_"+s.ref)?G.green:G.purple,padding:"2px 10px",borderRadius:12,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif"}}>
-                                  {entries.find(e=>e.field_key==="mem_"+s.ref) ? "✓ Memorized" : "✦ Memorize"}
+                                <button onClick={() => startQuiz(s)} style={{background:entries.find(e=>e.field_key==="mem_"+vkey(s))?"rgba(124,146,132,0.15)":G.purpleF,border:"1px solid "+(entries.find(e=>e.field_key==="mem_"+vkey(s))?G.greenB:G.purpleB),color:entries.find(e=>e.field_key==="mem_"+vkey(s))?G.green:G.purple,padding:"2px 10px",borderRadius:12,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif"}}>
+                                  {entries.find(e=>e.field_key==="mem_"+vkey(s)) ? "✓ Memorized" : "✦ Memorize"}
                                 </button>
-                                <button onClick={() => toggleBookmark(s, wk, "scripture")} style={{background:isBookmarked(s.ref,wk)?"rgba(176,138,78,0.2)":"transparent",border:"1px solid "+(isBookmarked(s.ref,wk)?"rgba(176,138,78,0.4)":G.border),color:isBookmarked(s.ref,wk)?G.gold:T.muted,padding:"2px 10px",borderRadius:12,cursor:"pointer",fontSize:16}}>
-                                  {isBookmarked(s.ref,wk) ? "★" : "☆"}
+                                <button onClick={() => toggleBookmark(s, wk, "scripture")} style={{background:isBookmarked(vkey(s),wk)?"rgba(176,138,78,0.2)":"transparent",border:"1px solid "+(isBookmarked(vkey(s),wk)?"rgba(176,138,78,0.4)":G.border),color:isBookmarked(vkey(s),wk)?G.gold:T.muted,padding:"2px 10px",borderRadius:12,cursor:"pointer",fontSize:16}}>
+                                  {isBookmarked(vkey(s),wk) ? "★" : "☆"}
                                 </button>
                               </div>
                             </div>
@@ -1431,16 +1444,16 @@ export default function AnchoredSteps() {
 
       {/* Memorize Modal — 3 modes */}
       {quizVerse && (()=>{
-        const isMemorized = entries.some(e=>e.field_key==='mem_'+quizVerse.ref&&e.field_value==='1')
+        const isMemorized = entries.some(e=>e.field_key==='mem_'+vkey(quizVerse)&&e.field_value==='1')
         const words = quizVerse.text.split(' ')
         const blankedWords = words.map((w,i)=>(i+1)%3===0?'___':w)
-        const markMemorized = async()=>{await set('mem_'+quizVerse.ref,'1');setQuizVerse(null);}
+        const markMemorized = async()=>{await set('mem_'+vkey(quizVerse),'1');setQuizVerse(null);}
         const checkScore=()=>{
           const norm=s=>s.toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim()
           const tw=norm(memTyped).split(' ');const ow=norm(quizVerse.text).split(' ')
           const pct=Math.round(tw.filter(w=>ow.includes(w)).length/ow.length*100)
           setMemScore(pct)
-          if(pct>=70){set('mem_'+quizVerse.ref,'1')}
+          if(pct>=70){set('mem_'+vkey(quizVerse),'1')}
         }
         const closeModal=()=>{setQuizVerse(null);setMemMode(null);setMemRevealed(false);setMemTyped('');setMemScore(null);}
         return (

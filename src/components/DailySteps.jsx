@@ -316,7 +316,7 @@ function buildSteps(week) {
         <div className="ds-rc" key={title}><h3>{title}</h3>{body ? <p>{body}</p> : <p className="is-empty">Not done yet. It{"\u2019"}s part of day {day}.</p>}</div>
       );
       const rq = c.val("ds_rq"), carry = c.val("ds_carry");
-      const match = c.get("ds_match"), mem = c.get("ds_mem"), memorized = c.get("mem_" + v0.ref) === "1";
+      const match = c.get("ds_match"), mem = c.get("ds_mem"), memorized = c.get("mem_" + (v0.key || v0.ref)) === "1";
       const stood = excerpt(c.val("vm_pr")), refl = rq !== "" ? excerpt(c.val("rf" + rq)) : "";
       const plan = excerpt(c.val("apply")), prayer = excerpt(c.val("prayer"));
       return (<>
@@ -356,7 +356,7 @@ function buildSteps(week) {
       textCard("lexicon", "Which word stood out, and why does it matter?", "Optional. A line or two is plenty.", "The word that stayed with me\u2026", { rows: 4, skip: true, cta: "Finish step" }),
     ] },
     { id: 3, name: "Memorize", blurb: "Rebuild " + shortRef(v0.ref), min: 5, cards: memCards,
-      onComplete: c => c.set("mem_" + v0.ref, "1") },
+      onComplete: c => c.set("mem_" + (v0.key || v0.ref), "1") },
     { id: 4, name: "Reflect", blurb: "One question, answered honestly", min: 6, cards: [
       { top: true,
         ready: c => c.val("ds_rq") !== "",

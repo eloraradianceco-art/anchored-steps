@@ -287,7 +287,7 @@ export default function Settings({ profile, userId, supabase, entries, wk, ALL_W
             </FoldRow>}
             <FoldRow C={G} id="set-credits" emoji="📖" title="Scripture Credits" sub="Translations used in this app">
               <div style={{ marginTop: -22 }}>
-          <ScriptureCredits notices={['ESV', 'NIV', 'NKJV', 'NLT', 'KJV']} theme={{ text: G.text, muted: G.muted, card: G.bgCard, border: G.border }} />
+          <ScriptureCredits notices={['BSB', 'KJV']} theme={{ text: G.text, muted: G.muted, card: G.bgCard, border: G.border }} />
               </div>
             </FoldRow>
             <FoldRow C={G} id="set-about" emoji="ℹ️" title="About" sub="Anchored Steps · Year 1 v1.0">
