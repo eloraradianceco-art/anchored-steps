@@ -1,7 +1,7 @@
 // Apple in-app purchase for the phone app (RevenueCat), same pattern as Armed & Anchored.
 //
-// Turns on by itself once REVENUECAT_IOS_KEY holds this app's public RevenueCat key (starts with "appl_"; it is meant
-// to ship inside the app). Until then the front page shows the years an account already owns and no buy buttons.
+// On inside the iPhone/iPad app since 2026-11-25 (REVENUECAT_IOS_KEY below). In a browser, or with the key blank, the
+// front page shows the years an account already owns and no buy buttons.
 //
 // App Store Connect (app "Anchored Steps", com.eloraradiance.anchoredsteps), three non-consumables:
 //   as_year1_lifetime · as_year2_lifetime · as_both_years_lifetime
@@ -12,7 +12,9 @@
 import { Capacitor } from '@capacitor/core'
 import { Purchases } from '@revenuecat/purchases-capacitor'
 
-export const REVENUECAT_IOS_KEY = import.meta.env.VITE_REVENUECAT_IOS_KEY ?? ''   // public key goes here once the RevenueCat app exists
+// RevenueCat project "Anchored Steps", App Store app. This is the public SDK key (safe to ship); the secret key lives
+// only in the shared database (app_secrets: revenuecat_as_secret_key).
+export const REVENUECAT_IOS_KEY = import.meta.env.VITE_REVENUECAT_IOS_KEY ?? 'appl_xfYsEKyOGZCgEbezoiVKAxBuZnm'
 const fake = typeof window !== 'undefined' ? window.__ER_TEST_STORE__ || null : null   // browser checks only
 export const PURCHASES_ON = !!fake || (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios' && /^appl_/.test(REVENUECAT_IOS_KEY))
 export const ENTITLEMENT = { as1: 'year1', as2: 'year2' }
