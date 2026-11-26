@@ -740,17 +740,6 @@ function AnchoredStepsY2Inner(){
     else setResetSent(true);
   };
 
-  const enduringWordUrl = (ref) => {
-    if (!ref) return '#';
-    const m = ref.match(/^(.+?)\s+(\d+)/);
-    if (!m) return 'https://enduringword.com/bible-commentary/';
-    let book = m[1].trim().toLowerCase().replace(/\s+/g, '-');
-    const chap = m[2];
-    if (book === 'psalm') book = 'psalms';
-    return 'https://enduringword.com/bible-commentary/' + book + '-' + chap + '/';
-  };
-
-
   if(loading || (APP && (!session || access==='no'))) return (
     <div style={{position:"fixed",inset:0,zIndex:50,background:T.bg,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",textAlign:"center"}}>
       <img src={ASSET+"icon-192.png"} alt="" width="72" height="72" style={{width:72,height:72,borderRadius:16,boxShadow:"0 6px 22px rgba(0,0,0,0.45)",objectFit:"cover",display:"block",marginBottom:18}}/>
@@ -1328,7 +1317,7 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
                       <div style={{flex:1}}>
                         <p style={{fontSize:20,lineHeight:1.9,color:T.cream,fontStyle:"italic",marginBottom:14,letterSpacing:"0.01em"}}>{week.verseText || '(Verse text missing)'}</p>
                         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
-                          <a href={enduringWordUrl(week.verseRef||'')} target="_blank" rel="noreferrer" style={{fontSize:11,color:T.gold,fontFamily:"Cinzel,serif",fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",textDecoration:"none",borderBottom:"1px solid "+T.goldB}}>{week.verseRef || ''}{week.verseTranslation ? ' (' + week.verseTranslation + ')' : ''} ↗</a>
+                          <span style={{fontSize:11,color:T.gold,fontFamily:"Cinzel,serif",fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase"}}>{week.verseRef || ''}{week.verseTranslation ? ' (' + week.verseTranslation + ')' : ''}</span>
                           <div style={{display:"flex",gap:6}}>
                             <button onClick={()=>setQuizVerse({text:week.verseText,ref:week.verseRef})} style={{background:get("mem_"+week.verseRef)?T.greenF:T.purpleF,border:"1px solid "+(get("mem_"+week.verseRef)?T.greenB:T.purpleB),color:get("mem_"+week.verseRef)?T.green:T.purple,padding:"3px 11px",borderRadius:12,cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif"}}>
                               {get("mem_"+week.verseRef)?"✓ Memorized":"✦ Memorize"}
@@ -1386,7 +1375,7 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
                     <div style={{fontSize:11,color:T.purple,fontFamily:"Cinzel,serif",letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:10}}>Ask:</div>
                     <p style={{fontSize:18,color:T.text,lineHeight:1.85,margin:"0 0 20px",whiteSpace:"pre-line"}}>{week.studyPrompt || 'Study prompt not available.'}</p>
                     <div style={{borderTop:"1px solid "+T.purpleB,paddingTop:16}}>
-                      <a href={enduringWordUrl(week.verseRef||'')} target="_blank" rel="noreferrer" style={{fontSize:11,color:T.purple,fontFamily:"Cinzel,serif",letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:10,display:"block",textDecoration:"none"}}>Read full commentary: {week.verseRef || ''}{week.verseTranslation ? ' (' + week.verseTranslation + ')' : ''} ↗</a>
+                      <div style={{fontSize:11,color:T.purple,fontFamily:"Cinzel,serif",letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:10}}>{week.verseRef || ''}{week.verseTranslation ? ' (' + week.verseTranslation + ')' : ''}</div>
                       <p style={{fontSize:17,color:T.cream,lineHeight:1.9,fontStyle:"italic",margin:0}}>&#8220;{week.verseText || ''}&#8221;</p>
                     </div>
                   </div>
