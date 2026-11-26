@@ -5,8 +5,8 @@ export const BRAND = {
   icon: '/icon.png',
   tagline: '52 Weeks of Faith in Action',
   verse: {
-    text: 'But as for you, continue in what you have learned and have firmly believed, knowing from whom you learned it.',
-    ref: '2 Timothy 3:14 · ESV',
+    text: 'But as for you, continue in the things you have learned and firmly believed, since you know from whom you have learned them.',
+    ref: '2 Timothy 3:14 · BSB',
   },
   features: [
     { icon: '📖', text: '52 weeks, each with a theme and a key passage' },
