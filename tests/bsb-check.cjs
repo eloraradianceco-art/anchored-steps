@@ -44,7 +44,7 @@ const server = http.createServer((req, res) => { let f = path.join(DIST, decodeU
   check('saved verse shows the BSB wording, not the stored copy', !/OLD WORDING/.test(body) && !/\(ESV\)|\(NIV\)|\(NKJV\)/.test(body))
   if (OUT) await page.screenshot({ path: path.join(OUT, 'bsb-saved.png') })
   // the memorized mark still shows on that verse
-  await page.getByRole('button', { name: /Go/ }).first().click().catch(() => {}); await page.waitForTimeout(1200)
+  await page.getByRole('button', { name: /^(Go|Open)\b/ }).first().click().catch(() => {}); await page.waitForTimeout(1200)
   body = await page.locator('body').innerText()
   check('memorized mark made under the old label still shows', /✓ Memorized/.test(body))
   check('the verse is starred as saved', /★/.test(body))
