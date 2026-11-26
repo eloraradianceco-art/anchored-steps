@@ -225,9 +225,9 @@ function ContextModal({ ae, onClose, G }) {
 const BUY_LINK = "https://buy.stripe.com/6oU8wOgHWeC20abcA357W0d";   // Year 1 lifetime, $39.99 (since 2026-11-25)
 // Both years ($59.99): Year 1 + Year 2 in one purchase. Checkout returns here; claim_purchase opens both.
 const BOTH_LINK = "https://buy.stripe.com/5kQ6oG4Ze8dE7CDgQj57W0g";
-// Anchored Library ($79): Year 1 + Year 2 + Armed & Anchored in one purchase. Checkout returns to
+// Anchored Library ($79.99): Year 1 + Year 2 + Armed & Anchored in one purchase. Checkout returns to
 // eloraradiance.com/library-welcome, which opens each app with the checkout id.
-const LIBRARY_LINK = "https://buy.stripe.com/28EfZg0IYalM6yzeIb57W0b";
+const LIBRARY_LINK = "https://buy.stripe.com/6oUbJ0dvKbpQbSTeIb57W0h";
 const CHECKOUT_KEY = "as1_checkout_session";
 const JUST_PAID_KEY = "as1_just_paid";
 

@@ -5,7 +5,7 @@ const { createClient } = require("@supabase/supabase-js");
 // Armed & Anchored share one database and one sign-in, so this endpoint records each
 // purchase for the right app. There are no access codes and no emails: the app unlocks
 // when the buyer signs in with the email they paid with (or comes back from checkout).
-// The Anchored Library ($79) is one purchase row (app "bundle") that opens all three apps.
+// The Anchored Library ($79.99) is one purchase row (app "bundle") that opens all three apps.
 // Both years ($59.99) is one purchase row (app "both") that opens Year 1 and Year 2.
 // The Living Planner Pro subscription lives in its own database: checkouts, renewals and
 // cancellations are passed to it (plannerSync), and that is the only way Pro turns on or off.
@@ -32,7 +32,8 @@ const LINK_APP = {
   plink_1UfpxvBr8nMXOo8tYNuqNN05: "aa",  // Armed & Anchored lifetime ($39.99), current link since 2026-11-25
   plink_1TemdMBr8nMXOo8tEK01T1gs: "aa",  // Armed & Anchored ($39), retired 2026-11-25
   plink_1TYoaFBr8nMXOo8tyad1GVaT: "aa",  // Armed & Anchored, earlier link
-  plink_1UcXpsBr8nMXOo8tR6UwEncI: "bundle", // Anchored Library ($79): Year 1 + Year 2 + Armed & Anchored
+  plink_1UgC7jBr8nMXOo8tsEaKE1jV: "bundle", // Anchored Library ($79.99): Year 1 + Year 2 + Armed & Anchored
+  plink_1UcXpsBr8nMXOo8tR6UwEncI: "bundle", // the earlier $79 Library link (turned off 2026-11-26)
   plink_1UfpxxBr8nMXOo8tAeo9VukE: "both",   // Both years ($59.99): Year 1 + Year 2
 };
 // Fallback for checkouts without a known link: where the buyer is sent afterwards.
