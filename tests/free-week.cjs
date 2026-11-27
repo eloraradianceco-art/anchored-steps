@@ -78,6 +78,9 @@ server.listen(PORT, async () => {
     await v.page.getByRole('button', { name: /Contents/i }).last().click(); await v.page.waitForTimeout(700)
     await v.page.getByRole('button', { name: /week\s*5\b/i }).first().click({ timeout: 3000 }).catch((e) => console.log('click', e.message.split('\n')[0])); await v.page.waitForTimeout(700); t = await v.text()
     check('free: a later week in Contents opens the purchase page', /Get Lifetime Access/i.test(t), t.slice(0, 120).replace(/\n/g, ' / '))
+    await v.page.getByRole('button', { name: /Back to your free week/ }).click().catch(() => {}); await v.page.waitForTimeout(500)
+    for (const tab of ['Search', 'Progress', 'Settings', 'Steps']) { await v.page.getByRole('button', { name: new RegExp(tab, 'i') }).last().click().catch(() => {}); await v.page.waitForTimeout(700) }
+    check('free: Search, Progress and Settings open without errors, nothing off the side', v.errs.length === 0 && (await v.wide()) <= 0, v.errs.join(' | '))
     await v.ctx.close()
   } catch (e) { check('test run', false, e.message.split('\n')[0]) }
   await browser.close(); server.close()
