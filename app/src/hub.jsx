@@ -98,7 +98,7 @@ function Door({ y, state, product, busy, canBuy, onOpen, onBuy, flagged }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
       <img src={y.icon} alt="" width="56" height="56" style={{ width: 56, height: 56, borderRadius: 13, flex: 'none', boxShadow: '0 4px 14px rgba(0,0,0,0.35)', opacity: owned ? 1 : 0.82 }} />
       <div style={{ minWidth: 0, textAlign: 'left' }}>
-        <div style={{ fontFamily: DISPLAY, fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: C.eyebrow, marginBottom: 3 }}>{y.label}{!owned && <span style={{ marginLeft: 8, letterSpacing: '0.1em', color: C.muted }}>· Locked</span>}</div>
+        <div style={{ fontFamily: DISPLAY, fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: C.eyebrow, marginBottom: 3 }}>{y.label}{!owned && <span style={{ marginLeft: 8, letterSpacing: '0.1em', color: C.muted }}>· Week 1 free</span>}</div>
         <div style={{ fontFamily: DISPLAY, fontSize: 17, fontWeight: 600, lineHeight: 1.25, color: C.title }}>{y.title}</div>
       </div>
     </div>
@@ -126,12 +126,16 @@ function Door({ y, state, product, busy, canBuy, onOpen, onBuy, flagged }) {
     )
   }
   return (
-    <section className="hub-in" style={card} aria-label={`${y.label}: ${y.title}, locked`}>
+    <section className="hub-in" style={card} aria-label={`${y.label}: ${y.title}, week 1 free`}>
       {head}
       <p style={{ fontSize: 16.5, lineHeight: 1.6, color: C.text, margin: '14px 0 0' }}>{y.pitch}</p>
+      {/* Free week (2026-11-27): week 1 of each year is open to every account. Coming back from a year to buy
+          (flagged), the purchase leads; otherwise the free week does. */}
+      <a href={y.page} onClick={(e) => { e.preventDefault(); onOpen(y) }} aria-label={`Start ${y.label} week 1 free`}
+        style={{ ...(flagged && canBuy && product ? ghostBtn : primaryBtn), display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: 16 }}>{flagged ? 'Back to Week 1' : 'Start Week 1 Free'} →</a>
       {canBuy && product ? (
         <>
-          <button type="button" disabled={busy} onClick={() => onBuy(y.key)} style={{ ...primaryBtn, marginTop: 16, opacity: busy ? 0.6 : 1 }}>Unlock {y.label}{product.price ? ` · ${product.price}` : ''}</button>
+          <button type="button" disabled={busy} onClick={() => onBuy(y.key)} style={{ ...(flagged ? primaryBtn : ghostBtn), marginTop: 12, opacity: busy ? 0.6 : 1 }}>Unlock {y.label}{product.price ? ` · ${product.price}` : ''}</button>
           <p style={{ fontSize: 14, color: C.muted, margin: '10px 0 0', textAlign: 'center' }}>One-time purchase. No subscription. Yours for good.</p>
         </>
       ) : (

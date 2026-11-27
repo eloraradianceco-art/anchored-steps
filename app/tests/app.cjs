@@ -179,11 +179,25 @@ server.listen(PORT, async () => {
     check('website purchase: Year 1 is open, Year 2 locked with no buy button (purchases off)', /Week 12 of 52/.test(t) && /Already own Year 2\?/.test(t) && !/Unlock/.test(t))
     await v.ctx.close()
 
-    // 9. A locked year opened directly sends the reader back, and the front page says why
-    v = await open(browser, { owned: ['as2'], start: '/year1/index.html' })
-    await v.page.waitForTimeout(1200)
+    // 9. Free week: a year the account doesn't own opens on week 1; other weeks go to the front page to buy
+    v = await open(browser, { owned: ['as2'], store: { sells: ['year1', 'year2', 'both'] } })
     t = await v.text()
-    check('locked Year 1 opened directly: back on the front page with the reason', v.at() === '/index.html' && /Year 1 isn.t on this account yet/.test(t), v.at())
+    check('front page: an unowned year offers week 1 free and the purchase', /Year 1\s*· Week 1 free/i.test(t) && /Start Week 1 Free/.test(t) && /Unlock Year 1 · \$39\.99/.test(t) && !/Locked/i.test(t), t.slice(0, 200).replace(/\n/g, ' / '))
+    await v.page.getByRole('link', { name: /Start Year 1 week 1 free/ }).click(); await v.page.waitForTimeout(2600)
+    t = await v.text()
+    check('free week: Year 1 opens on week 1 with the bar', v.at() === '/year1/index.html' && /Week 1 of 52/.test(t) && /Week 1 is free/.test(t) && v.errs.length === 0, v.at() + ' ' + v.errs.join(' | '))
+    check('free week: no price and no outside checkout link inside the year', !/\$\d/.test(t) && (await v.page.locator('a[href*="stripe.com"]').count()) === 0)
+    check('free week: nothing runs off the side', (await v.wide()) <= 0, String(await v.wide()))
+    await v.page.getByRole('button', { name: 'Next week' }).click(); await v.page.waitForTimeout(1800)
+    t = await v.text()
+    check('free week: next week goes to the front page, purchase first', v.at() === '/index.html' && /Unlock Year 1 · \$39\.99/.test(t) && /Back to Week 1/.test(t), v.at())
+    await v.page.getByRole('button', { name: /Unlock Year 1/ }).click(); await v.page.waitForTimeout(2600)
+    t = await v.text()
+    check('free week: buying from there unlocks the year', /Year 1 is unlocked/.test(t) && !/Unlock Year 1/.test(t))
+    await v.ctx.close()
+    v = await open(browser, { owned: [], start: '/year2/index.html' })
+    await v.page.waitForTimeout(1200); t = await v.text()
+    check('free week: Year 2 opened directly stays on its week 1', v.at() === '/year2/index.html' && /Week 1 of 52/.test(t) && /Week 1 is free/.test(t) && v.errs.length === 0, v.at() + ' ' + v.errs.join(' | '))
     await v.ctx.close()
 
     // 10. Account: email, reminder, delete account, sign out

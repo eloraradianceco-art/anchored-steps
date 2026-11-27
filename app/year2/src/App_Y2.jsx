@@ -60,7 +60,7 @@ function y2BuyLink(base, email, userId) {
 }
 
 // Signed in, but no Year 2 purchase is linked to this account yet (e.g. they came from Year 1 or Armed & Anchored).
-function Y2NoAccess({ email, userId, buyLink, onUnlocked, onSignOut }) {
+function Y2NoAccess({ email, userId, buyLink, onUnlocked, onSignOut, onBack }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const check = async () => {
@@ -72,7 +72,8 @@ function Y2NoAccess({ email, userId, buyLink, onUnlocked, onSignOut }) {
   };
   return <Welcome brand={BRAND} session={{ user: { email } }} buyHref={y2BuyLink(buyLink, email, userId)}
     bothHref={y2BuyLink(BOTH_LINK, email, userId)} bundleHref={y2BuyLink(LIBRARY_LINK, email, userId)}
-    onCheckAgain={check} checking={busy} checkMessage={msg} onSignOut={onSignOut} />;
+    onCheckAgain={check} checking={busy} checkMessage={msg} onSignOut={onSignOut}
+    onBack={onBack} backLabel="Back to your free week" />;
 }
 
 // Safari (iOS 26) colors the status-bar area and its bottom bar from the page background,
@@ -331,6 +332,12 @@ function AnchoredStepsY2Inner(){
   });
   const myWeekRef=useRef((()=>{ try { return Number(localStorage.getItem('y2_my_week')) || 0; } catch { return 0; } })());
   const [stepsLoaded,setStepsLoaded]=useState(false); // step progress for the whole year has arrived
+  // Free week (2026-11-27): a signed-in account with no Year 2 purchase has week 1, complete. Every other week opens
+  // the purchase page (on the website) or the front page (in the phone app), which is where buying happens.
+  const [showPaywall,setShowPaywall]=useState(false);
+  const FREE_WEEK = 1;
+  const freeRef=useRef(false);
+  const openPaywall = () => { if (APP) APP.home("as2"); else { setShowPaywall(true); window.scrollTo(0,0); } };
   const stepsBusyRef=useRef(false);                   // a step is open on the Steps page
   // Week sync with the account (fixed 2026-11-17: Next used to jump back a week).
   // The account's week is read ONCE per sign-in. After that this device is the one moving, so it only saves.
@@ -428,7 +435,10 @@ function AnchoredStepsY2Inner(){
   },[]);
 
   // Phone app: signing in and buying happen on the app's front page, so a signed-out or locked year goes back there.
-  useEffect(()=>{ if(APP && !loading && (!session || access==='no')) APP.home("as2"); },[loading,session,access]);
+  useEffect(()=>{ if(APP && !loading && !session) APP.home("as2"); },[loading,session]);
+  // Free accounts stay on the free week
+  freeRef.current = access==='no';
+  useEffect(()=>{ if(access==='no') setWk(FREE_WEEK); else setShowPaywall(false); },[access]);
 
   // Load the profile once per sign-in. (It used to re-run on every week change and every session refresh, and each
   // run put the account's saved week back on screen: tap Next, and a read that beat the save sent you back a week.)
@@ -570,7 +580,7 @@ function AnchoredStepsY2Inner(){
   },[uid]);
 
   // Your week, from step progress across the year (0 until that progress has loaded, or if no step is done yet)
-  const myWeek = useMemo(() => (stepsLoaded ? yourWeek(entries.filter(e => e.user_id === uid), 52) : 0), [entries, stepsLoaded, uid]);
+  const myWeek = useMemo(() => access==='no' ? (stepsLoaded ? FREE_WEEK : 0) : (stepsLoaded ? yourWeek(entries.filter(e => e.user_id === uid), 52) : 0), [entries, stepsLoaded, uid, access]);
   useEffect(()=>{
     if (!stepsLoaded) return;
     myWeekRef.current = myWeek;
@@ -685,6 +695,7 @@ function AnchoredStepsY2Inner(){
   },[entries, session]);
 
   const goWk=useCallback((n)=>{
+    if (freeRef.current && Math.max(1,Math.min(52,n)) !== FREE_WEEK) { openPaywall(); return; }
     weekMovedRef.current = true;
     setWk(Math.max(1,Math.min(52,n)));
     setSec('passage');
@@ -724,7 +735,7 @@ function AnchoredStepsY2Inner(){
     else setResetSent(true);
   };
 
-  if(loading || (APP && (!session || access==='no'))) return (
+  if(loading || (APP && !session)) return (
     <div style={{position:"fixed",inset:0,zIndex:50,background:T.bg,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",textAlign:"center"}}>
       <img src={ASSET+"icon-192.png"} alt="" width="72" height="72" style={{width:72,height:72,borderRadius:16,boxShadow:"0 6px 22px rgba(0,0,0,0.45)",objectFit:"cover",display:"block",marginBottom:18}}/>
       <div style={{fontFamily:"Cinzel,Georgia,serif",color:T.gold,fontSize:12,fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",marginBottom:8}}>Anchored Steps · Year 2</div>
@@ -738,7 +749,8 @@ function AnchoredStepsY2Inner(){
         <HomeScreenTip brand={BRAND} onContinue={()=>setJustSignedUp(false)} continueLabel="⚓ Open Year 2 →" />
       </AuthCard>
     );
-    if(entry==='welcome') return <Welcome brand={BRAND} buyHref={STRIPE_LINK} bothHref={BOTH_LINK} bundleHref={LIBRARY_LINK} onSignIn={()=>setEntry('auth')} />;
+    if(entry==='welcome') return <Welcome brand={BRAND} buyHref={STRIPE_LINK} bothHref={BOTH_LINK} bundleHref={LIBRARY_LINK} onSignIn={()=>setEntry('auth')}
+      onTryFree={()=>{ setAuthMode('signup'); setAuthErr(''); setEntry('auth'); }} tryFreeLabel="Start Week 1 Free" />;
     const mode = resetMode ? 'forgot' : authMode==='signup' ? 'signup' : 'signin';
     const submitAuth = async () => {
       setAuthErr('');
@@ -781,10 +793,10 @@ function AnchoredStepsY2Inner(){
       <div style={{color:T.muted,fontSize:14}}>Loading your journal…</div>
     </div>
   );
-  if(access==='no') return (
+  if(access==='no' && showPaywall && !APP) return (
     <Y2NoAccess email={session.user?.email} userId={session.user?.id} buyLink={STRIPE_LINK}
       onUnlocked={()=>{ setAccess('checking'); setProfileTick(t=>t+1); }}
-      onSignOut={()=>supabase.auth.signOut()} />
+      onSignOut={()=>supabase.auth.signOut()} onBack={()=>setShowPaywall(false)} />
   );
 
 
@@ -1179,7 +1191,7 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div style={{display:"flex",gap:10,alignItems:"center"}}>
               <span style={{fontSize:11,color:T.gold,fontFamily:"Cinzel,serif",letterSpacing:"0.08em"}}>{bm.ref}</span>
-              <button onClick={()=>{weekMovedRef.current=true;setWk(bm.week);setView('journal');setSec(bm.section||'passage');setAnimK(a=>a+1);window.scrollTo(0,0);}} style={{background:"transparent",border:"none",color:T.muted,cursor:"pointer",fontSize:14,textDecoration:"underline"}}>Open</button>
+              <button onClick={()=>{if(freeRef.current && bm.week!==FREE_WEEK){openPaywall();return;}weekMovedRef.current=true;setWk(bm.week);setView('journal');setSec(bm.section||'passage');setAnimK(a=>a+1);window.scrollTo(0,0);}} style={{background:"transparent",border:"none",color:T.muted,cursor:"pointer",fontSize:14,textDecoration:"underline"}}>Open</button>
             </div>
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
               <span style={{fontSize:14,color:T.muted}}>Week {bm.week}</span>
@@ -1223,6 +1235,11 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
         </div>
       </div>
 
+      {access==='no' && (
+        <button type="button" data-free-bar onClick={openPaywall} style={{display:"block",width:"100%",textAlign:"center",cursor:"pointer",border:"none",borderBottom:"1px solid "+T.goldB,background:T.goldF,color:T.gold,fontFamily:"'EB Garamond',Georgia,serif",fontSize:16,lineHeight:1.4,padding:"10px 16px"}}>
+          Week 1 is free. <span style={{textDecoration:"underline"}}>Unlock all 52 weeks</span> {"\u203A"}
+        </button>
+      )}
       <div style={{maxWidth:860,margin:"0 auto",padding:`26px 18px calc(40px + ${BELOW_BAR})`}}>
         {/* JOURNAL VIEW */}
         {view==='steps' && week && (
