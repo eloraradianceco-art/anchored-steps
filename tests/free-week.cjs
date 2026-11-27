@@ -45,7 +45,7 @@ server.listen(PORT, async () => {
     let v = await open(browser, { signedIn: false }); let t = await v.text()
     check('signed out: purchase and free week both offered', /Get Lifetime Access/i.test(t) && /Start Week 1 Free/i.test(t) && /No card needed/i.test(t))
     await v.page.locator('[data-see-prices]').click(); await v.page.waitForTimeout(500); t = await v.text()
-    check('signed out: Get Lifetime Access opens the prices page (three choices, giving line)', /Choose Your Access/i.test(t) && /Get Year 1 · \$39\.99/i.test(t) && /Get Both Years · \$59\.99/i.test(t) && /Get All 3 Apps · \$79\.99/i.test(t) && /10% of net sales is given to ministry/i.test(t) && (await v.page.locator('[data-offers] a[href*="buy.stripe.com"]').count()) === 3 && !/Start Week 1 Free/i.test(t))
+    check('signed out: Get Lifetime Access opens the prices page (three choices, giving line)', /Choose Your Access/i.test(t) && new RegExp('Get Year ' + (APPID === 'as1' ? 1 : 2) + ' · \\$39\\.99', 'i').test(t) && /Get Both Years · \$59\.99/i.test(t) && /Get All 3 Apps · \$79\.99/i.test(t) && /10% of net sales is given to ministry/i.test(t) && (await v.page.locator('[data-offers] a[href*="buy.stripe.com"]').count()) === 3 && !/Start Week 1 Free/i.test(t))
     await v.page.getByRole('button', { name: /← Back/ }).click(); await v.page.waitForTimeout(400); t = await v.text()
     check('signed out: back returns to the front page, with no prices list on it', /Start Week 1 Free/i.test(t) && !/\$59\.99|\$79\.99|given to ministry/i.test(t))
     await v.page.getByRole('button', { name: /Start Week 1 Free/i }).click(); await v.page.waitForTimeout(700); t = await v.text()
