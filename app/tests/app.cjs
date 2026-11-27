@@ -89,11 +89,11 @@ server.listen(PORT, async () => {
     // 1. Signed out: the front page explains the app; no prices, no buy buttons, no outside checkout links
     let v = await open(browser, { signedIn: false })
     let t = await v.text()
-    check('signed out: front page with both years', /Anchored Steps/.test(t) && /Year 1/i.test(t) && /Year 2/i.test(t) && /Create Account/i.test(t) && /Sign In/i.test(t))
+    check('signed out: front page with both years', /Anchored Steps/.test(t) && /Year 1/i.test(t) && /Year 2/i.test(t) && /Start Week 1 Free/.test(t) && /Sign in/.test(t) && !/Get Lifetime Access/.test(t))
     check('signed out: no price, no checkout link', !/\$\d/.test(t) && (await v.page.locator('a[href*="stripe.com"]').count()) === 0)
     check('signed out: nothing runs off the side, no errors', (await v.wide()) <= 0 && v.errs.length === 0, v.errs.join(' | '))
     await v.shot('1-signed-out')
-    await v.page.getByRole('button', { name: 'Sign In', exact: true }).click(); await v.page.waitForTimeout(300)
+    await v.page.getByRole('button', { name: 'Sign in', exact: true }).click(); await v.page.waitForTimeout(300)
     await v.page.locator('input[type="email"]').fill('grace@example.com'); await v.page.locator('input[type="password"]').fill('secret-pass')
     await v.shot('2-sign-in')
     await v.page.locator('form button[type="submit"]').click(); await v.page.waitForTimeout(1800)
@@ -104,7 +104,7 @@ server.listen(PORT, async () => {
 
     // 2. Signed out and a year's page is opened directly: back to the front page
     v = await open(browser, { signedIn: false, start: '/year1/index.html' })
-    check('year 1 opened signed out: returns to the front page', v.at() === '/index.html' && /Create Account/i.test(await v.text()), v.at())
+    check('year 1 opened signed out: returns to the front page', v.at() === '/index.html' && /Start Week 1 Free/.test(await v.text()), v.at())
     await v.ctx.close()
 
     // 3. Owns both: progress on each door, opens each year, the header goes back
@@ -136,6 +136,22 @@ server.listen(PORT, async () => {
     t = await v.text()
     check('Year 2 settings: no "More from Elora Radiance" list in the phone app', /Settings/i.test(t) && !/More from Elora Radiance/i.test(t))
     await v.page.getByRole('button', { name: 'All studies' }).click().catch(() => {}); await v.page.waitForTimeout(600)
+    await v.ctx.close()
+
+    // 3b. Signed out with the App Store on: the same two buttons as the website; Get Lifetime Access asks for the
+    //     account first and then opens the prices page
+    v = await open(browser, { signedIn: false, store: { sells: ['year1', 'year2', 'both'] } })
+    t = await v.text()
+    check('signed out, store on: Start Week 1 Free and Get Lifetime Access, no price', /Start Week 1 Free/.test(t) && /Get Lifetime Access/.test(t) && /No card needed/.test(t) && !/\$\d/.test(t) && !/Create Account/i.test(t))
+    await v.shot('1b-signed-out-store')
+    await v.page.locator('[data-get-access]').click(); await v.page.waitForTimeout(300)
+    t = await v.text()
+    check('Get Lifetime Access: asks for the account first and says why', /Create your account \(or sign in\) first/.test(t) && (await v.page.locator('input[type="password"]').count()) === 1)
+    await v.page.getByRole('tab', { name: 'Sign In' }).click(); await v.page.waitForTimeout(200)
+    await v.page.locator('input[type="email"]').fill('grace@example.com'); await v.page.locator('input[type="password"]').fill('secret-pass')
+    await v.page.locator('form button[type="submit"]').click(); await v.page.waitForTimeout(2200)
+    t = await v.text()
+    check('Get Lifetime Access: after sign-in the prices page opens', /Choose Your Access/i.test(t) && /Unlock Year 1 · \$39\.99/.test(t) && /given to ministry/.test(t), t.slice(0, 120).replace(/\n/g, ' / '))
     await v.ctx.close()
 
     // 4. Owns Year 1 only; the store sells all three: only Year 2 is offered, and buying it unlocks it
@@ -215,7 +231,7 @@ server.listen(PORT, async () => {
     check('account: email, daily reminder, privacy and account, sign out', /grace@example\.com/.test(t) && /Daily Reminder/i.test(t) && /Privacy & Account/i.test(t) && /Sign Out/i.test(t))
     await v.shot('10-account')
     await v.page.getByRole('button', { name: 'Sign Out' }).click(); await v.page.waitForTimeout(1200)
-    check('sign out: back to the signed-out front page', /Create Account/i.test(await v.text()))
+    check('sign out: back to the signed-out front page', /Start Week 1 Free/.test(await v.text()))
     check('account flow: no page errors', v.errs.length === 0, v.errs.join(' | '))
     await v.ctx.close()
   } catch (e) { check('test ran', false, e.message.split('\n')[0]) }

@@ -138,7 +138,7 @@ function Door({ y, state, canBuy, onOpen }) {
   )
 }
 
-function Home({ session, onSignOut }) {
+function Home({ session, onSignOut, startOffers = false }) {
   const uid = session.user.id
   const [years, setYears] = useState(null)          // { as1: {...}, as2: {...} }
   const [products, setProducts] = useState(undefined) // undefined = not asked yet; null = store unreachable
@@ -146,7 +146,7 @@ function Home({ session, onSignOut }) {
   const [confirming, setConfirming] = useState(false)
   const [note, setNote] = useState(null)             // { tone, text }
   const [from] = useState(() => { try { return new URLSearchParams(window.location.search).get('from') } catch { return null } })
-  const [view, setView] = useState(from ? 'offers' : 'home')   // a year sends the reader here to buy: open on the prices
+  const [view, setView] = useState(from || startOffers ? 'offers' : 'home')   // a year sends the reader here to buy: open on the prices
   const show = (v) => { setView(v); try { window.scrollTo(0, 0) } catch { /* fine */ } }
   const alive = useRef(true)
   useEffect(() => () => { alive.current = false }, [])
@@ -346,7 +346,7 @@ function Account({ session, onBack, onSignOut, onRestore, busy, note }) {
 }
 
 // Signed out: what the app is, then sign in or create an account.
-function Front({ onSignIn, onSignUp }) {
+function Front({ onSignIn, onStartFree, onGetAccess }) {
   return (
     <Frame center>
       <div style={{ textAlign: 'center' }}>
@@ -365,14 +365,22 @@ function Front({ onSignIn, onSignUp }) {
           </div>
         </div>
       ))}
-      <button type="button" onClick={onSignUp} style={{ ...primaryBtn, marginTop: 10 }}>Create Account</button>
-      <button type="button" onClick={onSignIn} style={{ ...ghostBtn, marginTop: 12 }}>Sign In</button>
-      <p style={{ textAlign: 'center', fontSize: 14.5, color: C.muted, lineHeight: 1.55, margin: '14px 0 0' }}>One account keeps your journal on every device. Already use Anchored Steps on the website? Sign in with the same email.</p>
+      {/* The same two buttons as the website (2026-11-27). Both need an account: the free week keeps a journal, and a
+          purchase is saved to the account. Get Lifetime Access opens the prices page once the account exists. */}
+      <button type="button" data-start-free onClick={onStartFree} style={{ ...primaryBtn, marginTop: 10 }}>Start Week 1 Free</button>
+      <p style={{ textAlign: 'center', fontSize: 14, color: C.muted, lineHeight: 1.55, margin: '10px 0 0' }}>Week 1 of each year is free with a free account. No card needed.</p>
+      {PURCHASES_ON && (
+        <>
+          <button type="button" data-get-access onClick={onGetAccess} style={{ ...ghostBtn, marginTop: 14 }}>⚓ Get Lifetime Access</button>
+          <p style={{ textAlign: 'center', fontSize: 14, color: C.muted, lineHeight: 1.55, margin: '10px 0 0' }}>One-time purchase · No subscription</p>
+        </>
+      )}
+      <p style={{ textAlign: 'center', fontSize: 15, color: C.muted, lineHeight: 1.55, margin: '18px 0 0' }}>Already have an account? <button type="button" onClick={onSignIn} style={{ ...linkBtn, padding: '10px 4px' }}>Sign in</button></p>
     </Frame>
   )
 }
 
-function Auth({ start, onBack }) {
+function Auth({ start, onBack, intent }) {
   const [mode, setMode] = useState(start)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -410,6 +418,7 @@ function Auth({ start, onBack }) {
     <AuthCard brand={BRAND} mode={mode} onMode={(m) => { setMode(m); setError('') }}
       email={email} onEmail={setEmail} password={password} onPassword={setPassword}
       onSubmit={mode === 'signin' ? signIn : mode === 'forgot' ? forgot : signUp} loading={loading} error={error}
+      message={mode === 'forgot' || error ? null : intent === 'buy' ? 'Create your account (or sign in) first. Lifetime access is saved to it, so it opens on every device.' : intent === 'free' && mode === 'signup' ? 'Create a free account to start week 1. Your journal and progress are saved to it.' : null}
       resetSent={resetSent} onResetDone={() => { setResetSent(false); setMode('signin') }} onBack={onBack} />
   )
 }
@@ -417,6 +426,7 @@ function Auth({ start, onBack }) {
 function App() {
   const [session, setSession] = useState(undefined)   // undefined = still reading the saved sign-in
   const [entry, setEntry] = useState(null)            // null | 'signin' | 'signup'
+  const [intent, setIntent] = useState(null)          // null | 'free' | 'buy': which front-page button brought them to sign-up
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session || null))
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => { setSession(s || null); if (!s) { setEntry(null); storeSignOut() } })
@@ -424,8 +434,9 @@ function App() {
   }, [])
   useEffect(() => { window.ERApp?.statusBar?.(false) }, [])
   if (session === undefined) return <Splash />
-  if (!session) return entry ? <Auth start={entry} onBack={() => setEntry(null)} /> : <Front onSignIn={() => setEntry('signin')} onSignUp={() => setEntry('signup')} />
-  return <Home key={session.user.id} session={session} onSignOut={() => supabase.auth.signOut()} />
+  if (!session) return entry ? <Auth start={entry} intent={intent} onBack={() => setEntry(null)} />
+    : <Front onSignIn={() => { setIntent(null); setEntry('signin') }} onStartFree={() => { setIntent('free'); setEntry('signup') }} onGetAccess={() => { setIntent('buy'); setEntry('signup') }} />
+  return <Home key={session.user.id} session={session} startOffers={intent === 'buy'} onSignOut={() => { setIntent(null); return supabase.auth.signOut() }} />
 }
 
 class ErrorBoundary extends React.Component {
