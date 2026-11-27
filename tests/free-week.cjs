@@ -76,6 +76,8 @@ server.listen(PORT, async () => {
     // 5. Contents list in free mode: another week goes to the purchase page
     v = await open(browser)
     await v.page.getByRole('button', { name: /Contents/i }).last().click(); await v.page.waitForTimeout(700)
+    t = await v.text()
+    check('free: Contents marks weeks 2 to 52 as locked, and week 1 is not', (await v.page.locator('[aria-label="Locked"]').count()) === 51 && /Weeks marked 🔒 open with a purchase/.test(t), String(await v.page.locator('[aria-label="Locked"]').count()))
     await v.page.getByRole('button', { name: /week\s*5\b/i }).first().click({ timeout: 3000 }).catch((e) => console.log('click', e.message.split('\n')[0])); await v.page.waitForTimeout(700); t = await v.text()
     check('free: a later week in Contents opens the purchase page', /Get Lifetime Access/i.test(t), t.slice(0, 120).replace(/\n/g, ' / '))
     await v.page.getByRole('button', { name: /Back to your free week/ }).click().catch(() => {}); await v.page.waitForTimeout(500)

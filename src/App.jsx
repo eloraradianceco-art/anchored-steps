@@ -946,7 +946,7 @@ export default function AnchoredSteps() {
                       const isCur=w.week===wk
                       return (
                         <button key={w.week} onClick={()=>{goWk(w.week);setShowWeekJump(false)}} style={{background:isCur?"linear-gradient(145deg,rgba(176,138,78,0.18),rgba(176,138,78,0.07))":"transparent",border:"1px solid "+(isCur?"rgba(176,138,78,0.4)":G.border),color:isCur?G.gold:G.muted,borderRadius:8,padding:"2px 2px",cursor:"pointer",fontSize:11,fontFamily:"Cinzel,serif",textAlign:"center",lineHeight:1.3,touchAction:"manipulation",minWidth:0,minHeight:0,overflow:"hidden",display:"flex",flexDirection:"column",alignItems:"stretch",justifyContent:"center"}}>
-                          <div style={{fontSize:13,fontWeight:600,lineHeight:1.15}}>{w.week}</div>
+                          <div style={{fontSize:13,fontWeight:600,lineHeight:1.15}}>{w.week}{noAccess && w.week !== FREE_WEEK && <span aria-label="Locked" style={{fontSize:9,marginLeft:2}}>🔒</span>}</div>
                           {/* Up to two lines of the week's title (it used to be the first word only: "The", "A", three "Spiritual"s) */}
                           <div style={{overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",fontSize:10,lineHeight:1.15,overflowWrap:"anywhere"}}>{w.title}</div>
                         </button>
@@ -1222,7 +1222,7 @@ export default function AnchoredSteps() {
         {view === "contents" && (
           <div className="fi">
             <h2 style={{fontFamily:"Cinzel,serif",fontSize:20,color:T.cream,marginBottom:3}}>Table of Contents</h2>
-            <p style={{fontSize:16,color:T.muted,fontStyle:"italic",marginBottom:20}}>52 weeks of faith formation. Tap any week to open it.</p>
+            <p style={{fontSize:16,color:T.muted,fontStyle:"italic",marginBottom:20}}>52 weeks of faith formation. {noAccess ? "Week 1 is free. Weeks marked 🔒 open with a purchase." : "Tap any week to open it."}</p>
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(225px,1fr))",gap:8}}>
               {ALL_WEEKS.map(w => {
                 const done = daysComplete(w.week);
@@ -1231,9 +1231,9 @@ export default function AnchoredSteps() {
                   <button key={w.week} onClick={() => { goWk(w.week); setView("journal"); }} style={{background:cur?"linear-gradient(145deg,rgba(176,138,78,0.16),rgba(176,138,78,0.06))":done>0?"linear-gradient(145deg,rgba(124,146,132,0.1),rgba(124,146,132,0.03))":G.bgCard,border:"1px solid "+(cur?"rgba(176,138,78,0.4)":done>0?"rgba(124,146,132,0.3)":G.border),borderRadius:12,padding:"12px 14px",cursor:"pointer",textAlign:"left",transition:"all .25s",boxShadow:cur?"0 4px 16px rgba(0,0,0,0.1)":"none"}}>
                     <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}>
                       <span style={{fontSize:11,color:cur?G.gold:darkMode?G.dim:G.muted,fontFamily:"Cinzel,serif",letterSpacing:"0.1em"}}>WEEK {w.week}</span>
-                      {done > 0 && <span style={{fontSize:14,color:G.green}}>{done}/7</span>}
+                      {noAccess && w.week !== FREE_WEEK ? <span aria-label="Locked" title="Opens with a purchase" style={{fontSize:13}}>🔒</span> : (done > 0 && <span style={{fontSize:14,color:G.green}}>{done}/7</span>)}
                     </div>
-                    <div style={{fontSize:16,color:cur?(darkMode?G.cream:"#2C2416"):T.text,fontWeight:600,lineHeight:1.3}}>{w.title}</div>
+                    <div style={{fontSize:16,color:cur?(darkMode?G.cream:"#2C2416"):T.text,fontWeight:600,lineHeight:1.3,opacity:noAccess && w.week !== FREE_WEEK ? 0.7 : 1}}>{w.title}</div>
                     <div style={{fontSize:14,color:darkMode?G.dim:G.text,marginTop:2,fontStyle:"italic"}}>{w.subtitle.substring(0,42)}{w.subtitle.length>42?"...":""}</div>
                   </button>
                 );
