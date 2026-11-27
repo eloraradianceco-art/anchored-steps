@@ -82,6 +82,7 @@ async function open(browser, { owned = [], signedIn = true, store = null, webPur
   return { page, ctx, errs, world, text, wide, shot, at: () => new URL(page.url()).pathname }
 }
 
+const prices = async (v) => { await v.page.locator('[data-see-prices]').click(); await v.page.waitForTimeout(500); return v.text() }
 server.listen(PORT, async () => {
   const browser = await chromium.launch()
   try {
@@ -140,7 +141,9 @@ server.listen(PORT, async () => {
     // 4. Owns Year 1 only; the store sells all three: only Year 2 is offered, and buying it unlocks it
     v = await open(browser, { owned: ['as1'], store: { sells: ['year1', 'year2', 'both'] } })
     t = await v.text()
-    check('owns Year 1: Year 2 is offered at Apple\'s price', /Unlock Year 2 · \$39\.99/.test(t) && !/Unlock Year 1/.test(t) && !/Both years together/i.test(t))
+    check('owns Year 1: the front page shows one Get Lifetime Access button and no prices', /Get Lifetime Access/.test(t) && !/\$\d/.test(t) && !/given to ministry/.test(t))
+    t = await prices(v)
+    check('owns Year 1: Year 2 is offered at Apple\'s price', /Unlock Year 2 · \$39\.99/.test(t) && !/Unlock Year 1/.test(t) && !/Unlock Both Years/i.test(t) && /Choose Your Access/i.test(t))
     check('owns Year 1: giving line, restore, terms and privacy are on the page', /10% of net sales is given to ministry\./.test(t) && /Restore purchases/i.test(t) && /Terms/.test(t) && /Privacy/.test(t) && !/Children/.test(t))
     await v.shot('6-owns-year1')
     await v.page.getByRole('button', { name: /Unlock Year 2/ }).click(); await v.page.waitForTimeout(2600)
@@ -151,7 +154,8 @@ server.listen(PORT, async () => {
 
     // 5. Owns nothing; all three for sale: each year and the pair, with the saving worked out from Apple's prices
     v = await open(browser, { store: { sells: ['year1', 'year2', 'both'] }, viewport: { width: 320, height: 640 } })
-    t = await v.text()
+    await v.shot('8a-front-small'); check('owns nothing, small iPhone, front page: nothing runs off the side', (await v.wide()) <= 0, String(await v.wide()))
+    t = await prices(v)
     check('owns nothing: both years and the pair are offered', /Unlock Year 1 · \$39\.99/.test(t) && /Unlock Year 2 · \$39\.99/.test(t) && /Unlock Both Years · \$69\.99/i.test(t) && /Save \$9\.99/.test(t), t.match(/Save[^.]*\./)?.[0] || '')
     check('owns nothing, small iPhone: nothing runs off the side, no errors', (await v.wide()) <= 0 && v.errs.length === 0, String(await v.wide()) + v.errs.join(' | '))
     await v.shot('8-nothing-owned-small')
@@ -162,6 +166,7 @@ server.listen(PORT, async () => {
 
     // 6. Cancelled purchase: nothing changes, no error shown
     v = await open(browser, { owned: ['as1'], store: { sells: ['year2'], cancel: true } })
+    await prices(v)
     await v.page.getByRole('button', { name: /Unlock Year 2/ }).click(); await v.page.waitForTimeout(700)
     t = await v.text()
     check('cancelled purchase: still offered, no message, server not asked again', /Unlock Year 2/.test(t) && !/didn.t go through|unlocked/.test(t))
@@ -170,7 +175,8 @@ server.listen(PORT, async () => {
     // 7. Restore: Apple already has Year 2 for this Apple ID
     v = await open(browser, { owned: [], store: { sells: ['year1', 'year2', 'both'], appleOwns: ['as2'] } })
     t = await v.text()
-    check('opening the app applies an earlier Apple purchase without a tap', /Week 5 of 52/.test(t) && /Unlock Year 1/.test(t) && !/Unlock Year 2/.test(t))
+    const t7 = await prices(v)
+    check('opening the app applies an earlier Apple purchase without a tap', /Week 5 of 52/.test(t) && /Unlock Year 1/.test(t7) && !/Unlock Year 2/.test(t7))
     await v.ctx.close()
 
     // 8. A purchase made on the website opens here (claimed by email at sign-in)
@@ -182,7 +188,7 @@ server.listen(PORT, async () => {
     // 9. Free week: a year the account doesn't own opens on week 1; other weeks go to the front page to buy
     v = await open(browser, { owned: ['as2'], store: { sells: ['year1', 'year2', 'both'] } })
     t = await v.text()
-    check('front page: an unowned year offers week 1 free and the purchase', /Year 1\s*· Week 1 free/i.test(t) && /Start Week 1 Free/.test(t) && /Unlock Year 1 · \$39\.99/.test(t) && !/Locked/i.test(t), t.slice(0, 200).replace(/\n/g, ' / '))
+    check('front page: an unowned year offers week 1 free and the purchase', /Year 1\s*· Week 1 free/i.test(t) && /Start Week 1 Free/.test(t) && /Get Lifetime Access/.test(t) && !/\$\d/.test(t) && !/Locked/i.test(t), t.slice(0, 200).replace(/\n/g, ' / '))
     await v.page.getByRole('link', { name: /Start Year 1 week 1 free/ }).click(); await v.page.waitForTimeout(2600)
     t = await v.text()
     check('free week: Year 1 opens on week 1 with the bar', v.at() === '/year1/index.html' && /Week 1 of 52/.test(t) && /Week 1 is free/.test(t) && v.errs.length === 0, v.at() + ' ' + v.errs.join(' | '))

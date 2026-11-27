@@ -17,6 +17,10 @@ export const BRAND = {
   ],
   cta: '⚓ Get Lifetime Access',
   fine: 'One-time $39.99 · No subscription · All 52 weeks, yours forever',
+  // Front page, under "Get Lifetime Access" (which opens the prices page), and that page's first choice.
+  from: 'One-time purchase from $39.99 · No subscription',
+  offerName: 'Anchored Steps · Year 2',
+  offerCta: '⚓ Get Year 2 · $39.99',
   // Giving line on the purchase page (EntryScreens.jsx, GivingLine). This is the plain sentence; the running total, and
   // whether the main recipient is named, come from eloraradiance.com/giving.json.
   giving: '10% of net sales is given to ministry.',

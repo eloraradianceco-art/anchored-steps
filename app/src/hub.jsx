@@ -91,7 +91,7 @@ function Splash({ text = 'Opening…' }) {
   )
 }
 
-function Door({ y, state, product, busy, canBuy, onOpen, onBuy, flagged }) {
+function Door({ y, state, canBuy, onOpen }) {
   const owned = state?.owned !== false   // true, or null when it could not be checked
   const pct = owned && state?.week ? Math.max(2, Math.round(((state.week - 1 + (state.steps || 0) / 7) / 52) * 100)) : 0
   const head = (
@@ -103,7 +103,7 @@ function Door({ y, state, product, busy, canBuy, onOpen, onBuy, flagged }) {
       </div>
     </div>
   )
-  const card = { display: 'block', width: '100%', background: C.card, border: `1px solid ${flagged ? C.ctaBorder : C.cardBorder}`, borderRadius: 18, padding: '18px 18px 18px', margin: '0 0 14px', color: C.text, textDecoration: 'none', textAlign: 'left', fontFamily: BODY }
+  const card = { display: 'block', width: '100%', background: C.card, border: `1px solid ${C.cardBorder}`, borderRadius: 18, padding: '18px 18px 18px', margin: '0 0 14px', color: C.text, textDecoration: 'none', textAlign: 'left', fontFamily: BODY }
   if (owned) {
     return (
       <a className="hub-door hub-in" href={y.page} onClick={(e) => { e.preventDefault(); onOpen(y) }} style={card} aria-label={`Open ${y.label}: ${y.title}`}>
@@ -129,18 +129,11 @@ function Door({ y, state, product, busy, canBuy, onOpen, onBuy, flagged }) {
     <section className="hub-in" style={card} aria-label={`${y.label}: ${y.title}, week 1 free`}>
       {head}
       <p style={{ fontSize: 16.5, lineHeight: 1.6, color: C.text, margin: '14px 0 0' }}>{y.pitch}</p>
-      {/* Free week (2026-11-27): week 1 of each year is open to every account. Coming back from a year to buy
-          (flagged), the purchase leads; otherwise the free week does. */}
+      {/* Free week (2026-11-27): week 1 of each year is open to every account. The prices are on their own page,
+          behind "Get Lifetime Access" at the foot of the front page. */}
       <a href={y.page} onClick={(e) => { e.preventDefault(); onOpen(y) }} aria-label={`Start ${y.label} week 1 free`}
-        style={{ ...(flagged && canBuy && product ? ghostBtn : primaryBtn), display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: 16 }}>{flagged ? 'Back to Week 1' : 'Start Week 1 Free'} →</a>
-      {canBuy && product ? (
-        <>
-          <button type="button" disabled={busy} onClick={() => onBuy(y.key)} style={{ ...(flagged ? primaryBtn : ghostBtn), marginTop: 12, opacity: busy ? 0.6 : 1 }}>Unlock {y.label}{product.price ? ` · ${product.price}` : ''}</button>
-          <p style={{ fontSize: 14, color: C.muted, margin: '10px 0 0', textAlign: 'center' }}>One-time purchase. No subscription. Yours for good.</p>
-        </>
-      ) : (
-        <p style={{ fontSize: 15, color: C.muted, lineHeight: 1.6, margin: '12px 0 0' }}>{flagged ? `${y.label} isn't on this account yet. ` : ''}{canBuy ? "The App Store isn't reachable right now. Check your connection and try again." : `Already own ${y.label}? Sign in with the email you used for it and it opens here.`}</p>
-      )}
+        style={{ ...primaryBtn, display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: 16 }}>Start Week 1 Free →</a>
+      {!canBuy && <p style={{ fontSize: 15, color: C.muted, lineHeight: 1.6, margin: '12px 0 0' }}>{`Already own ${y.label}? Sign in with the email you used for it and it opens here.`}</p>}
     </section>
   )
 }
@@ -152,8 +145,9 @@ function Home({ session, onSignOut }) {
   const [busy, setBusy] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [note, setNote] = useState(null)             // { tone, text }
-  const [view, setView] = useState('home')
   const [from] = useState(() => { try { return new URLSearchParams(window.location.search).get('from') } catch { return null } })
+  const [view, setView] = useState(from ? 'offers' : 'home')   // a year sends the reader here to buy: open on the prices
+  const show = (v) => { setView(v); try { window.scrollTo(0, 0) } catch { /* fine */ } }
   const alive = useRef(true)
   useEffect(() => () => { alive.current = false }, [])
   useEffect(() => { try { if (window.location.search) window.history.replaceState(null, '', window.location.pathname) } catch { /* fine */ } }, [])
@@ -207,6 +201,7 @@ function Home({ session, onSignOut }) {
     const want = key === 'both' ? ['as1', 'as2'] : [key === 'year1' ? 'as1' : 'as2']
     const ok = await confirm(want)
     setBusy(false)
+    if (ok) show('home')
     setNote(ok ? { tone: 'ok', text: key === 'both' ? 'Both years are unlocked. Welcome.' : `${key === 'year1' ? 'Year 1' : 'Year 2'} is unlocked. Welcome.` }
       : { tone: 'error', text: 'Apple has your purchase, but it has not reached your account yet. Tap “Restore purchases” in a moment; you will not be charged again.' })
   }
@@ -235,6 +230,64 @@ function Home({ session, onSignOut }) {
   const save = both && products?.year1?.amount != null && products?.year2?.amount != null && both.amount != null ? Math.round((products.year1.amount + products.year2.amount - both.amount) * 100) / 100 : 0
   const anyOwned = YEARS.some((y) => years[y.app].owned !== false)
 
+  const tools = locked.length > 0 && (
+    <>
+      <div style={{ textAlign: 'center', margin: '14px 0 0' }}>
+        {canBuy && <button type="button" onClick={restore} disabled={busy} style={linkBtn}>Restore purchases</button>}
+        <button type="button" onClick={async () => { setBusy(true); setNote(null); if (PURCHASES_ON) await sync(); const y = await load(); setBusy(false); if (YEARS.some((x) => y[x.app].owned === false)) setNote({ tone: 'ok', text: 'Checked. Nothing new on this account yet.' }) }} disabled={busy} style={linkBtn}>{busy ? 'Checking…' : 'Check again'}</button>
+      </div>
+      {canBuy && (
+        <p style={{ textAlign: 'center', fontSize: 14, color: C.muted, margin: '6px 0 0' }}>
+          <a href="https://eloraradiance.com/terms.html" target="_blank" rel="noopener noreferrer" style={{ color: C.link }}>Terms</a> · <a href="https://eloraradiance.com/privacy.html" target="_blank" rel="noopener noreferrer" style={{ color: C.link }}>Privacy</a>
+        </p>
+      )}
+    </>
+  )
+
+  // ── The prices: one page, at most three choices (each locked year, and the pair when both are locked) ──
+  if (view === 'offers' && canBuy && locked.length > 0) {
+    const sent = YEARS.find((y) => y.app === from && years[y.app].owned === false)
+    const choice = { background: C.card, border: `1px solid ${C.cardBorder}`, borderRadius: 18, padding: '18px 18px 16px', margin: '0 0 14px', textAlign: 'center' }
+    const name = { fontFamily: DISPLAY, fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.accent, marginBottom: 6 }
+    const about = { fontSize: 15.5, color: C.text, lineHeight: 1.55, margin: '0 0 14px' }
+    return (
+      <Frame>
+        <div data-offers>
+          <div style={{ textAlign: 'left', margin: '0 0 8px' }}>
+            <button type="button" onClick={() => { setNote(null); if (sent) open(sent); else show('home') }} style={{ ...linkBtn, textDecoration: 'none', padding: '10px 6px 10px 0' }}>← {sent ? 'Back to Week 1' : 'Back'}</button>
+          </div>
+          <div style={{ textAlign: 'center', margin: '0 0 20px' }}>
+            <img src={BRAND.icon} alt="" width="52" height="52" style={{ width: 52, height: 52, borderRadius: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.35)' }} />
+            <h1 style={{ margin: '12px 0 0', fontFamily: DISPLAY, fontSize: 24, fontWeight: 700, letterSpacing: '0.04em', color: C.title }}>Anchored Steps</h1>
+            <div style={{ fontFamily: DISPLAY, fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.muted, marginTop: 8 }}>Choose Your Access</div>
+          </div>
+          {products === undefined ? <p style={{ textAlign: 'center', color: C.muted, fontSize: 15.5 }}>Asking the App Store…</p>
+            : !products ? <Note tone="error">The App Store isn't reachable right now. Check your connection and try again.</Note> : (
+              <>
+                {locked.map((y, i) => products[y.key] && (
+                  <div key={y.app} style={choice}>
+                    <div style={name}>Anchored Steps · {y.label}</div>
+                    <p style={about}>{y.title}. One-time purchase, no subscription, yours for good.</p>
+                    <button type="button" disabled={busy} onClick={() => buy(y.key)} style={{ ...((sent ? sent.app === y.app : i === 0) ? primaryBtn : ghostBtn), opacity: busy ? 0.6 : 1 }}>Unlock {y.label}{products[y.key].price ? ` · ${products[y.key].price}` : ''}</button>
+                  </div>
+                ))}
+                {both && (
+                  <div style={choice}>
+                    <div style={name}>Both Years</div>
+                    <p style={about}>Two years of guided Scripture study on one account.{save > 0 ? ` Save ${both.price.replace(/[\d.,\s]+/, '')}${save.toFixed(2).replace(/\.00$/, '')} over buying each.` : ''}</p>
+                    <button type="button" disabled={busy} onClick={() => buy('both')} style={{ ...ghostBtn, opacity: busy ? 0.6 : 1 }}>Unlock Both Years{both.price ? ` · ${both.price}` : ''}</button>
+                  </div>
+                )}
+              </>
+            )}
+          <GivingLine b={BRAND} />
+          {note && <Note tone={note.tone}>{note.text}</Note>}
+          {tools}
+        </div>
+      </Frame>
+    )
+  }
+
   return (
     <Frame center>
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, margin: '0 0 20px' }}>
@@ -248,31 +301,17 @@ function Home({ session, onSignOut }) {
       <p style={{ fontSize: 19, fontStyle: 'italic', lineHeight: 1.5, color: C.text, margin: '0 0 18px' }}>{anyOwned ? 'Walk steadily. Stay anchored.' : 'Choose where to begin.'}</p>
 
       {YEARS.map((y) => (
-        <Door key={y.app} y={y} state={years[y.app]} product={products?.[y.key]} busy={busy} canBuy={canBuy} onOpen={open} onBuy={buy} flagged={from === y.app && years[y.app].owned === false} />
+        <Door key={y.app} y={y} state={years[y.app]} canBuy={canBuy} onOpen={open} />
       ))}
 
-      {both && (
-        <div className="hub-in" style={{ margin: '4px 0 14px', padding: '16px 18px', border: `1px solid ${C.cardBorder}`, borderRadius: 18, textAlign: 'center' }}>
-          <div style={{ fontFamily: DISPLAY, fontSize: 15, fontWeight: 600, color: C.title, marginBottom: 4 }}>Both years together</div>
-          <p style={{ fontSize: 15.5, color: C.muted, lineHeight: 1.55, margin: '0 0 12px' }}>Two years of guided Scripture study on one account.{save > 0 ? ` Save ${both.price.replace(/[\d.,\s]+/, '')}${save.toFixed(2).replace(/\.00$/, '')} over buying each.` : ''}</p>
-          <button type="button" disabled={busy} onClick={() => buy('both')} style={{ ...ghostBtn, opacity: busy ? 0.6 : 1 }}>Unlock Both Years{both.price ? ` · ${both.price}` : ''}</button>
-        </div>
-      )}
-
-      {canBuy && locked.length > 0 && <GivingLine b={BRAND} />}
-      {note && <Note tone={note.tone}>{note.text}</Note>}
-
-      {locked.length > 0 && (
-        <div style={{ textAlign: 'center', margin: '14px 0 0' }}>
-          {canBuy && <button type="button" onClick={restore} disabled={busy} style={linkBtn}>Restore purchases</button>}
-          <button type="button" onClick={async () => { setBusy(true); setNote(null); if (PURCHASES_ON) await sync(); const y = await load(); setBusy(false); if (YEARS.some((x) => y[x.app].owned === false)) setNote({ tone: 'ok', text: 'Checked. Nothing new on this account yet.' }) }} disabled={busy} style={linkBtn}>{busy ? 'Checking…' : 'Check again'}</button>
-        </div>
-      )}
       {canBuy && locked.length > 0 && (
-        <p style={{ textAlign: 'center', fontSize: 14, color: C.muted, margin: '6px 0 0' }}>
-          <a href="https://eloraradiance.com/terms.html" target="_blank" rel="noopener noreferrer" style={{ color: C.link }}>Terms</a> · <a href="https://eloraradiance.com/privacy.html" target="_blank" rel="noopener noreferrer" style={{ color: C.link }}>Privacy</a>
-        </p>
+        <>
+          <button type="button" data-see-prices onClick={() => { setNote(null); show('offers') }} style={{ ...ghostBtn, marginTop: 4 }}>⚓ Get Lifetime Access</button>
+          <p style={{ fontSize: 14, color: C.muted, margin: '10px 0 0', textAlign: 'center' }}>One-time purchase. No subscription.</p>
+        </>
       )}
+      {note && <Note tone={note.tone}>{note.text}</Note>}
+      {!canBuy && tools}
     </Frame>
   )
 }
