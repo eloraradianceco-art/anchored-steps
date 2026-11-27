@@ -108,7 +108,6 @@ const SECTIONS = [
   {id:"apply",      label:"⚒️ Apply"},
   {id:"prayer",     label:"🙏 Prayer"},
   {id:"tracker",    label:"📊 Tracker"},
-  {id:"community",  label:"🌿 Community"},
 ];
 
 // ───────── Complete Theme System (Dark + Light) ─────────
@@ -367,9 +366,6 @@ function AnchoredStepsY2Inner(){
   const [profile,setProfile]=useState(null);
   const [access,setAccess]=useState('checking'); // 'checking' | 'yes' | 'no' — is Year 2 unlocked on this account
   const [day,setDay]=useState(-1);
-  const [communityInput,setCommunityInput]=useState('');
-  const [communityDone,setCommunityDone]=useState(false);
-  const [communityNotes,setCommunityNotes]=useState([]);
   const [showSignOutConfirm,setShowSignOutConfirm]=useState(false);
   const [speaking,setSpeaking]=useState(false);
   // Word Study pronunciation (read-aloud fixes live in speech.js)
@@ -608,18 +604,6 @@ function AnchoredStepsY2Inner(){
     return () => document.removeEventListener('visibilitychange', onVis);
   }, []);
 
-  // Load community notes for current week
-  useEffect(()=>{
-    if(!session) return;
-    supabase.from('community_notes_y2')
-      .select('*')
-      .eq('week', wk)
-      .order('created_at', { ascending: false })
-      .limit(50)
-      .then(({data, error})=>{
-        if(!error && data) setCommunityNotes(data);
-      });
-  }, [session, wk]);
 
   const get=useCallback((key)=>{
     const e=entries.find(e=>e.week===wk&&e.field_key===key);
@@ -1296,8 +1280,7 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
                   (s.id==='reflect'&&[0,1,2,3,4].some(i=>(get('rq'+i)||'').trim())) ||
                   (s.id==='apply'&&(get('apply')||'').trim()) ||
                   (s.id==='prayer'&&(get('prayer')||'').trim()) ||
-                  (s.id==='tracker'&&(DAYS.some((_,i)=>(get('tr_'+i)||'').trim())||(get('gratitude')||'').trim())) ||
-                  (s.id==='community'&&communityDone);
+                  (s.id==='tracker'&&(DAYS.some((_,i)=>(get('tr_'+i)||'').trim())||(get('gratitude')||'').trim()));
                 return (
                   <button key={s.id} onClick={()=>{setSec(s.id);setAnimK(a=>a+1);window.scrollTo(0,0);}} style={{background:sec===s.id?"linear-gradient(135deg,"+T.goldF+","+T.goldF+")":"transparent",border:"1px solid "+(sec===s.id?T.goldB:T.border),color:sec===s.id?T.gold:T.muted,padding:"6px 10px",borderRadius:8,cursor:"pointer",fontSize:14,transition:"all .18s",position:"relative"}}>
                     {s.label}
@@ -1495,38 +1478,6 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
                   <label style={LBL}>End of Week Reflection</label>
                   <textarea rows={4} defaultValue={get("weekreflect")} onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)} onChange={e=>set("weekreflect",e.target.value)} placeholder="What changed in you this week?" style={INP}/>
                   <SaveBtn onSave={save} flash={flash} T={T}/>
-                </div>
-              )}
-
-              {/* COMMUNITY */}
-              {sec==="community" && (
-                <div>
-                  <label style={LBL}>Community Reflections — Week {wk}</label>
-                  <p style={{fontSize:16,color:T.muted,fontStyle:"italic",marginBottom:20,lineHeight:1.75}}>Share one insight, takeaway, or truth God highlighted for you this week.</p>
-                  <textarea rows={4} value={communityInput} onChange={e=>setCommunityInput(e.target.value)} placeholder="Share what God revealed to you this week..." style={{...INP,marginBottom:10}}/>
-                  <button onClick={async()=>{
-                    if(!communityInput.trim()) return;
-                    const {data} = await supabase.from('community_notes_y2').insert({user_id:session.user.id,week:wk,text:communityInput.trim(),date:new Date().toLocaleDateString()}).select().single();
-                    if(data) setCommunityNotes(prev => [data, ...prev]);
-                    setCommunityDone(true);
-                    setCommunityInput('');
-                    setTimeout(()=>setCommunityDone(false),3000);
-                  }} style={{background:communityDone?T.greenF:T.goldF,border:"1px solid "+(communityDone?T.greenB:T.goldB),color:communityDone?T.green:T.gold,padding:"9px 18px",borderRadius:8,cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",marginBottom:24,transition:"all .3s"}}>
-                    {communityDone?"✓ Shared!":"Share with Community"}
-                  </button>
-
-                  {/* Display community notes */}
-                  {communityNotes.length > 0 && (
-                    <div>
-                      <div style={{fontFamily:"Cinzel,serif",fontSize:11,color:T.gold,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:12}}>What Others Are Sharing</div>
-                      {communityNotes.map((note,i)=>(
-                        <div key={note.id || i} style={{background:T.bgCard,border:"1px solid "+T.border,borderRadius:10,padding:"12px 16px",marginBottom:8}}>
-                          <p style={{fontSize:16,color:T.text,lineHeight:1.7,margin:"0 0 6px",fontStyle:"italic"}}>"{note.text}"</p>
-                          <p style={{fontSize:14,color:T.muted,margin:0}}>{note.created_at ? new Date(note.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : note.date}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               )}
             </div>
