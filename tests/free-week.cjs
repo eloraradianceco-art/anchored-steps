@@ -44,13 +44,17 @@ server.listen(PORT, async () => {
     // 1. Signed out: the free week is offered beside the purchase, and leads to Create Account
     let v = await open(browser, { signedIn: false }); let t = await v.text()
     check('signed out: purchase and free week both offered', /Get Lifetime Access/i.test(t) && /Start Week 1 Free/i.test(t) && /No card needed/i.test(t))
+    await v.page.locator('[data-see-prices]').click(); await v.page.waitForTimeout(500); t = await v.text()
+    check('signed out: Get Lifetime Access opens the prices page (three choices, giving line)', /Choose Your Access/i.test(t) && new RegExp('Get Year ' + (APPID === 'as1' ? 1 : 2) + ' · \\$39\\.99', 'i').test(t) && /Get Both Years · \$59\.99/i.test(t) && /Get All 3 Apps · \$79\.99/i.test(t) && /10% of net sales is given to ministry/i.test(t) && (await v.page.locator('[data-offers] a[href*="buy.stripe.com"]').count()) === 3 && !/Start Week 1 Free/i.test(t))
+    await v.page.getByRole('button', { name: /← Back/ }).click(); await v.page.waitForTimeout(400); t = await v.text()
+    check('signed out: back returns to the front page, with no prices list on it', /Start Week 1 Free/i.test(t) && !/\$59\.99|\$79\.99|given to ministry/i.test(t))
     await v.page.getByRole('button', { name: /Start Week 1 Free/i }).click(); await v.page.waitForTimeout(700); t = await v.text()
     check('signed out: the free week opens Create Account', /Create Account/i.test(t) && (await v.page.locator('input[type="password"]').count()) === 1, t.slice(0, 120).replace(/\n/g, ' / '))
     await v.ctx.close()
 
     // 2. Signed in, nothing bought: week 1 opens (not the purchase page), whatever week this device last showed
     v = await open(browser); t = await v.text()
-    check('free: opens the app on week 1, not the purchase page', /Week 1 of 52/i.test(t) && !/Get Lifetime Access/i.test(t), t.slice(0, 160).replace(/\n/g, ' / '))
+    check('free: opens the app on week 1, not the purchase page', /Week 1 of 52/i.test(t) && !/Choose Your Access/i.test(t), t.slice(0, 160).replace(/\n/g, ' / '))
     check('free: the bar says week 1 is free', (await v.page.locator('[data-free-bar]').count()) === 1 && /Week 1 is free/i.test(t))
     check('free: nothing runs off the side, no page errors', (await v.wide()) <= 0 && v.errs.length === 0, v.errs.join(' | '))
     // a step can be opened and its work is saved to week 1
@@ -59,17 +63,17 @@ server.listen(PORT, async () => {
     await v.page.goto(`http://localhost:${PORT}/`); await v.page.waitForTimeout(2200)
     // 3. Next week → purchase page, with a way back
     await v.page.getByRole('button', { name: 'Next week' }).click(); await v.page.waitForTimeout(800); t = await v.text()
-    check('free: next week opens the purchase page', /Get Lifetime Access/i.test(t) && /Back to your free week/i.test(t) && /Check Again/i.test(t))
+    check('free: next week opens the purchase page', /Choose Your Access/i.test(t) && /Back to your free week/i.test(t) && /Check Again/i.test(t))
     await v.page.getByRole('button', { name: /Back to your free week/ }).click(); await v.page.waitForTimeout(600); t = await v.text()
-    check('free: back returns to week 1', /Week 1 of 52/i.test(t) && !/Get Lifetime Access/i.test(t))
+    check('free: back returns to week 1', /Week 1 of 52/i.test(t) && !/Choose Your Access/i.test(t))
     await v.page.locator('[data-free-bar]').click(); await v.page.waitForTimeout(600)
-    check('free: the bar opens the purchase page', /Get Lifetime Access/i.test(await v.text()))
+    check('free: the bar opens the purchase page', /Choose Your Access/i.test(await v.text()))
     // 4. Buying: Check Again opens the whole year
     v.world.buyable = true
     await v.page.getByRole('button', { name: /Check Again/ }).click(); await v.page.waitForTimeout(3200); t = await v.text()
-    check('purchase: the year opens and the free bar is gone', /of 52/i.test(t) && !/Get Lifetime Access/i.test(t) && (await v.page.locator('[data-free-bar]').count()) === 0, t.slice(0, 140).replace(/\n/g, ' / '))
+    check('purchase: the year opens and the free bar is gone', /of 52/i.test(t) && !/Choose Your Access/i.test(t) && (await v.page.locator('[data-free-bar]').count()) === 0, t.slice(0, 140).replace(/\n/g, ' / '))
     await v.page.getByRole('button', { name: 'Next week' }).click(); await v.page.waitForTimeout(800); t = await v.text()
-    check('purchase: next week now opens week 2', /Week 2 of 52/i.test(t) && !/Get Lifetime Access/i.test(t))
+    check('purchase: next week now opens week 2', /Week 2 of 52/i.test(t) && !/Choose Your Access/i.test(t))
     check('whole run: no page errors', v.errs.length === 0, v.errs.join(' | '))
     await v.ctx.close()
 
@@ -79,7 +83,7 @@ server.listen(PORT, async () => {
     t = await v.text()
     check('free: Contents marks weeks 2 to 52 as locked, and week 1 is not', (await v.page.locator('[aria-label="Locked"]').count()) === 51 && /Weeks marked 🔒 open with a purchase/.test(t), String(await v.page.locator('[aria-label="Locked"]').count()))
     await v.page.getByRole('button', { name: /week\s*5\b/i }).first().click({ timeout: 3000 }).catch((e) => console.log('click', e.message.split('\n')[0])); await v.page.waitForTimeout(700); t = await v.text()
-    check('free: a later week in Contents opens the purchase page', /Get Lifetime Access/i.test(t), t.slice(0, 120).replace(/\n/g, ' / '))
+    check('free: a later week in Contents opens the purchase page', /Choose Your Access/i.test(t), t.slice(0, 120).replace(/\n/g, ' / '))
     await v.page.getByRole('button', { name: /Back to your free week/ }).click().catch(() => {}); await v.page.waitForTimeout(500)
     for (const tab of ['Search', 'Progress', 'Settings', 'Steps']) { await v.page.getByRole('button', { name: new RegExp(tab, 'i') }).last().click().catch(() => {}); await v.page.waitForTimeout(700) }
     check('free: Search, Progress and Settings open without errors, nothing off the side', v.errs.length === 0 && (await v.wide()) <= 0, v.errs.join(' | '))
