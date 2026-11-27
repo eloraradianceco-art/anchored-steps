@@ -2,10 +2,10 @@ import { useState } from 'react'
 
 const SLIDES = [
   { icon:'⚓', title:'Welcome to Anchored Steps Year 2',
-    subtitle:'A deeper dive — Year 2 builds on Year 1 with richer study, longer passages, and deeper application.',
-    detail:'Every week gives you seven sections: Passage, Context, Don\'t Miss, Study, Reflect, Apply, Prayer, and Tracker.' },
-  { icon:'📅', title:'52 More Weeks. Seven Sections.', 
-    subtitle:'Same daily rhythm. New depth. Each week covers a different theme across all seven study sections.',
+    subtitle:'A deeper dive — Year 2 builds on Year 1 with richer study, one key verse a week read in its full context, and deeper application.',
+    detail:'Every week gives you nine sections: Passage, Context, Don\'t Miss, Study, Lexicon, Reflect, Apply, Prayer, and Tracker.' },
+  { icon:'📅', title:'52 More Weeks. Seven Daily Steps.', 
+    subtitle:'Same daily rhythm. New depth. Each week takes one theme through the same seven daily steps.',
     detail:'Work through each section daily and complete the full study by Sunday.' },
   { icon:'⚠️', title:'"Don\'t Miss This"',
     subtitle:'Year 2 introduces a new section — a single line or idea in the passage that most readers skip over entirely.',

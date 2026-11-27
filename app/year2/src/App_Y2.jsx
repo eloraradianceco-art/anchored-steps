@@ -1275,7 +1275,7 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
                     const isCur=w.week===wk
                     return (
                       <button key={w.week} onClick={()=>{goWk(w.week);setShowWeekJump(false)}} style={{background:isCur?"linear-gradient(145deg,"+T.goldF+","+T.goldF+")":"transparent",border:"1px solid "+(isCur?T.goldB:T.border),borderRadius:8,color:isCur?T.gold:T.muted,padding:"2px 2px",minWidth:0,cursor:"pointer",fontFamily:"Cinzel,serif",textAlign:"center",lineHeight:1.3,touchAction:"manipulation",minHeight:0,overflow:"hidden",display:"flex",flexDirection:"column",alignItems:"stretch",justifyContent:"center"}}>
-                        <div style={{fontSize:13,fontWeight:600,lineHeight:1.15}}>{w.week}</div>
+                        <div style={{fontSize:13,fontWeight:600,lineHeight:1.15}}>{w.week}{access==='no' && w.week !== FREE_WEEK && <span aria-label="Locked" style={{fontSize:9,marginLeft:2}}>🔒</span>}</div>
                         {/* Year 2 themes are phrases, so the tile shows up to two lines of the theme, not just its first word */}
                         <div style={{overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",fontSize:10,lineHeight:1.15,overflowWrap:"anywhere"}}>{w.theme}</div>
                       </button>
@@ -1505,7 +1505,7 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
         {view==='contents' && (
           <div className="fi">
             <h2 style={{fontFamily:"Cinzel,serif",fontSize:20,color:T.cream,marginTop:17,marginBottom:3}}>Table of Contents</h2>
-            <p style={{fontSize:16,color:T.muted,fontStyle:"italic",marginTop:16,marginBottom:20}}>52 weeks of deeper formation. Tap any week to open it.</p>
+            <p style={{fontSize:16,color:T.muted,fontStyle:"italic",marginTop:16,marginBottom:20}}>52 weeks of deeper formation. {access==='no' ? "Week 1 is free. Weeks marked 🔒 open with a purchase." : "Tap any week to open it."}</p>
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(225px,1fr))",gap:8}}>
               {ALL_WEEKS.map(w=>{
                 const done=daysComplete(w.week);
@@ -1514,9 +1514,9 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
                   <button key={w.week} onClick={()=>{goWk(w.week);setView('journal');}} style={{background:cur?"linear-gradient(145deg,"+T.goldF+","+T.goldF+")":done>0?"linear-gradient(145deg,"+T.greenF+","+T.greenF+")":T.bgCard,border:"1px solid "+(cur?T.goldB:done>0?T.greenB:T.border),borderRadius:12,padding:"13px 16px",cursor:"pointer",textAlign:"left",transition:"all .25s"}}>
                     <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}>
                       <span style={{fontSize:11,color:cur?T.gold:T.muted,fontFamily:"Cinzel,serif",letterSpacing:"0.1em"}}>WEEK {w.week}</span>
-                      {done>0&&<span style={{fontSize:14,color:T.green}}>{done}/7</span>}
+                      {access==='no' && w.week !== FREE_WEEK ? <span aria-label="Locked" title="Opens with a purchase" style={{fontSize:13}}>🔒</span> : (done>0&&<span style={{fontSize:14,color:T.green}}>{done}/7</span>)}
                     </div>
-                    <div style={{fontSize:16,color:cur?T.cream:T.text,fontWeight:600,lineHeight:1.3}}>{w.theme}</div>
+                    <div style={{fontSize:16,color:cur?T.cream:T.text,fontWeight:600,lineHeight:1.3,opacity:access==='no' && w.week !== FREE_WEEK ? 0.7 : 1}}>{w.theme}</div>
                     {w.verseRef&&<div style={{fontSize:14,color:T.muted,marginTop:2,fontStyle:"italic"}}>{w.verseRef}</div>}
                   </button>
                 );

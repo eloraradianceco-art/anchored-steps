@@ -26,7 +26,7 @@ const YEARS = [
     pitch: 'Build a daily rhythm in Scripture that holds: study, reflect, apply and pray, one week at a time.',
     table: 'profiles', idCol: 'id', entries: 'journal_entries', weekKeys: ['as1_my_week', 'as1_current_week'] },
   { app: 'as2', key: 'year2', label: 'Year 2', title: '52 Deeper Weeks of Scripture Study', icon: '/year2/icon-192.png', page: '/year2/index.html',
-    pitch: 'Go further: longer passages in their context, harder questions, and a faith that keeps walking.',
+    pitch: 'Go further: one key verse a week read in its full context, harder questions, and a faith that keeps walking.',
     table: 'as2_profiles', idCol: 'user_id', entries: 'as2_journal_entries', weekKeys: ['y2_my_week', 'y2_last_week'] },
 ]
 
