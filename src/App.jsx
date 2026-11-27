@@ -31,7 +31,6 @@ const SECTIONS = [
   {id:"prayer",label:"🙏 Prayer"},
   {id:"tracker",label:"📊 Tracker"},
   {id:"weekEnd",label:"✨ Week End"},
-  {id:"community",label:"🌿 Community"},
 ];
 
 // Dark palette. Module-level screens (sign-in, unlock, loading) are always dark and use it
@@ -382,8 +381,6 @@ export default function AnchoredSteps() {
   const [memTyped, setMemTyped] = useState('');
   const [memScore, setMemScore] = useState(null);
   const [openAuthor, setOpenAuthor] = useState(null);
-  const [communityInput, setCommunityInput] = useState("");
-  const [communityDone, setCommunityDone] = useState(false);
   // Settings
   const [darkMode, setDarkMode] = useState(() => { try { return localStorage.getItem("as_dark") !== "false" } catch { return true } });
   // Palette for everything inside the app: readable light colors in light mode.
@@ -737,16 +734,6 @@ export default function AnchoredSteps() {
     a.download = "anchored-steps.txt"; a.click();
   };
 
-  const submitCommunity = async () => {
-    if (!communityInput.trim()) return;
-    const key = "community_w" + wk;
-    const ex = JSON.parse(localStorage.getItem(key) || "[]");
-    ex.unshift({text: communityInput.trim(), date: new Date().toLocaleDateString()});
-    localStorage.setItem(key, JSON.stringify(ex.slice(0,50)));
-    setCommunityInput(""); setCommunityDone(true);
-    setTimeout(() => setCommunityDone(false), 2500);
-  };
-  const communityNotes = () => { try { return JSON.parse(localStorage.getItem("community_w"+wk)||"[]"); } catch { return []; } };
 
 
   // ── Loading (in the phone app, also while it returns to the front page)
@@ -1211,25 +1198,6 @@ export default function AnchoredSteps() {
                     </div>
                   )}
                   <SaveBtn onSave={save} flash={flash} G={G} />
-                </div>
-              )}
-
-              {sec === "community" && (
-                <div>
-                  <label style={LBL}>Community Reflections &#8212; Week {wk}</label>
-                  <p style={{fontSize:16,color:T.muted,fontStyle:"italic",marginBottom:20,lineHeight:1.75}}>Share one insight, takeaway, or truth God highlighted for you this week.</p>
-                  <textarea rows={4} value={communityInput} onChange={e => setCommunityInput(e.target.value)} placeholder="Share what God revealed to you this week..." style={{...INP,marginBottom:10}} />
-                  <button onClick={submitCommunity} style={{background:communityDone?"rgba(120,184,120,0.15)":G.goldF,border:"1px solid "+(communityDone?G.greenB:G.goldB),color:communityDone?G.green:G.gold,padding:"9px 18px",borderRadius:8,cursor:"pointer",fontSize:12,fontFamily:"Cinzel,serif",letterSpacing:"0.08em",marginBottom:24,transition:"all .3s"}}>
-                    {communityDone ? "✓ Shared!" : "Share with Community"}
-                  </button>
-                  <label style={LBL}>From the Community</label>
-                  {communityNotes().length === 0 && <p style={{fontSize:16,color:G.dim,fontStyle:"italic"}}>No community notes yet. Be the first to share.</p>}
-                  {communityNotes().length > 0 && communityNotes().map((n,i) => (
-                    <div key={i} style={{background:G.bgCard,border:"1px solid "+G.border,borderRadius:10,padding:"14px 16px",marginBottom:10}}>
-                      <p style={{fontSize:16,color:T.text,lineHeight:1.7,marginBottom:6}}>{n.text}</p>
-                      <span style={{fontSize:14,color:G.dim}}>{n.date}</span>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>
