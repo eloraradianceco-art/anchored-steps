@@ -1312,7 +1312,7 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
               {/* PASSAGE */}
               {sec==="passage" && (
                 <div>
-                  <label style={LBL}>Primary Passage — Week {wk}</label>
+                  <label style={LBL}>Key Verse — Week {wk}</label>
                   <div style={{background:"linear-gradient(145deg,"+T.goldF+","+T.goldF+")",border:"1px solid "+T.goldB,borderRadius:16,padding:"22px 24px",marginBottom:14,boxShadow:"0 8px 24px rgba(0,0,0,0.12)"}}>
                     <div style={{display:"flex",gap:10}}>
                       <span style={{color:T.gold,fontSize:32,lineHeight:1,opacity:.3,flexShrink:0,fontFamily:"Georgia,serif"}}>&#8220;</span>
@@ -1332,6 +1332,20 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
                       </div>
                     </div>
                   </div>
+                  {Array.isArray(week.passage) && week.passage.length > 0 && (<>
+                    <label style={{...LBL,marginTop:20}}>The Whole Paragraph — {week.passageRef}</label>
+                    <div data-paragraph style={{background:T.bgCard,border:"1px solid "+T.border,borderRadius:12,padding:"16px 20px",marginBottom:14}}>
+                      <p style={{fontSize:18,color:T.text,lineHeight:1.85,margin:0}}>
+                        {week.passage.map((v,i)=>(
+                          <span key={i} style={v.k?{color:T.gold,fontWeight:600,fontStyle:"italic"}:undefined}><sup style={{fontFamily:"Cinzel,serif",fontSize:"0.6em",color:v.k?T.gold:T.muted,marginRight:3,lineHeight:0}}>{v.n}</sup>{v.t}{" "}</span>
+                        ))}
+                      </p>
+                      <div style={{marginTop:12,paddingTop:10,borderTop:"1px solid "+T.border,display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                        <span style={{fontSize:13,color:T.muted,fontStyle:"italic"}}>The key verse is marked. Berean Standard Bible.</span>
+                        <CopyBtn text={week.passage.map(v=>v.t).join(" ")+" ("+week.passageRef+", BSB)"} label="Copy Paragraph" T={T}/>
+                      </div>
+                    </div>
+                  </>)}
                   <label style={{...LBL,marginTop:20}}>Read in Context</label>
                   <div style={{background:T.bgCard,border:"1px solid "+T.border,borderRadius:12,padding:"16px 20px",marginBottom:14}}>
                     <p style={{fontSize:18,color:T.text,lineHeight:1.85,margin:0,whiteSpace:"pre-line"}}>{week.readInContext || 'No context available for this week.'}</p>

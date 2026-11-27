@@ -154,6 +154,19 @@ function BlankVerse({ data, filled }) {
 }
 
 /* ---------- a long reading, two paragraphs at a time ---------- */
+// The paragraph the week's key verse comes from (2026-11-27). The key verse is marked so it is read where it sits.
+export function ParagraphText({ verses, className = "ds-para" }) {
+  if (!Array.isArray(verses) || !verses.length) return null;
+  return (
+    <p className={className}>
+      {verses.map((v, i) => (
+        <span key={i} className={v.k ? "ds-keyverse" : undefined}><sup className="ds-vnum">{v.n}</sup>{v.t}{" "}</span>
+      ))}
+    </p>
+  );
+}
+export const paragraphPlain = (verses) => (Array.isArray(verses) ? verses.map(v => v.t).join(" ") : "");
+
 function Reading({ text, c, keyName }) {
   const ps = paras(text);
   const more = !!c.u[keyName];
@@ -350,8 +363,15 @@ function buildSteps(week) {
   memCards[memCards.length - 1] = { ...memCards[memCards.length - 1], cta: "Finish step" };
 
   return [
-    { id: 1, name: "Read", blurb: "The passage, its setting, and what not to miss", min: 6, cards: [
-      verseCard("This week’s passage"),
+    { id: 1, name: "Read", blurb: "The verse, its whole paragraph, and what not to miss", min: 7, cards: [
+      verseCard("This week’s key verse"),
+      ...(Array.isArray(week.passage) && week.passage.length ? [{ top: true,
+        render: c => (<>
+          <p className="ds-kicker">Now read the whole paragraph it comes from</p>
+          <ParagraphText verses={week.passage} />
+          <p className="ds-ref">{week.passageRef} · BSB</p>
+          <button className={"ds-chip" + (c.listening ? " is-on" : "")} aria-pressed={!!c.listening} onClick={() => c.speak(paragraphPlain(week.passage))}><Speaker />{c.listening ? "Stop" : "Listen"}</button>
+        </>) }] : []),
       { top: true,
         render: c => (<>
           <p className="ds-kicker">Read it in context</p>
@@ -826,6 +846,10 @@ const CSS = `
 
 .ds-kicker{margin-bottom:14px!important;color:var(--muted);font-style:italic;font-size:17px}
 .ds-verse{margin-bottom:14px!important;font-size:27px;line-height:1.4;color:var(--ink);font-style:italic;border:0}
+.ds-para{margin-bottom:14px!important;font-size:20px;line-height:1.75;color:var(--ink)}
+.ds-vnum{font-family:Cinzel,Georgia,serif;font-size:.55em;color:var(--muted);margin-right:3px;vertical-align:super;line-height:0}
+.ds-keyverse{color:var(--gold);font-weight:600;font-style:italic}
+.ds-keyverse .ds-vnum{color:var(--gold)}
 .ds-ref{font-family:Cinzel,Georgia,serif;font-size:14px;letter-spacing:.07em;color:var(--gold);margin-bottom:22px!important}
 .ds-flush{margin-bottom:0!important}
 .ds-chip{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--line);background:var(--panel);border-radius:999px;padding:10px 18px;font-size:17px;color:var(--ink)!important;cursor:pointer;align-self:flex-start;min-height:44px}

@@ -9,7 +9,7 @@ export const BRAND = {
     ref: 'Philippians 3:12 · BSB',
   },
   features: [
-    { icon: '📖', text: '52 deeper weeks, each on one key verse read in its context' },
+    { icon: '📖', text: '52 deeper weeks: each key verse read inside its whole paragraph' },
     { icon: '⚠️', text: '“Don’t Miss This”: the line most readers walk past' },
     { icon: '🗓️', text: 'Seven daily steps through study, reflection, application and prayer' },
     { icon: '📚', text: 'Greek & Hebrew word studies you can hear aloud' },
