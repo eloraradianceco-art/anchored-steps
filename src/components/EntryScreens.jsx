@@ -106,11 +106,13 @@ function Note({ c, tone = 'ok', children }) {
 export function Welcome({
   brand: b, session, buyHref, bundleHref, bothHref, onPrimary, onSignIn, onSignOut, purchasable = true, unavailableNote,
   onCheckAgain, checking = false, checkMessage, notice,
+  onBack, backLabel, onTryFree, tryFreeLabel,
 }) {
   const c = b.colors
   const signedIn = !!session
   return (
     <Page b={b}>
+      {onBack && <div style={{ textAlign: 'left', marginBottom: 14 }}><button type="button" onClick={onBack} style={linkBtn(c.link)}>← {backLabel || 'Back'}</button></div>}
       <Mark b={b} size={64} />
       <Eyebrow b={b} />
       <Title b={b} size={30} />
@@ -139,6 +141,12 @@ export function Welcome({
             ? <a href={buyHref} style={primaryBtn(c)}>{b.cta}</a>
             : <button type="button" onClick={onPrimary} style={primaryBtn(c)}>{b.cta}</button>}
           <p style={{ fontSize: 14, color: c.muted, lineHeight: 1.6, margin: '12px 0 0' }}>{b.fine}</p>
+          {onTryFree && !signedIn && (
+            <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${c.divider}` }}>
+              <button type="button" onClick={onTryFree} style={{ ...primaryBtn(c), background: 'transparent', border: `1px solid ${c.cardBorder}`, color: c.accent, fontSize: 14, padding: '13px 20px', cursor: 'pointer' }}>{tryFreeLabel || 'Start Week 1 Free'}</button>
+              <p style={{ fontSize: 13, color: c.muted, lineHeight: 1.6, margin: '10px 0 0' }}>Week 1 is free with a free account. No card needed.</p>
+            </div>
+          )}
           {bothHref && (
             <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${c.divider}` }}>
               <a href={bothHref} style={{ ...primaryBtn(c), background: 'transparent', border: `1px solid ${c.cardBorder}`, color: c.accent, fontSize: 14, padding: '13px 20px' }}>Get Both Years · $59.99</a>

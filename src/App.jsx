@@ -268,7 +268,7 @@ function buyLink(email, userId, link = BUY_LINK) {
 }
 
 // Signed in, but no Year 1 purchase is linked to this account yet (e.g. they came from Armed & Anchored).
-function NoAccessScreen({ email, userId, onUnlocked, onSignOut }) {
+function NoAccessScreen({ email, userId, onUnlocked, onSignOut, onBack }) {
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState("")
   const check = async () => {
@@ -280,20 +280,21 @@ function NoAccessScreen({ email, userId, onUnlocked, onSignOut }) {
   }
   return <Welcome brand={BRAND} session={{ user: { email } }} buyHref={buyLink(email, userId)}
     bothHref={buyLink(email, userId, BOTH_LINK)} bundleHref={buyLink(email, userId, LIBRARY_LINK)}
-    onCheckAgain={check} checking={busy} checkMessage={msg} onSignOut={onSignOut} />
+    onCheckAgain={check} checking={busy} checkMessage={msg} onSignOut={onSignOut}
+    onBack={onBack} backLabel="Back to your free week" />
 }
 
 // Auth is now in ./components/Auth_AS1.jsx — but keep inline version for single-file deploy
 // This updated AuthScreen matches AA's design pattern
-function AuthScreen({onAuth, onBack}) {
+function AuthScreen({onAuth, onBack, freeStart = false}) {
   const paid = justPaid()
-  const [mode, setMode] = useState(paid ? "signup" : "signin")
+  const [mode, setMode] = useState(paid || freeStart ? "signup" : "signin")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [msg, setMsg] = useState(paid ? "Payment received. Create your account (or sign in) to open Year 1." : "")
+  const [msg, setMsg] = useState(paid ? "Payment received. Create your account (or sign in) to open Year 1." : freeStart ? "Create a free account to start week 1. No card needed." : "")
   const [resetSent, setResetSent] = useState(false)
   const [justSignedUp, setJustSignedUp] = useState(false)
 
@@ -355,6 +356,12 @@ export default function AnchoredSteps() {
   const [showSettings, setShowSettings] = useState(false);
   const [subExpired, setSubExpired] = useState(false);
   const [noAccess, setNoAccess] = useState(false);
+  // Free week (2026-11-27): a signed-in account with no Year 1 purchase has week 1, complete. Every other week opens
+  // the purchase page (on the website) or the front page (in the phone app), which is where buying happens.
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [freeStart, setFreeStart] = useState(false);
+  const FREE_WEEK = 1;
+  const openPaywall = () => { if (APP) APP.home("as1"); else { setShowPaywall(true); window.scrollTo(0, 0); } };
   // Signed out: the welcome page first, the sign-in card after "Sign in" (straight there after checkout)
   const [entry, setEntry] = useState(() => justPaid() ? "auth" : "welcome");
   const [view, setView] = useState("steps");
@@ -435,7 +442,7 @@ export default function AnchoredSteps() {
   }, []);
 
   // Phone app: signing in and buying happen on the app's front page, so a signed-out or locked year goes back there.
-  useEffect(() => { if (APP && !loading && (!session || noAccess)) APP.home("as1"); }, [loading, session, noAccess]);
+  useEffect(() => { if (APP && !loading && !session) APP.home("as1"); }, [loading, session]);
 
   const loadUserData = async (userId) => {
     setLoading(true);
@@ -456,6 +463,7 @@ export default function AnchoredSteps() {
         ({ data: prof, error: profErr } = await fetchProfile());
       }
       setNoAccess(!prof && !profErr);
+      if (!prof && !profErr) { setWk(FREE_WEEK); if (ents) setStepsLoaded(true); } else setShowPaywall(false);
       if (prof) {
         setProfile(prof);
         const storedWeek = localStorage.getItem('as1_current_week');
@@ -496,7 +504,7 @@ export default function AnchoredSteps() {
   // Your week, from step progress (0 until entries have loaded, or if no step is done yet). Remembered on this
   // device so the next opening starts there straight away.
   const myUserId = session?.user?.id || null;
-  const myWeek = useMemo(() => (stepsLoaded && myUserId ? yourWeek(entries.filter(e => e.user_id === myUserId), ALL_WEEKS.length || 52) : 0), [entries, stepsLoaded, myUserId]);
+  const myWeek = useMemo(() => noAccess ? (stepsLoaded ? FREE_WEEK : 0) : (stepsLoaded && myUserId ? yourWeek(entries.filter(e => e.user_id === myUserId), ALL_WEEKS.length || 52) : 0), [entries, stepsLoaded, myUserId, noAccess]);
   useEffect(() => {
     if (!stepsLoaded) return;
     myWeekRef.current = myWeek;
@@ -568,12 +576,13 @@ export default function AnchoredSteps() {
   const save = () => { setFlash(true); setTimeout(() => setFlash(false), 1800); };
 
   const goWk = async (n) => {
+    if (noAccess && n !== FREE_WEEK) { openPaywall(); return; }
     weekMovedRef.current = true;
     setWk(n); setSec("scripture"); setDay(-1);
     localStorage.setItem('as1_current_week', String(n));
     setAnimK(a => a+1); setLexWord(null);
     // (quiz state removed — was never declared)
-    if (session) {
+    if (session && !noAccess) {
       await supabase.from("profiles").update({ current_week: n, updated_at: new Date().toISOString() })
         .eq("id", session.user.id);
       setProfile(prev => ({ ...prev, current_week: n }));
@@ -737,7 +746,7 @@ export default function AnchoredSteps() {
 
 
   // ── Loading (in the phone app, also while it returns to the front page)
-  if (loading || (APP && (!session || noAccess))) return (
+  if (loading || (APP && !session)) return (
     <div style={{position:"fixed",inset:0,zIndex:50,background:G.bg,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",textAlign:"center"}}>
       <img src={ASSET+"icon-192.png"} alt="" width="72" height="72" style={{width:72,height:72,borderRadius:16,boxShadow:"0 6px 22px rgba(0,0,0,0.45)",objectFit:"cover",display:"block",marginBottom:18}}/>
       <div style={{fontFamily:"Cinzel,Georgia,serif",color:G.gold,fontSize:12,fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",marginBottom:8}}>Anchored Steps · Year 1</div>
@@ -747,11 +756,12 @@ export default function AnchoredSteps() {
 
   // ── Not logged in
   if (!session) return entry === "welcome"
-    ? <Welcome brand={BRAND} buyHref={BUY_LINK} bothHref={BOTH_LINK} bundleHref={LIBRARY_LINK} onSignIn={() => setEntry("auth")} />
-    : <AuthScreen onAuth={() => window.location.reload()} onBack={() => setEntry("welcome")} />;
+    ? <Welcome brand={BRAND} buyHref={BUY_LINK} bothHref={BOTH_LINK} bundleHref={LIBRARY_LINK} onSignIn={() => { setFreeStart(false); setEntry("auth"); }}
+        onTryFree={() => { setFreeStart(true); setEntry("auth"); }} tryFreeLabel="Start Week 1 Free" />
+    : <AuthScreen key={freeStart ? "free" : "in"} freeStart={freeStart} onAuth={() => window.location.reload()} onBack={() => setEntry("welcome")} />;
 
   // ── Signed in, but Year 1 not unlocked on this account
-  if (noAccess) return <NoAccessScreen email={session.user?.email} userId={session.user?.id} onUnlocked={() => loadUserData(session.user.id)} onSignOut={signOut} />;
+  if (noAccess && showPaywall && !APP) return <NoAccessScreen email={session.user?.email} userId={session.user?.id} onUnlocked={() => loadUserData(session.user.id)} onSignOut={signOut} onBack={() => setShowPaywall(false)} />;
 
   // ── Bottom tab bar ─────────────────────────────────────────────
   // Steps, Contents, Search, Progress and Settings sit at the bottom where a thumb reaches them
@@ -893,6 +903,11 @@ export default function AnchoredSteps() {
           </div>
         </div>
       </header>
+      {noAccess && (
+        <button type="button" data-free-bar onClick={openPaywall} style={{display:"block",width:"100%",textAlign:"center",cursor:"pointer",border:"none",borderBottom:"1px solid "+G.goldB,background:G.goldF,color:G.gold,fontFamily:"'EB Garamond',Georgia,serif",fontSize:16,lineHeight:1.4,padding:"10px 16px"}}>
+          Week 1 is free. <span style={{textDecoration:"underline"}}>Unlock all 52 weeks</span> {"\u203A"}
+        </button>
+      )}
 
       <main style={{maxWidth:860,margin:"0 auto",padding:`26px 18px calc(40px + ${BELOW_BAR})`}}>
 
