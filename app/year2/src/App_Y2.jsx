@@ -1342,16 +1342,12 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
                       </p>
                       <div style={{marginTop:12,paddingTop:10,borderTop:"1px solid "+T.border,display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,flexWrap:"wrap"}}>
                         <span style={{fontSize:13,color:T.muted,fontStyle:"italic"}}>The key verse is marked. Berean Standard Bible.</span>
-                        <CopyBtn text={week.passage.map(v=>v.t).join(" ")+" ("+week.passageRef+", BSB)"} label="Copy Paragraph" T={T}/>
                       </div>
                     </div>
                   </>)}
                   <label style={{...LBL,marginTop:20}}>Read in Context</label>
                   <div style={{background:T.bgCard,border:"1px solid "+T.border,borderRadius:12,padding:"16px 20px",marginBottom:14}}>
                     <p style={{fontSize:18,color:T.text,lineHeight:1.85,margin:0,whiteSpace:"pre-line"}}>{week.readInContext || 'No context available for this week.'}</p>
-                    <div style={{marginTop:12,paddingTop:10,borderTop:"1px solid "+T.border,display:"flex",justifyContent:"flex-end",gap:8}}>
-                      <CopyBtn text={week.readInContext||''} label="Copy Context" T={T}/>
-                    </div>
                   </div>
                   <SaveBtn onSave={save} flash={flash} T={T}/>
                 </div>
@@ -1363,9 +1359,6 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
                   <label style={LBL}>Where Are We in the Story?</label>
                   <div style={{background:T.bgCard,border:"1px solid "+T.border,borderRadius:12,padding:"16px 20px",marginBottom:18}}>
                     <p style={{fontSize:18,color:T.text,lineHeight:1.85,margin:0,whiteSpace:"pre-line"}}>{week.whereAreWe || 'Context information not available.'}</p>
-                    <div style={{marginTop:12,paddingTop:10,borderTop:"1px solid "+T.border,display:"flex",justifyContent:"flex-end",gap:8}}>
-                      <CopyBtn text={week.whereAreWe||''} label="Copy Story Context" T={T}/>
-                    </div>
                   </div>
                 </div>
               )}
@@ -1376,9 +1369,6 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
                   <label style={LBL}>⚠️ Don't Miss This</label>
                   <div style={{background:"linear-gradient(145deg,"+T.goldF+","+T.goldF+")",border:"1px solid "+T.goldB,borderRadius:12,padding:"16px 20px",marginBottom:18}}>
                     <p style={{fontSize:16,color:T.text,lineHeight:1.85,margin:0,whiteSpace:"pre-line"}}>{week.dontMissThis || 'No key insight for this week.'}</p>
-                    <div style={{marginTop:12,paddingTop:10,borderTop:"1px solid "+T.border,display:"flex",justifyContent:"flex-end",gap:8}}>
-                      <CopyBtn text={"\u26a0\ufe0f Don't Miss This — Week "+wk+"\n\n"+(week.dontMissThis||'')} label="Copy Don't Miss This" T={T}/>
-                    </div>
                   </div>
                 </div>
               )}
@@ -1398,9 +1388,6 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
                   <label style={LBL}>Study Notes</label>
                   <div style={{background:T.bgCard,border:"1px solid "+T.border,borderRadius:12,padding:"16px 20px",marginBottom:18}}>
                     <p style={{fontSize:18,color:T.text,lineHeight:1.85,margin:0,whiteSpace:"pre-line"}}>{week.studyNotes || 'No study notes for this week.'}</p>
-                    <div style={{marginTop:12,paddingTop:10,borderTop:"1px solid "+T.border,display:"flex",justifyContent:"flex-end",gap:8}}>
-                      <CopyBtn text={(week.verseRef||'')+" — Study Notes\n\n"+(week.studyNotes||'')} label="Copy Study Notes" T={T}/>
-                    </div>
                   </div>
                   <label style={LBL}>Your Notes</label>
                   <textarea rows={6} defaultValue={get("study")} onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)} onChange={e=>set("study",e.target.value)} placeholder="Write your personal study notes here..." style={INP}/>
@@ -1462,9 +1449,6 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
                   <label style={LBL}>Application + Action Step</label>
                   <div style={{background:"linear-gradient(145deg,"+T.goldF+","+T.goldF+")",border:"1px solid "+T.goldB,borderRadius:14,padding:"20px 22px",marginBottom:18}}>
                     <p style={{fontSize:16,color:T.text,lineHeight:1.85,margin:0,whiteSpace:"pre-line"}}>{week.application || 'No application content this week.'}</p>
-                    <div style={{marginTop:12,paddingTop:10,borderTop:"1px solid "+T.border,display:"flex",justifyContent:"flex-end",gap:8}}>
-                      <CopyBtn text={"Week "+wk+" Application\n\n"+(week.application||'')} label="Copy Application" T={T}/>
-                    </div>
                   </div>
                   <label style={LBL}>How Will You Live This Out?</label>
                   <textarea rows={5} defaultValue={get("apply")} onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)} onChange={e=>set("apply",e.target.value)} placeholder="Write your specific plan here..." style={INP}/>
@@ -1478,9 +1462,6 @@ function Settings({ profile, session, supabase, entries, wk, ALL_WEEKS, darkMode
                   <label style={LBL}>This Week's Prayer</label>
                   <div style={{background:T.purpleF,border:"1px solid "+T.purpleB,borderRadius:14,padding:"22px 24px",marginBottom:4}}>
                     <p style={{fontSize:17,color:T.cream,lineHeight:1.65,fontStyle:"italic",margin:"0 0 14px",whiteSpace:"pre-line"}}>{week.prayer || 'No prayer text for this week.'}</p>
-                    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                      <CopyBtn text={week.prayer||''} label="Copy Prayer" T={T}/>
-                    </div>
                   </div>
                   <div style={{marginBottom:18}}/>
                   <label style={LBL}>Your Personal Prayer</label>

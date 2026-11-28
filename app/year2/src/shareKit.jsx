@@ -3,6 +3,8 @@
 // - Short text is sized up to fill the card. Text that can't fit at a readable size is split at sentence
 //   breaks into a numbered set (1/3, 2/3…) that shares together, so nothing is cut off or rewritten.
 // - What you see in the preview is exactly what gets shared (the preview is the real card, scaled down).
+// - Everything is centred (2026-11-27): header, label, text and footer, on single cards and on every card of a set.
+//   Numbered lists keep their text left-aligned inside a centred block.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 export const SHARE_FORMATS = [
@@ -10,7 +12,7 @@ export const SHARE_FORMATS = [
   { id: 'story', label: 'Story', ratio: '9:16', w: 1080, h: 1920 },
 ]
 const MAX_FONT = 72   // px on a 1080-wide image
-const MIN_FONT = 42   // ≈ 15pt when the image fills a phone screen; never smaller
+const MIN_FONT = 46   // ≈ 16.5pt when the image fills a phone screen; never smaller (was 42 until 2026-11-27)
 const LINE_HEIGHT = 1.55
 let warmed = false   // Safari sometimes drops images on the very first capture
 
@@ -133,8 +135,7 @@ function layout(content, W, H, st, refText) {
 function CardPage({ fmt, theme, header, label, index, total, page, size, bodyStyle, refText, nodeRef, measureRef }) {
   const bodyRef = useRef(null)
   const single = total === 1
-  const plain = !page?.items && (page?.text || '').length <= 320
-  const st = { ...bodyStyle, align: single && plain ? 'center' : 'left' }
+  const st = { ...bodyStyle, align: 'center' }
   useLayoutEffect(() => {
     if (bodyRef.current && page) fillBody(bodyRef.current, page, size, st, index === total - 1 ? refText : null)
   })
@@ -146,20 +147,16 @@ function CardPage({ fmt, theme, header, label, index, total, page, size, bodySty
     }}>
       {theme.glow && <div style={{ position: 'absolute', inset: 0, background: theme.glow, pointerEvents: 'none' }} />}
       <div style={{ position: 'absolute', inset: 30, border: `2px solid ${theme.frame}`, borderRadius: 30, pointerEvents: 'none' }} />
-      <div style={{ position: 'relative', flexShrink: 0 }}>{header}</div>
-      <div style={{ position: 'relative', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 24, margin: '40px 0 30px' }}>
-        <span style={{ fontSize: 30, letterSpacing: '0.16em', textTransform: 'uppercase', color: theme.label, fontFamily: theme.display }}>{label}</span>
-        {total > 1 && <span style={{ fontSize: 30, letterSpacing: '0.08em', color: theme.label, fontFamily: theme.display, flexShrink: 0 }}>{index + 1} / {total}</span>}
+      <div style={{ position: 'relative', flexShrink: 0, display: 'flex', justifyContent: 'center', textAlign: 'left' }}>{header}</div>
+      <div style={{ position: 'relative', flexShrink: 0, textAlign: 'center', margin: '40px 0 30px', fontSize: 30, letterSpacing: '0.16em', textTransform: 'uppercase', color: theme.label, fontFamily: theme.display }}>
+        {label}{total > 1 && <span style={{ letterSpacing: '0.08em' }}> · {index + 1} of {total}</span>}
       </div>
-      <div ref={measureRef} style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: single ? 'center' : 'flex-start' }}>
+      <div ref={measureRef} style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <div ref={bodyRef} />
       </div>
-      <div style={{ position: 'relative', flexShrink: 0, marginTop: 36, paddingTop: 30, borderTop: `2px solid ${theme.divider}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24 }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 32, color: theme.footer, fontFamily: theme.display, letterSpacing: '0.05em', lineHeight: 1.3 }}>{theme.footerLine}</div>
-          <div style={{ fontSize: 28, color: theme.muted, letterSpacing: '0.04em', marginTop: 6, lineHeight: 1.3 }}>{theme.url}</div>
-        </div>
-        {index < total - 1 && <div style={{ fontSize: 28, color: theme.muted, flexShrink: 0, fontFamily: theme.display, letterSpacing: '0.08em' }}>CONTINUED →</div>}
+      <div style={{ position: 'relative', flexShrink: 0, marginTop: 36, paddingTop: 30, borderTop: `2px solid ${theme.divider}`, textAlign: 'center' }}>
+        <div style={{ fontSize: 32, color: theme.footer, fontFamily: theme.display, letterSpacing: '0.05em', lineHeight: 1.3 }}>{theme.footerLine}</div>
+        <div style={{ fontSize: 28, color: theme.muted, letterSpacing: '0.04em', marginTop: 6, lineHeight: 1.3 }}>{theme.url}{index < total - 1 && <span style={{ fontFamily: theme.display, letterSpacing: '0.08em' }}> · CONTINUED →</span>}</div>
       </div>
     </div>
   )
