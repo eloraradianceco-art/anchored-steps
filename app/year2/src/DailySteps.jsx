@@ -225,9 +225,12 @@ function buildSteps(week) {
           {!f ? (<>
             <span className="ds-flip-word">{w.word}</span>
             {w.original && <span className="ds-flip-orig">{w.original}</span>}
+            {w.language && <span className="ds-flip-lang">{w.language}</span>}
             <span className="ds-flip-hint">Tap to see what it means</span>
           </>) : (<>
             <span className="ds-flip-word is-small">{w.word}</span>
+            {/* The original word stays in view on the meaning side, labelled with its language (2026-11-27). */}
+            {w.original && <span className="ds-flip-orig is-small">{w.original}{w.language && <span className="ds-flip-lang is-inline">{w.language}</span>}</span>}
             <span className="ds-flip-mean">{w.meaning}</span>
             {w.note && <span className="ds-flip-note">{w.note}</span>}
           </>)}
@@ -870,6 +873,9 @@ const CSS = `
 .ds-flip-word{font-family:Cinzel,Georgia,serif;font-size:28px;font-weight:600;color:var(--ink);line-height:1.2}
 .ds-flip-word.is-small{font-size:17px;color:var(--gold)}
 .ds-flip-orig{font-size:23px;color:var(--gold);font-style:italic}
+.ds-flip-orig.is-small{font-size:19px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ds-flip-lang{font-family:Cinzel,Georgia,serif;font-style:normal;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold);border-radius:999px;padding:3px 10px;opacity:.9}
+.ds-flip-lang.is-inline{font-size:11px;padding:2px 9px}
 .ds-flip-hint{font-size:16px;color:var(--muted);margin-top:16px;font-style:italic}
 .ds-flip-mean{font-size:21px;line-height:1.4;color:var(--ink)}
 .ds-flip-note{font-size:17px;line-height:1.55;color:var(--muted)}
